@@ -1,28 +1,31 @@
-# Product spec (seed)
+# Product spec — incremental TD (7-day public experiment)
 
 ## Goal
 
-Evolve this scaffold into a coherent **incremental / idle** browser game that is fun to click for a few minutes and keeps a clear fantasy.
+Ship a coherent **incremental tower-defense hybrid** that strangers can play on GitHub Pages after merges to `main`: click-first combat → auto-click → towers/waves → prestige.
 
 ## Hard requirements
 
 - Client-only (no game server, no auth, no cloud save)
-- Vite + TypeScript + DOM/CSS
-- Economy math in pure modules under `src/`, covered by Vitest
+- Vite + TypeScript; Canvas2D **or** Phaser 3 (one engine, pinned in M1)
+- Pure modules for economy/combat/save under `src/`, Vitest-covered
 - `npm run gate` green before any "done" claim
-- Ship via `agent/<run-id>` PRs into `main`; play via local/DSH preview (no GitHub Pages)
+- Ship via `agent/<run-id>` PRs into `main`; Pages deploys from `main` only
+- Keep Vite `base` = `/autonomous-lab/`
 
-## Player-facing MVP
+## Player-facing MVP (enough to prove the experiment)
 
-1. One primary resource with a big readable number
-2. Manual harvest action
-3. At least two generators that produce over time
-4. At least one upgrade multiplier
-5. localStorage save/load with schema `version`
-6. Short README "how to play"
+1. Visible path + spawning enemies + lives/leak rules
+2. Click-enemy damage + scrap HUD
+3. Click-power shop (G1) and at least one auto-click tier (G2)
+4. Tower unlock (G3): place at least two tower types; towers shoot
+5. Wave escalation + prestige soft-reset with a permanent meta multiplier (G4 lite)
+6. localStorage save schema `version` (corrupt → reset)
+7. README how-to-play; CONTENT.md tables for towers/enemies/upgrades
 
-## Non-goals (unless ROADMAP later promotes them)
+## Non-goals
 
 - Multiplayer, accounts, payments
-- Engine rewrites (Phaser/Three)
-- Making the repo public or adding GitHub Pages hosting
+- Three.js / fog-exploration maps
+- Calling prestige a “wall” in UI copy
+- Making `agent/*` look tidy — only `main` must stay playable

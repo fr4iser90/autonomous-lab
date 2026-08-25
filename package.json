@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Agent-operated game lab: mechanical gates (test/build) + PR shipping; private preview on 5173",
+  "description": "Public 7-day agent experiment: incremental TD hybrid with CI gates and GitHub Pages",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc -p tsconfig.json --noEmit && vite build",

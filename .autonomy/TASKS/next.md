@@ -1,13 +1,16 @@
 # Next task
 
-**M1 — Tighten the toy loop**
+**M1 — Engine pin + map stub**
 
-- Improve click feedback and make the passive rate obvious in the HUD.
-- Keep economy math in `src/economy.ts` (or split modules) with Vitest coverage.
-- Do not start M2 generators until this task's ACCEPT is met.
+- Pick **Canvas2D** or **Phaser 3**, add the dependency, record the choice in `.autonomy/DECISIONS.md`.
+- Show a fixed enemy path and at least one enemy walking toward the base.
+- Player click on an enemy deals **1** damage; enemy dies at 0 HP.
+- Keep Vite `base` = `/autonomous-lab/`. Leave the harvest toy only if still useful as a HUD stub — prefer replacing the boot screen with the map.
 
 ACCEPT:
 
-- [ ] Harvest and tick still update Energy correctly
+- [ ] Engine pinned in DECISIONS.md + package.json
+- [ ] Path + click-damage enemy visible in `npm run dev`
+- [ ] Pure combat/damage helpers covered by Vitest where practical
 - [ ] `npm run gate` passes
-- [ ] PROGRESS.md notes what changed
+- [ ] PROGRESS.md notes the engine choice
