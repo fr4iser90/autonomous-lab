@@ -1,0 +1,43 @@
+name: Open agent PR
+
+# Keep a PR open from each agent/* tip into main so CI + automerge can run.
+on:
+  push:
+    branches: ['agent/**']
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: open-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ensure-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create PR if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          branch="${GITHUB_REF_NAME}"
+          open_count="$(gh pr list --base main --head "$branch" --state open --json number --jq 'length')"
+          if [[ "$open_count" != "0" ]]; then
+            echo "Open PR already exists for $branch"
+            exit 0
+          fi
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Live: ${branch}" \
+            --body "$(cat <<EOF
+          Automerge candidate from \`${branch}\`.
+
+          - CI \`gate\` must pass
+          - Automerge workflow squash-merges into \`main\` → Pages updates
+          - Do not push \`main\`/\`baseline\` from the agent
+          EOF
+          )"

@@ -11,3 +11,4 @@
 
 - 2026-08-25: Boilerplate seeded (Vite toy, CI, Pages, autonomy templates).
 - 2026-08-25: Removed genre-specific incremental-TD defaults — prompts stay in the harness.
+- 2026-08-25: Mode A live — open-agent-pr + automerge after green `gate`.
