@@ -1,0 +1,66 @@
+name: Automerge agent PRs
+
+# After CI succeeds on a pull_request, squash-merge agent/* → main (Pages follows).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Squash-merge agent PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const run = context.payload.workflow_run
+            const headBranch = run.head_branch
+            if (!headBranch || !headBranch.startsWith('agent/')) {
+              core.info(`Skip: head_branch=${headBranch}`)
+              return
+            }
+
+            let prs = (run.pull_requests || []).filter(
+              (pr) => pr.base.ref === 'main' && pr.head.ref.startsWith('agent/'),
+            )
+
+            if (prs.length === 0) {
+              const { data } = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+                base: 'main',
+                head: `${owner}:${headBranch}`,
+              })
+              prs = data
+            }
+
+            if (prs.length === 0) {
+              core.info(`No open PR for ${headBranch}`)
+              return
+            }
+
+            for (const pr of prs) {
+              core.info(`Merging PR #${pr.number} (${pr.head.ref} → main)`)
+              try {
+                await github.rest.pulls.merge({
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash',
+                  commit_title: `Live ${pr.head.ref} (#${pr.number})`,
+                  commit_message: 'Automerge after green CI gate; Pages deploys from main.',
+                })
+                core.info(`Merged #${pr.number}`)
+              } catch (error) {
+                core.warning(`Could not merge #${pr.number}: ${error.message}`)
+              }
+            }

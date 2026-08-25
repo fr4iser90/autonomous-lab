@@ -1,27 +1,28 @@
 # Autonomous Lab — agent constitution
 
-This **public** repo is a **genre-agnostic boilerplate** for DSH autonomy experiments. Concrete game goals live in the harness `PROMPTS/` (or the human's pasted objective) — **not** in this repository's defaults. Mechanical gates beat prompt hope. Outsiders judge **merged `main` + Pages**, not raw `agent/*` commits.
+This **public** repo is a **genre-agnostic boilerplate** for DSH autonomy experiments. Concrete game goals live in the harness `PROMPTS/` (or the human's pasted objective) — **not** in this repository's defaults. Mechanical gates beat prompt hope. Outsiders follow **commits on `agent/*`** and the **live Pages** site fed by automerge into `main`.
 
 ## Branch model (do not invent a second one)
 
 | Ref | Role | Who writes |
 |---|---|---|
 | `baseline` | Frozen boilerplate reset. Never force-push. | Human only (rare scaffold upgrades) |
-| `main` | Shipped playable line. **GitHub Pages deploys only from here.** | Human merge of green PRs |
+| `main` | Live playable line. **GitHub Pages deploys only from here.** | Automerge of green `agent/*` PRs (or human) |
 | `agent/<run-id>` | One autonomy prompt / experiment | Agent (via `github_*` tools) |
 
 Rules:
 
-1. **Never push to `main` or `baseline`.** Open a PR from `agent/<run-id>` into `main`.
+1. **Never push to `main` or `baseline`.** Work only on `agent/<run-id>`.
 2. **One prompt = one run branch**, cut from `baseline` for a clean experiment (preferred) or from `main` to continue a shipped line.
-3. **Pages has one live URL:** `https://fr4iser90.github.io/autonomous-lab/`. WIP plays on DSH/`npm run dev` `:5173`.
-4. Reset: `git fetch origin && git checkout baseline && git checkout -b agent/<new-run-id>` (or `./scripts/new-run.sh <run-id>`).
+3. **Live loop:** push `agent/*` → workflow opens/updates PR → CI `gate` → automerge squash into `main` → Pages rebuilds.
+4. **Pages URL:** `https://fr4iser90.github.io/autonomous-lab/`. WIP also on DSH/`npm run dev` `:5173`.
+5. Reset: `./scripts/new-run.sh <run-id>` (from `origin/baseline`).
 
 ## What this boilerplate owns vs what the prompt owns
 
 | Boilerplate (this repo) | Run prompt (harness `PROMPTS/` / human objective) |
 |---|---|
-| Vite + TypeScript toolchain, `npm run gate`, CI, Pages `base` | Genre, fantasy, milestones, engine choice |
+| Vite + TypeScript toolchain, `npm run gate`, CI, Pages `base`, automerge | Genre, fantasy, milestones, engine choice |
 | Branch / PR / never-push-main rules | Content caps, DEMO rules, soak budgets |
 | Empty `.autonomy/` templates to fill at run start | The actual SPEC/ROADMAP/TASKS content |
 
@@ -53,14 +54,15 @@ Also keep `PROGRESS.md` / `CONTENT.md` / `README.md` aligned with what actually 
 2. Update Vitest for new pure logic when applicable.
 3. `npm run gate` green locally.
 4. Update autonomy docs + PROGRESS as needed.
-5. Commit on `agent/<run-id>`; `github_push`; open/update PR to `main`.
-6. Do **not** mark autonomy `complete` without gate-green evidence and a mergeable PR. Human merges; Pages follows `main`.
+5. Commit + `github_push` on `agent/<run-id>` (open PR if tools require it; Actions also opens one).
+6. After automerge, **rebase onto `origin/main`** (or merge `main`) before the next chunk so the next PR stays small.
+7. Do **not** mark autonomy `complete` without gate-green evidence on the run. Pages follows successful automerge.
 
 If blocked: set autonomy phase `blocked` with a real blocker.
 
 ## Out of scope unless the run objective says otherwise
 
 - Baking a specific game genre into `baseline`
-- Rewriting CI/Pages without a failing gate
+- Rewriting CI/Pages/automerge without a failing gate
 - Changing `baseline` history
 - Cloud saves, auth, multiplayer, or a second Pages site

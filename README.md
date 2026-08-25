@@ -1,21 +1,25 @@
 # Autonomous Lab
 
-**Genre-agnostic boilerplate** for public DSH autonomy experiments. CI gates + branch model + GitHub Pages. Concrete game prompts stay in the harness (`PROMPTS/`) — not as defaults in this repo.
+**Genre-agnostic boilerplate** for public DSH autonomy experiments. CI gates + **automerge** + GitHub Pages so a long agent run stays **live**. Concrete game prompts stay in the harness (`PROMPTS/`).
 
-**Play (after the repo is public and Pages is enabled):** https://fr4iser90.github.io/autonomous-lab/
+**Play (live after green automerge):** https://fr4iser90.github.io/autonomous-lab/
 
 Local/DSH preview: `npm run dev` → http://127.0.0.1:5173
 
-## Surfaces
+## Live loop (mode A)
 
-| Ref | Meaning |
+```
+agent/* commit → Open agent PR → CI gate → Automerge (squash) → main → Pages
+```
+
+| Surface | Meaning |
 |---|---|
-| `baseline` | Frozen boilerplate — reset point |
-| `agent/<run-id>` | One prompt / experiment (WIP) |
-| `main` | Shipped line + GitHub Pages |
-| `npm run gate` | `test` + `build` must stay green |
+| `baseline` | Frozen boilerplate |
+| `agent/<run-id>` | Experiment branch (follow commits here) |
+| `main` | Automerge target + Pages |
+| Actions `CI` / `Open agent PR` / `Automerge agent PRs` | Automation |
 
-Judge experiments by **playable `main`** and green Actions, not by messy `agent/*` history.
+Broken `gate` → no merge → Pages stays on last green `main`.
 
 ## Quick start
 
@@ -23,29 +27,27 @@ Judge experiments by **playable `main`** and green Actions, not by messy `agent/
 npm install
 npm run gate
 npm run dev
-```
-
-New run from baseline:
-
-```sh
 ./scripts/new-run.sh <run-id>
 ```
 
-Example: `./scripts/new-run.sh run-2026-08-25` — then paste/run your harness prompt in DSH against this workspace. The agent fills `.autonomy/*` from that objective.
+Then run your harness `PROMPTS/…` objective in DSH against this workspace.
 
-## DSH autonomy (shape only — objective comes from your prompt)
+## DSH autonomy (shape)
 
 ```text
-/autonomy start <paste or summarize the harness PROMPTS objective>; keep npm run gate green; PR agent/* into main; never push main/baseline; Pages deploys from main after human merge
+/autonomy start <harness PROMPTS objective>; keep npm run gate green; push agent/* only; never push main/baseline; automerge + Pages follow green CI
 ```
-
-See `AGENTS.md`.
 
 ## One-time GitHub setup
 
-1. Make the repo **Public** (required for free Pages)
-2. Settings → Pages → Source: **GitHub Actions**
-3. Protect `main` and `baseline` (PR + green CI)
+1. Repo **Public**; Pages **Source = GitHub Actions** (not Jekyll/Static HTML templates)
+2. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
+3. Settings → Actions → General → Workflow permissions:
+   - **Read and write permissions**
+   - ✅ **Allow GitHub Actions to create and approve pull requests**
+4. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
+5. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
+6. Pages **Source = GitHub Actions** (ignore Jekyll/Static HTML template cards)
 
 ## Scripts
 
