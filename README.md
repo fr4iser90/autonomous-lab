@@ -42,8 +42,12 @@ Then run your harness `PROMPTS/…` objective in DSH against this workspace.
 
 1. Repo **Public**; Pages **Source = GitHub Actions** (not Jekyll/Static HTML templates)
 2. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
-3. If automerge is denied: Settings → Actions → General → Workflow permissions → **Read and write**; ensure required check name is exactly **`gate`**
-4. Optional: Settings → General → **Allow auto-merge** (nice-to-have; this repo merges via the Automerge workflow API)
+3. Settings → Actions → General → Workflow permissions:
+   - **Read and write permissions**
+   - ✅ **Allow GitHub Actions to create and approve pull requests**
+4. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
+5. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
+6. Pages **Source = GitHub Actions** (ignore Jekyll/Static HTML template cards)
 
 ## Scripts
 
