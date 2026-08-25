@@ -1,12 +1,12 @@
 # Product spec (fill per run)
 
-Replace this file at autonomy start from the **active DSH / harness prompt objective**.
+Replace this file at autonomy start from the **active run objective** (whatever the human pasted into the agent).
 
 Do not treat the boilerplate toy UI as the product fantasy.
 
 ## Goal
 
-<!-- one paragraph from the run prompt -->
+<!-- one paragraph from the run objective -->
 
 ## Hard requirements (always)
 
@@ -17,8 +17,8 @@ Do not treat the boilerplate toy UI as the product fantasy.
 
 ## Run-specific requirements
 
-<!-- engine, genre, save rules, ACCEPT bars from the prompt -->
+<!-- engine, genre, save rules, ACCEPT bars from the objective -->
 
 ## Non-goals
 
-<!-- from the prompt; plus: do not copy harness PROMPTS/* into this repo as defaults -->
+<!-- from the objective; never bake a specific game into baseline -->

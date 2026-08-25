@@ -1,12 +1,12 @@
 # Autonomous Lab
 
-**Genre-agnostic boilerplate** for public DSH autonomy experiments. CI gates + **automerge** + GitHub Pages so a long agent run stays **live**. Concrete game prompts stay in the harness (`PROMPTS/`).
+**Genre-agnostic boilerplate** for long public autonomy runs. CI gates + **automerge** + GitHub Pages so a run stays **live**. This repo does **not** ship game genres or overnight objectives — those come from whatever objective the human pastes into the agent for that run.
 
 **Play (live after green automerge):** https://fr4iser90.github.io/autonomous-lab/
 
-Local/DSH preview: `npm run dev` → http://127.0.0.1:5173
+Local preview: `pnpm install && pnpm run dev` (or npm) → http://127.0.0.1:5173
 
-## Live loop (mode A)
+## Live loop
 
 ```
 agent/* commit → Open agent PR → CI gate → Automerge (squash) → main → Pages
@@ -24,18 +24,18 @@ Broken `gate` → no merge → Pages stays on last green `main`.
 ## Quick start
 
 ```sh
-npm install
-npm run gate
-npm run dev
+pnpm install   # or npm install
+pnpm run gate
+pnpm run dev
 ./scripts/new-run.sh <run-id>
 ```
 
-Then run your harness `PROMPTS/…` objective in DSH against this workspace.
+Then paste your run objective into the agent with this checkout as the workspace.
 
-## DSH autonomy (shape)
+## Autonomy shape
 
 ```text
-/autonomy start <harness PROMPTS objective>; keep npm run gate green; push agent/* only; never push main/baseline; automerge + Pages follow green CI
+start with the pasted objective; keep gate green; push agent/* only; never push main/baseline; automerge + Pages follow green CI
 ```
 
 ## One-time GitHub setup
@@ -45,15 +45,13 @@ Then run your harness `PROMPTS/…` objective in DSH against this workspace.
 3. Settings → Actions → General → Workflow permissions:
    - **Read and write permissions**
    - ✅ **Allow GitHub Actions to create and approve pull requests**
-4. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
-5. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
-6. Pages **Source = GitHub Actions** (ignore Jekyll/Static HTML template cards)
+4. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
 
 ## Scripts
 
 | Script | Meaning |
 |---|---|
-| `npm test` | Vitest |
+| `npm test` / `pnpm test` | Vitest |
 | `npm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
 | `npm run gate` | test + build |
 | `npm run dev` | Vite on 5173 |
