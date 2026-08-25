@@ -1,16 +1,14 @@
 # Next task
 
-**M1 — Engine pin + map stub**
+**Bootstrap this run from the active objective**
 
-- Pick **Canvas2D** or **Phaser 3**, add the dependency, record the choice in `.autonomy/DECISIONS.md`.
-- Show a fixed enemy path and at least one enemy walking toward the base.
-- Player click on an enemy deals **1** damage; enemy dies at 0 HP.
-- Keep Vite `base` = `/autonomous-lab/`. Leave the harvest toy only if still useful as a HUD stub — prefer replacing the boot screen with the map.
+- Read the human/DSH objective (harness prompt). Do **not** invent a genre that is not in that objective.
+- Rewrite `.autonomy/SPEC.md`, `.autonomy/ROADMAP.md`, and this file for the real first milestone.
+- Append engine/stack choices to `.autonomy/DECISIONS.md` when first made.
+- Keep `npm run gate` green and Vite `base` = `/autonomous-lab/`.
 
 ACCEPT:
 
-- [ ] Engine pinned in DECISIONS.md + package.json
-- [ ] Path + click-damage enemy visible in `npm run dev`
-- [ ] Pure combat/damage helpers covered by Vitest where practical
+- [ ] SPEC/ROADMAP/TASKS reflect the active prompt (not leftover boilerplate placeholders)
 - [ ] `npm run gate` passes
-- [ ] PROGRESS.md notes the engine choice
+- [ ] PROGRESS.md NOW points at the first real milestone

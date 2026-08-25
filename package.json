@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Public 7-day agent experiment: incremental TD hybrid with CI gates and GitHub Pages",
+  "description": "Genre-agnostic public boilerplate for DSH autonomy experiments (CI + Pages + branch model)",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc -p tsconfig.json --noEmit && vite build",

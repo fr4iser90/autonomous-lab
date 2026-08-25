@@ -1,24 +1,11 @@
-# Content bible — incremental TD
+# Content bible (fill per run)
 
-Theme: **TBD** (agent locks one coherent fantasy on first real content write; do not re-theme mid-run).
+Theme and registries belong to the **active prompt**. Clear and rewrite when starting a new `agent/<run-id>` from `baseline`.
 
-## Progression gates
+## Theme
 
-| Gate | Unlock |
-|---|---|
-| G0 | Click enemies for 1 dmg; tower shop locked |
-| G1 | Click Power shop |
-| G2 | Auto-click tiers |
-| G3 | Towers / build bar |
-| G4 | Prestige soft-reset |
+TBD — set once from the run objective; do not re-theme mid-run.
 
-## Currencies
+## Tables
 
-| Id | Name | Notes |
-|---|---|---|
-| scrap | Scrap | Run currency from damage/kills |
-| meta | Meta | Prestige currency (M6+) |
-
-## Towers / enemies / upgrades
-
-Fill tables as content lands. Target depth later: many entries, but MVP can start small.
+Add currencies / units / maps / etc. as the prompt requires.

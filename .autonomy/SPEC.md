@@ -1,31 +1,24 @@
-# Product spec — incremental TD (7-day public experiment)
+# Product spec (fill per run)
+
+Replace this file at autonomy start from the **active DSH / harness prompt objective**.
+
+Do not treat the boilerplate toy UI as the product fantasy.
 
 ## Goal
 
-Ship a coherent **incremental tower-defense hybrid** that strangers can play on GitHub Pages after merges to `main`: click-first combat → auto-click → towers/waves → prestige.
+<!-- one paragraph from the run prompt -->
 
-## Hard requirements
+## Hard requirements (always)
 
-- Client-only (no game server, no auth, no cloud save)
-- Vite + TypeScript; Canvas2D **or** Phaser 3 (one engine, pinned in M1)
-- Pure modules for economy/combat/save under `src/`, Vitest-covered
-- `npm run gate` green before any "done" claim
-- Ship via `agent/<run-id>` PRs into `main`; Pages deploys from `main` only
+- Client work stays compatible with Vite + `npm run gate`
 - Keep Vite `base` = `/autonomous-lab/`
+- Ship via `agent/<run-id>` PRs into `main` (Pages from `main` only)
+- Never push `main` or `baseline`
 
-## Player-facing MVP (enough to prove the experiment)
+## Run-specific requirements
 
-1. Visible path + spawning enemies + lives/leak rules
-2. Click-enemy damage + scrap HUD
-3. Click-power shop (G1) and at least one auto-click tier (G2)
-4. Tower unlock (G3): place at least two tower types; towers shoot
-5. Wave escalation + prestige soft-reset with a permanent meta multiplier (G4 lite)
-6. localStorage save schema `version` (corrupt → reset)
-7. README how-to-play; CONTENT.md tables for towers/enemies/upgrades
+<!-- engine, genre, save rules, ACCEPT bars from the prompt -->
 
 ## Non-goals
 
-- Multiplayer, accounts, payments
-- Three.js / fog-exploration maps
-- Calling prestige a “wall” in UI copy
-- Making `agent/*` look tidy — only `main` must stay playable
+<!-- from the prompt; plus: do not copy harness PROMPTS/* into this repo as defaults -->

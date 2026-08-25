@@ -1,21 +1,21 @@
 # Autonomous Lab
 
-Public **7-day agent experiment**: an incremental tower-defense hybrid, built by DSH autonomy on `agent/*` branches, merged to `main` when gate-green.
+**Genre-agnostic boilerplate** for public DSH autonomy experiments. CI gates + branch model + GitHub Pages. Concrete game prompts stay in the harness (`PROMPTS/`) — not as defaults in this repo.
 
-**Play (after Pages is enabled on the public repo):** https://fr4iser90.github.io/autonomous-lab/
+**Play (after the repo is public and Pages is enabled):** https://fr4iser90.github.io/autonomous-lab/
 
 Local/DSH preview: `npm run dev` → http://127.0.0.1:5173
 
-## What this is
+## Surfaces
 
-| Surface | Meaning |
+| Ref | Meaning |
 |---|---|
-| `baseline` | Frozen scaffold — reset point |
-| `agent/<run-id>` | One autonomy prompt (WIP; may be messy) |
+| `baseline` | Frozen boilerplate — reset point |
+| `agent/<run-id>` | One prompt / experiment (WIP) |
 | `main` | Shipped line + GitHub Pages |
-| CI `npm run gate` | `test` + `build` must stay green |
+| `npm run gate` | `test` + `build` must stay green |
 
-Agent-built code on purpose. Expect chaos on `agent/*`; judge the experiment by **playable `main`** and green Actions.
+Judge experiments by **playable `main`** and green Actions, not by messy `agent/*` history.
 
 ## Quick start
 
@@ -25,25 +25,27 @@ npm run gate
 npm run dev
 ```
 
-New 7-day run:
+New run from baseline:
 
 ```sh
-./scripts/new-run.sh incremental-td-7d
+./scripts/new-run.sh <run-id>
 ```
 
-## DSH autonomy (example)
+Example: `./scripts/new-run.sh run-2026-08-25` — then paste/run your harness prompt in DSH against this workspace. The agent fills `.autonomy/*` from that objective.
+
+## DSH autonomy (shape only — objective comes from your prompt)
 
 ```text
-/autonomy start 7-day incremental TD hybrid on this scaffold: click-first enemies → auto-click → towers/waves → prestige. Keep npm run gate green. PR agent/* into main only. Never push main/baseline. Pages deploys from main after human merge.
+/autonomy start <paste or summarize the harness PROMPTS objective>; keep npm run gate green; PR agent/* into main; never push main/baseline; Pages deploys from main after human merge
 ```
 
-See `AGENTS.md` and `.autonomy/`.
+See `AGENTS.md`.
 
-## Make the repo public + Pages (one-time human)
+## One-time GitHub setup
 
-1. GitHub → Settings → General → Danger zone → **Change visibility → Public**
+1. Make the repo **Public** (required for free Pages)
 2. Settings → Pages → Source: **GitHub Actions**
-3. Protect `main` and `baseline` (no direct push; require PR + green CI on `main`)
+3. Protect `main` and `baseline` (PR + green CI)
 
 ## Scripts
 

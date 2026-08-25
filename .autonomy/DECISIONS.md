@@ -1,7 +1,12 @@
 # Decisions
 
-- **2026-08-25 — Experiment:** Public 7-day incremental TD showcase; Pages from `main` only.
-- **2026-08-25 — Hosting:** GitHub Pages project site; Vite `base` = `/autonomous-lab/`.
-- **2026-08-25 — Branches:** `baseline` frozen scaffold; `agent/<run-id>` for work; never push `main`/`baseline` from the agent.
-- **2026-08-25 — Gates:** `npm run gate` (test + build) is the mechanical Definition of Done.
-- **2026-08-25 — Engine:** Not pinned yet — agent must pick Canvas2D **or** Phaser 3 in M1 and record it here.
+Boilerplate defaults (stable across runs):
+
+- **Hosting:** GitHub Pages from `main`; Vite `base` = `/autonomous-lab/`.
+- **Branches:** `baseline` frozen boilerplate; `agent/<run-id>` for work; never push `main`/`baseline` from the agent.
+- **Gates:** `npm run gate` (test + build) is the mechanical Definition of Done.
+- **Prompts:** Genre/engine come from the harness prompt for the run — not from `baseline` defaults.
+
+Run-specific decisions (append below at autonomy start / when first chosen):
+
+- *(none yet)*

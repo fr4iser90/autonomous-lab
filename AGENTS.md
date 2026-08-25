@@ -1,70 +1,66 @@
 # Autonomous Lab — agent constitution
 
-This **public** repo is the product workspace for a long DSH autonomy experiment (incremental tower defense). Mechanical gates beat prompt hope. Outsiders should judge **merged `main` + Pages**, not raw `agent/*` commits.
+This **public** repo is a **genre-agnostic boilerplate** for DSH autonomy experiments. Concrete game goals live in the harness `PROMPTS/` (or the human's pasted objective) — **not** in this repository's defaults. Mechanical gates beat prompt hope. Outsiders judge **merged `main` + Pages**, not raw `agent/*` commits.
 
 ## Branch model (do not invent a second one)
 
 | Ref | Role | Who writes |
 |---|---|---|
-| `baseline` | Frozen scaffold reset point. Never force-push. | Human only (rare scaffold upgrades) |
+| `baseline` | Frozen boilerplate reset. Never force-push. | Human only (rare scaffold upgrades) |
 | `main` | Shipped playable line. **GitHub Pages deploys only from here.** | Human merge of green PRs |
 | `agent/<run-id>` | One autonomy prompt / experiment | Agent (via `github_*` tools) |
 
 Rules:
 
 1. **Never push to `main` or `baseline`.** Open a PR from `agent/<run-id>` into `main`.
-2. **One prompt = one run branch**, cut from `baseline` (clean experiment) or from `main` (continue shipped game). Prefer `baseline` for a new 7-day run.
+2. **One prompt = one run branch**, cut from `baseline` for a clean experiment (preferred) or from `main` to continue a shipped line.
 3. **Pages has one live URL:** `https://fr4iser90.github.io/autonomous-lab/`. WIP plays on DSH/`npm run dev` `:5173`.
-4. Reset a ruined tree: `git fetch origin && git checkout baseline && git checkout -b agent/<new-run-id>`.
+4. Reset: `git fetch origin && git checkout baseline && git checkout -b agent/<new-run-id>` (or `./scripts/new-run.sh <run-id>`).
 
-Helper: `./scripts/new-run.sh <run-id>` (creates `agent/<run-id>` from `origin/baseline`).
+## What this boilerplate owns vs what the prompt owns
 
-## Stack (fixed)
+| Boilerplate (this repo) | Run prompt (harness `PROMPTS/` / human objective) |
+|---|---|
+| Vite + TypeScript toolchain, `npm run gate`, CI, Pages `base` | Genre, fantasy, milestones, engine choice |
+| Branch / PR / never-push-main rules | Content caps, DEMO rules, soak budgets |
+| Empty `.autonomy/` templates to fill at run start | The actual SPEC/ROADMAP/TASKS content |
 
-- Vite + TypeScript client game; **no** Three.js, **no** game server, **no** multiplayer
-- Combat/render: **Canvas2D or Phaser 3** — pick ONE in M1, pin in `package.json` + DECISIONS.md, do not flip later
-- Economy / combat sim / save logic in pure modules under `src/`, covered by Vitest
-- Playwright only for UI demos in DSH (not required for every gate)
+Do **not** copy harness prompt files into this git history as the product default. At run start, derive SPEC/ROADMAP/TASKS from the active objective only.
+
+## Stack defaults (boilerplate)
+
+- Vite + TypeScript client app; preview **5173** only — never bind **3080**
+- Vitest for pure logic; Playwright only when the run prompt requires UI demos
 - `npm run gate` (= `test` + `build`) must pass before claiming a task done
-- Preview **5173** only — never bind **3080**
-- Vite `base` is `/autonomous-lab/` for project Pages — do not change without updating Pages docs
-
-## Product fantasy (incremental TD hybrid)
-
-Document details in CONTENT.md. Keep this order:
-
-1. **G0** Enemies walk a path; player **clicks enemies** for damage/scrap; tower shop locked
-2. **G1** Click-power upgrades
-3. **G2** Auto-click tiers
-4. **G3** Towers unlock → place/upgrade; TD becomes primary DPS
-5. **G4** Escalating waves + **prestige** soft-reset (meta multiplier). UI says Prestige/Ascend/Reboot — never “wall”
+- Vite `base` is `/autonomous-lab/` for project Pages — do not change without updating docs/CI
+- Engines (Canvas, Phaser, Three, DOM-only, …) are **prompt-chosen** and must be pinned in `.autonomy/DECISIONS.md` when first adopted — do not thrash
 
 ## Autonomy files
 
 | Path | Role |
 |---|---|
-| `.autonomy/SPEC.md` | Product requirements |
-| `.autonomy/ROADMAP.md` | Ordered milestones |
-| `.autonomy/DECISIONS.md` | Durable architecture choices |
-| `.autonomy/TASKS/next.md` | The single current task |
+| `.autonomy/SPEC.md` | Product requirements for **this run** (agent fills from objective) |
+| `.autonomy/ROADMAP.md` | Ordered milestones for **this run** |
+| `.autonomy/DECISIONS.md` | Durable choices for **this run** |
+| `.autonomy/TASKS/next.md` | Single current task |
 | `.autonomy/state.json` | Owned by autonomy tools — do not hand-edit unless repairing |
 
-Also keep `PROGRESS.md` / `CONTENT.md` / `README.md` current.
+Also keep `PROGRESS.md` / `CONTENT.md` / `README.md` aligned with what actually shipped.
 
 ## Definition of Done (every Ralph round)
 
 1. Implement **one** concrete task from `.autonomy/TASKS/next.md`.
-2. Update Vitest for new pure logic.
+2. Update Vitest for new pure logic when applicable.
 3. `npm run gate` green locally.
-4. Update SPEC/ROADMAP/TASKS/DECISIONS + PROGRESS as needed.
+4. Update autonomy docs + PROGRESS as needed.
 5. Commit on `agent/<run-id>`; `github_push`; open/update PR to `main`.
 6. Do **not** mark autonomy `complete` without gate-green evidence and a mergeable PR. Human merges; Pages follows `main`.
 
-If blocked: set autonomy phase `blocked` with a real blocker — no endless speculative rewrites.
+If blocked: set autonomy phase `blocked` with a real blocker.
 
-## Out of scope unless SPEC says otherwise
+## Out of scope unless the run objective says otherwise
 
-- Rewriting CI/Pages workflows without a failing gate
+- Baking a specific game genre into `baseline`
+- Rewriting CI/Pages without a failing gate
 - Changing `baseline` history
 - Cloud saves, auth, multiplayer, or a second Pages site
-- Replacing the engine after M1 pin (Canvas ↔ Phaser flip)
