@@ -16,7 +16,7 @@ Rules:
 2. **One prompt = one run branch**, cut from `baseline` for a clean experiment (preferred) or from `main` to continue a shipped line.
 3. **Live loop:** push `agent/*` → workflow opens/updates PR → CI `gate` → automerge squash into `main` → Pages rebuilds.
 4. **Pages URL:** `https://fr4iser90.github.io/autonomous-lab/`. WIP also on DSH/`npm run dev` `:5173`.
-5. Reset: `./scripts/new-run.sh <run-id>` (from `origin/baseline`).
+5. New run: agent runs `git fetch origin && git checkout -b agent/<run-id> origin/baseline` (human does not run `./scripts/new-run.sh`; that script is an optional local shortcut for the same git steps).
 
 ## What this boilerplate owns vs what the prompt owns
 
@@ -31,8 +31,9 @@ Do **not** copy harness prompt files into this git history as the product defaul
 ## Stack defaults (boilerplate)
 
 - Vite + TypeScript client app; preview **5173** only — never bind **3080**
+- **Package installs in DSH deploy containers:** prefer **`pnpm install`**, not **`npm install`**. The harness image ships pnpm; npm can omit devDependencies when `NODE_ENV=production`, which leaves only runtime deps (symptom: `audited 2 packages`, no Vite/Vitest). Use one package manager per project — drop the other lockfile before switching. If pnpm blocks postinstall scripts (esbuild), run `pnpm approve-builds` once in the project.
 - Vitest for pure logic; Playwright only when the run prompt requires UI demos
-- `npm run gate` (= `test` + `build`) must pass before claiming a task done
+- `npm run gate` (= `test` + `build`) must pass before claiming a task done (`pnpm run gate` is equivalent)
 - Vite `base` is `/autonomous-lab/` for project Pages — do not change without updating docs/CI
 - Engines (Canvas, Phaser, Three, DOM-only, …) are **prompt-chosen** and must be pinned in `.autonomy/DECISIONS.md` when first adopted — do not thrash
 
