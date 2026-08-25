@@ -1,8 +1,6 @@
 # Autonomous Lab
 
-Agent-operated Vite + TypeScript game lab with mechanical gates and GitHub Pages.
-
-**Play (after merge to `main`):** https://fr4iser90.github.io/autonomous-lab/
+Agent-operated Vite + TypeScript game lab with mechanical gates (`npm run gate`) and PR-based shipping. The repo stays **private**; play via local/DSH preview on port **5173** (not GitHub Pages).
 
 ## Quick start
 
@@ -20,12 +18,12 @@ baseline  ── frozen scaffold (never force-push)
    ├── agent/run-idle-7d     ← one autonomy prompt
    ├── agent/run-roguelite   ← another prompt
    │         │
-   │         └── PR ──► main ──► GitHub Pages (one live site)
+   │         └── PR ──► main   ← integration / "shipped" line
 ```
 
-- **Pages = only `main`.** GitHub does not give you one Pages URL per branch.
 - **Each prompt → new `agent/<run-id>` branch** (from `baseline` for a clean start).
 - Protect `main` and `baseline` in GitHub branch settings (no direct push).
+- Preview WIP in DSH/`npm run dev`; merge to `main` when a run is worth keeping.
 
 Create a run branch:
 
@@ -48,6 +46,6 @@ See `AGENTS.md` and `.autonomy/` for the constitution and seed plan.
 | Script | Meaning |
 |---|---|
 | `npm test` | Vitest |
-| `npm run build` | `tsc --noEmit` + Vite production build (`base=/autonomous-lab/`) |
+| `npm run build` | `tsc --noEmit` + Vite production build |
 | `npm run gate` | test + build |
 | `npm run dev` | Vite on 5173 |

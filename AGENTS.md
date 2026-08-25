@@ -7,14 +7,14 @@ This repo is the **product workspace** for long DSH autonomy runs. Mechanical ga
 | Ref | Role | Who writes |
 |---|---|---|
 | `baseline` | Frozen scaffold reset point. Never force-push. | Human only (rare scaffold upgrades) |
-| `main` | Playable production. **GitHub Pages deploys only from here.** | Human merge of green PRs |
+| `main` | Integration / shipped line after human merge of green PRs | Human merge of green PRs |
 | `agent/<run-id>` | One autonomy prompt / experiment | Agent (via `github_*` tools) |
 
 Rules:
 
 1. **Never push to `main` or `baseline`.** Open a PR from `agent/<run-id>` into `main`.
 2. **One prompt = one run branch**, cut from `baseline` (clean experiment) or from `main` (continue shipped game). Prefer `baseline` for a new 7-day fantasy.
-3. **GitHub Pages has one live URL per repo** (`https://fr4iser90.github.io/autonomous-lab/`). Parallel agent branches are fine; only merged `main` is public-playable. Local/DSH preview on `:5173` covers WIP.
+3. **Play locally / in DSH on `:5173`.** This private repo does not use GitHub Pages.
 4. Reset a ruined tree: `git fetch origin && git checkout baseline && git checkout -b agent/<new-run-id>`.
 
 Helper: `./scripts/new-run.sh <run-id>` (creates `agent/<run-id>` from `origin/baseline`).
@@ -25,8 +25,7 @@ Helper: `./scripts/new-run.sh <run-id>` (creates `agent/<run-id>` from `origin/b
 - Vitest for pure logic; Playwright only when validating UI demos in DSH
 - `npm run gate` (= `test` + `build`) must pass before claiming a task done
 - Preview **5173** only — never bind **3080**
-
-`vite.config.ts` sets `base: '/autonomous-lab/'` for project Pages. Local `npm run dev` still works.
+- Vite `base` is `/` (root); do not introduce a project Pages `base` path
 
 ## Autonomy files
 
@@ -55,6 +54,7 @@ If blocked on human merge, API limits, or missing design choice: set autonomy ph
 
 ## Out of scope unless SPEC says otherwise
 
-- Rewriting CI/Pages workflows without a failing gate
+- Adding GitHub Pages or making the repo public for hosting
+- Rewriting CI workflows without a failing gate
 - Changing `baseline` history
-- Cloud saves, auth, multiplayer, or a second public Pages site in this repo
+- Cloud saves, auth, or multiplayer

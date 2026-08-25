@@ -10,7 +10,7 @@ Evolve this scaffold into a coherent **incremental / idle** browser game that is
 - Vite + TypeScript + DOM/CSS
 - Economy math in pure modules under `src/`, covered by Vitest
 - `npm run gate` green before any "done" claim
-- Ship via `agent/<run-id>` PRs into `main` (Pages deploys from `main` only)
+- Ship via `agent/<run-id>` PRs into `main`; play via local/DSH preview (no GitHub Pages)
 
 ## Player-facing MVP
 
@@ -25,4 +25,4 @@ Evolve this scaffold into a coherent **incremental / idle** browser game that is
 
 - Multiplayer, accounts, payments
 - Engine rewrites (Phaser/Three)
-- Multiple GitHub Pages sites in this repository
+- Making the repo public or adding GitHub Pages hosting

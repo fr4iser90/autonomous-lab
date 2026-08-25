@@ -12,7 +12,7 @@ Ordered milestones. Keep `TASKS/next.md` pointed at exactly one slice.
    One upgrade multiplier; save schema v1 in localStorage with corrupt→reset. ACCEPT: vitest roundtrip; reload restores balances.
 
 4. **M4 — Fantasy pass**  
-   Lock theme in CONTENT.md; restyle UI to match; README how-to-play. ACCEPT: build green; Pages-ready `base` unchanged.
+   Lock theme in CONTENT.md; restyle UI to match; README how-to-play. ACCEPT: gate green; `vite` `base` stays `/`.
 
 5. **M5 — Depth**  
    Prestige or second currency; more generators; balance pass. ACCEPT: gate green; PROGRESS notes balance targets.
