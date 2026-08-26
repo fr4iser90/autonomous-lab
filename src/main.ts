@@ -1,37 +1,22 @@
 /**
- * BOILERPLATE_TOY — scaffold demo only. Delete or replace when the real game starts.
- * See BOILERPLATE.md. Not product fantasy.
+ * Signal Ascent — entry point (M1: title + play shell).
  */
-import { createEconomy, formatEnergy, harvest, step, type EconomyState } from './economy'
+import { createShell, type Shell } from './app/shell'
 
-const energyNode = document.querySelector('#energy')
-const rateNode = document.querySelector('#rate')
-const harvestNode = document.querySelector('#harvest')
-
-if (!(energyNode instanceof HTMLElement) || !(rateNode instanceof HTMLElement) || !(harvestNode instanceof HTMLButtonElement)) {
-  throw new Error('Missing required #energy, #rate, or #harvest elements')
+interface GameDebug {
+  shell: Shell
 }
 
-const energyEl: HTMLElement = energyNode
-const rateEl: HTMLElement = rateNode
-const harvestBtn: HTMLButtonElement = harvestNode
-
-let state: EconomyState = createEconomy(0)
-
-function render(): void {
-  energyEl.textContent = formatEnergy(state.energy)
-  rateEl.textContent = `+${formatEnergy(state.perTick)} / tick`
+declare global {
+  interface Window {
+    __SIGNAL_ASCENT__?: GameDebug
+  }
 }
 
-harvestBtn.addEventListener('click', () => {
-  state = harvest(state)
-  render()
-})
+const root = document.querySelector('#app')
+if (!(root instanceof HTMLElement)) {
+  throw new Error('Missing required #app root element')
+}
 
-window.setInterval(() => {
-  if (state.perTick <= 0) return
-  state = step(state)
-  render()
-}, 500)
-
-render()
+const shell = createShell(root)
+window.__SIGNAL_ASCENT__ = { shell }
