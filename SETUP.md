@@ -16,7 +16,7 @@ The public game on Pages is whatever last automerged to `main` — not this file
 
 | Job | Prompt | Model role |
 |---|---|---|
-| Overnight build | `example-prompts/games/<game>.md` | **`fast`** — self-vl on screenshots (no vision subagent) |
+| Overnight build | `example-prompts/games/<game>.md` | **`fast`** — `read_image` on PNGs (no vision subagent) |
 | Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** — same |
 | Idle **nudge** (harness) | short continue cue from DSH idle prompting | **`fast`** (same session) |
 | Hard code root-cause only | (spawned from overnight) meshing/lighting/AI | optional **`smart`** subagent — **not** for PNGs |
