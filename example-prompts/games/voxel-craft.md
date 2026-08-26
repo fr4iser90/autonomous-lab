@@ -1,5 +1,8 @@
 DSH RUNTIME
+
 - You are unattended. Nobody will answer. Never ask questions, never wait, never stop to summarize for a human.
+- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). A separate VL-validation agent may append there — see `voxel-craft-VL-validation.md`.
+- **Live Pages** (end-user): https://fr4iser90.github.io/autonomous-lab/ — proof after automerge / PHASE GATE. Dev loop stays local `:5173`. Optional live E2E is the **validator** job, not your primary loop.
 - If PROGRESS.md exists, read NOW and resume at the first unfinished milestone, content cycle, soak, demo, or Phase 4 cycle. Do not restart from M1.
 - **Never mark create_goal complete.** A human kills the process. Phase 3 DEMO is a checkpoint; Phase 4 runs forever after that.
 - **Lie detector (every resume):** If PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but any of these are missing → treat the claim as FALSE, append BUGS.md "false complete", resume the real next step:
@@ -17,10 +20,11 @@ DSH RUNTIME
 - Vision (VL) / smart: for **every** PRE-PR VISUAL, PHASE GATE, DEMO frame,
   milestone screenshot, and **every new content id** (block/item/recipe/npc) —
   **MUST spawn** the settings model named `smart` (or strongest VL) with the
-  image **path** when that model exists. Confirm the **new thing is actually
-  visible** (not only title screen / button count). "Read: binary file" is
-  normal for PNG; still call smart. File size/dimensions alone never PASS.
-  Only if no smart/VL in settings: self-read frames; log PASS/FAIL.
+  image **path** when that model exists. Confirm the **named thing is rendered
+  in the game view** (voxel mesh / mob body / item in game UI). Reject PASS if
+  the image is only an HTML/stats table or RGB swatches. "Read: binary file"
+  is normal for PNG; still call smart. File size alone never PASS. Only if no
+  smart/VL: self-read; still require in-engine `#game-canvas` scene.
 - Playwright: if mcp__playwright__* tools exist, use them for DEMO and visual checks. Otherwise npx playwright / bash. Vitest is the fast loop; browsers at milestone end, UI content cycles, Phase 3, and UI Phase 4 cycles.
 - Stack: Vite + TypeScript + Three.js r128 (CDN or bundled). Pin three in package.json. Work inside the boilerplate clone (see BOILERPLATE REPO block).
 - Preview: stop `kill "$(cat .game.pid)"` / `fuser -k "$(cat .game.port)/tcp"` when those files exist; confirm port free; `npm run dev` in background; write `$!` to `.game.pid` and bound port to `.game.port`; health-check HTTP before Playwright. Never `pkill`/`killall`/`pgrep` by interpreter name. `pnpm install` (prefer) before first dev start.
@@ -142,6 +146,8 @@ FORBIDDEN (instant revert / stop and redo correctly):
 - Starting the next phase without PHASE GATE PASS + LIVE LOOP toward main/Pages
 - Claiming a content cycle ACCEPT with only a title-screen screenshot / button
   count / file-size check — missing CONTENT VISUAL for each new id
+- Using HTML/data-table / markdown / terminal PNGs as CONTENT VISUAL instead of
+  in-engine `#game-canvas` renders of the placed block / spawned npc / item UI
 - `git reset --hard` / deleting the agent branch / discarding uncommitted game
   work to “make rebase easy”
 - Force-push without `--force-with-lease` on `agent/*`, or any force-push when
@@ -233,15 +239,30 @@ DOCUMENTATION (same turn as the code that makes them stale)
                 last ACCEPT, latest git tag / commit. History below NOW. No essays.
   CONTENT.md    Registries + CAPS line. Not a second PROGRESS.
   FEATURES.md   Decide log before each C-cycle / P4-1.
-  SOAK.md / BUGS.md / DEMO.md / README.md / shared/design.md
+  BUGS.md       ## Open queue (validator + soak + UI smoke). Drain at C-0 / P4-0.
+  SOAK.md / DEMO.md / README.md / shared/design.md
 
-On context loss: PROGRESS NOW → CONTENT.md CAPS → resume.
+On context loss: PROGRESS NOW → BUGS.md ## Open → CONTENT.md CAPS → resume.
 
 ================================================================
-CONTENT CAP CONSTANT (edit this ONE number — everything else follows)
+BUGS.md QUEUE (builder + VL-validation agent)
+================================================================
+
+- **Validator** (`voxel-craft-VL-validation.md` / `-followup`): document-only;
+  pins `origin/main` or a SHA; may use live Pages; appends ## Open; no `src/` edits.
+- **Builder (you):** at every **C-0** and **P4-0** (and on follow-up resume):
+  1. Read BUGS.md ## Open.
+  2. Fix all `blocker` + `playability` (root cause + regression test) before new
+     content. `visual` / `polish` may wait one cycle if PLAYABILITY is green.
+  3. After fix: move entry to ## Fixed with SHA + one-line cause; re-run repro.
+- Do not clear ## Open without a fix. Deduplicate with validator entries.
+
+================================================================
+CONTENT CAP CONSTANT — HUMAN: set before overnight
 ================================================================
 
   CAP = 20
+  # ← change me (20 = short lab; 40–80 = long run). One number; all registries follow.
 
 Every registry uses the same CAP. Phase 2 ends when all four hit CAP/CAP.
 Phase 4 may grow past CAP. Below, always write "CAP" or "CAP/CAP".
@@ -464,31 +485,51 @@ CONTENT VISUAL (every new block / item / recipe / npc — mandatory)
 ================================================================
 
 Whenever you **add or visibly change** registry content, you must leave
-screenshot evidence that the thing appears in-game — not registry-only.
+**in-engine rendered** screenshot evidence — the thing drawn by Three.js /
+the game canvas in a running world. Registry tables are NOT evidence.
 
 PATHS (commit these):
-  demo/content/C<N>-<kind>-<id>.png     e.g. C3-npc-rabbit.png, C5-block-basalt.png
-  demo/cycles/cycle-N.png               overview after the cycle (world/HUD)
+  demo/content/C<N>-<kind>-<id>.png     e.g. C3-npc-rabbit.png, C6-block-bricks.png
+  demo/cycles/cycle-N.png               overview: real world + HUD (canvas)
   demo/pre-pr/…                         LIVE LOOP shot (may duplicate overview)
 
-PER NEW ID — capture what matches the kind:
-  - **block:** place or find the block in world; shot shows its face/atlas clearly
-    (not buried / not 1px). Prefer creative give / debug place if needed.
-  - **item:** hotbar or inventory open with the item icon/stack visible.
-  - **recipe:** crafting grid (2×2 or 3×3) with inputs + result visible, or
-    crafted output in inventory immediately after craft.
-  - **npc/mob:** entity visible in world (spawn near player / wait / debug spawn);
-    body readable, not a black frame.
-  - **multi-add in one cycle:** one PNG **per new id** (not one title shot for 3
-    NPCs). Overview cycle-N.png is extra, not a substitute.
+HOW TO CAPTURE (required technique):
+  1. Boot `pnpm run dev`, open `/autonomous-lab/`, **Create New World** or Continue
+     (UI smoke: zero pageerror).
+  2. Wait until `#game-canvas` is visible and the voxel world is on screen.
+  3. Use Playwright to screenshot **the game canvas / page while in PLAY**
+     (`#game-canvas` or full page with canvas dominant) — NOT a separate HTML
+     report page you generated.
+  4. For each new id: arrange the scene (debug spawn / give / place in front of
+     camera), then save `demo/content/C<N>-<kind>-<id>.png`.
+
+PER NEW ID — what must be **visibly rendered** in the PNG:
+  - **block:** the block mesh in the world (faces/atlas), large in frame — e.g.
+    place Bricks/Glass/Wool/Coal ore in front of the player and shoot.
+  - **item:** hotbar or open inventory showing the item **in the game UI**, not
+    a markdown table of item ids.
+  - **recipe:** crafting UI in-game with inputs/result, or crafted item in
+    hotbar right after craft.
+  - **npc/mob:** the entity mesh in the 3D world (body readable). Debug-spawn
+    next to the player if needed. A stats table of HP/speed is **not** a shot.
+  - **multi-add:** **one PNG per new id**. One collage/table for 10 NPCs = FAIL.
+
+FORBIDDEN as CONTENT VISUAL (instant FAIL — redo with real renders):
+  - HTML/CSS “dashboard” or monospace tables (e.g. “C5: New NPCs Added” with
+    ID/Name/HP columns; “C6: New Blocks” with RGB swatches only)
+  - Screenshots of CODE, CONTENT.md, FEATURES.md, or terminal output
+  - Title screen / button counts / file-size-only checks
+  - Pure color squares or atlas tiles exported outside the running game
+    without the block placed in-world (unless also accompanied by in-world shot)
+  - Claiming CAP/Phase complete without per-id in-world PNGs committed
 
 VALIDATION:
-  - Zero pageerror during the capture path (enter world if needed).
-  - smart/VL when available: PASS must say the **named** content is visible.
-  - Title screen alone = FAIL for content cycles.
-  - Log paths + ids in FEATURES.md result + PROGRESS NOW.
+  - Zero pageerror on the capture path.
+  - smart/VL when available: PASS only if it confirms the **named** block/npc/
+    item is **visible in the 3D/game view** (not “I see a data table”).
+  - Log paths + ids in FEATURES.md + PROGRESS NOW.
 
-No CONTENT VISUAL for each new id → cycle ACCEPT is false; do not push as done.
+No real in-engine CONTENT VISUAL per new id → cycle ACCEPT is false; do not push.
 
 ================================================================
 PHASE 2 — content cycles until caps = CAP
@@ -501,17 +542,20 @@ wipe the false CAPS claim and redo missing cycles.
 
 CYCLE (C1, C2, …)
 
-  C-0  `npm test` green else FIX-ONLY (no new content).
+  C-0  Read BUGS.md ## Open → fix blocker/playability first. Then `npm test`
+       green else FIX-ONLY (no new content).
   C-1  FEATURES.md **before** code (≤10 min). One primary add:
        1 block OR 1–2 items OR 1–2 recipes OR 1 npc.
        Optional micro-polish only if ≤3 extra files and zero registry adds.
        REJECT duplicate id, >2 items + >1 block, or category already at CAP.
   C-2  Atlas + registry + gameplay hook + CONTENT.md + vitest for the new id.
-  C-3  `npm test` green; **CONTENT VISUAL** for every new id this cycle
-       (`demo/content/C<N>-…png`) + `demo/cycles/cycle-N.png` overview;
-       smart/VL PASS on those paths when available; FEATURES result lists
-       screenshot paths. Then LIVE LOOP (UI smoke + PRE-PR + SAFE SYNC + push).
+  C-3  `npm test` green; **CONTENT VISUAL** = in-engine canvas shots for every
+       new id (`demo/content/C<N>-…png`) + `demo/cycles/cycle-N.png` world
+       overview; smart/VL must confirm the **rendered** thing (reject data
+       tables). FEATURES lists screenshot paths. Then LIVE LOOP.
   C-4  PROGRESS NOW with CAPS + content screenshot paths. Next tool = C-0 for N+1.
+       Do **not** mark Phase 2 / CAP complete if CONTENT VISUAL files are
+       tables-only or missing per-id canvas shots.
 
 During Phase 2: no large refactors. Lowest cap % first; keep registries within ~10.
 
@@ -571,7 +615,8 @@ PHASE 4 — infinite improve (never stop alone)
 Cycle forever until a human kills this process. Never delete demo/. Never complete the goal.
 After CAP/CAP, may grow content past CAP or polish — still one change per cycle.
 
-  P4-0  Mini-soak (~20 iterations or ~10 min). Fail → FIX-ONLY, then P4-0 again.
+  P4-0  Read BUGS.md ## Open → fix blocker/playability. Mini-soak (~20 iterations
+        or ~10 min). Fail → FIX-ONLY, then P4-0 again.
   P4-1  FEATURES.md BEFORE code. ONE of:
         A) POLISH (prefer odd): lighting, HUD, meshing, mob AI, atlas, slot UX.
         B) FEATURE (prefer even): new block/item/recipe/npc (Phase 2 rules),
