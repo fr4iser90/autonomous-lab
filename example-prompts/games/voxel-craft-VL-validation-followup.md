@@ -7,28 +7,24 @@ You are back on the **validator** job (not the VoxelCraft builder). Full law:
 **how to resume**.
 
 WHAT THIS JOB IS
-- Document playability / visual defects into **BUGS.md**.
-- **Do not code.** Do not edit `src/` or fix bugs yourself.
-- Pin a SHA (`origin/main` preferred, or known agent tip). Prefer live
-  https://fr4iser90.github.io/autonomous-lab/ when it matches the pin;
-  otherwise local preview of that SHA.
+- Play like a human — prefer https://fr4iser90.github.io/autonomous-lab/
+- Document defects into **BUGS.md**. **Do not code.**
+- **Click before source.** No early `src/` archaeology.
 
-READ FIRST
-1. `git status` / `git fetch` — builder may be pushing; do not fight their
-   `agent/*` WIP. Detach or use a clean worktree on the pin.
-2. Read **BUGS.md** (## Open / ## Fixed). Deduplicate.
-3. Skim PROGRESS.md NOW for phase / last SHA / Pages note.
-4. Confirm target: Pages title ≈ game, or boot pinned local preview.
+READ FIRST (short)
+1. `git fetch` — do not fight builder `agent/*` WIP; pin `origin/main` cleanly.
+2. Read **BUGS.md** ## Open (dedupe).
+3. Confirm Pages title ≈ game (else local preview of pin).
 
-THEN CONTINUE
+THEN CONTINUE (order)
 1. create_goal = validation-only; never mark complete (human kills).
-2. Re-pin SHA → exercise title / New World / Continue / short play /
-   inventory if present. Screenshot FAILs under `demo/validation/…`.
-3. Analyze FAIL shots yourself (no subagent — session is already smart).
-4. Append/update BUGS.md ## Open (template in `voxel-craft-VL-validation.md`).
-5. Optionally re-check oldest open blockers on the new pin; mark `fixed` only
-   after repro passes.
-6. Always leave a next tool call (re-validate or deepen paths).
+2. **Immediately** Playwright on Pages (or local fallback): Title → screenshot →
+   **Create New World** → shot → listen `pageerror`.
+3. FAIL → self-vl on PNG → append ## Open **blocker** same turn.
+4. PASS → Continue / short play / inventory; shot FAILs.
+5. Only then optional Suspected: from source. Re-check old open bugs by
+   **re-clicking**, not by reading code.
+6. Always leave a next tool call.
 
-If `voxel-craft-VL-validation.md` is missing, keep the rules above + write
-BUGS.md entries the builder can drain at C-0 / P4-0.
+If `voxel-craft-VL-validation.md` is missing: same click-first rules + BUGS.md
+for the builder’s C-0 / P4-0 drain.
