@@ -20,7 +20,7 @@ THEN CONTINUE (order)
 1. create_goal = validation-only; never mark complete (human kills).
 2. **Immediately** Playwright on Pages (or local fallback): Title → screenshot →
    **Create New World** → shot → listen `pageerror`.
-3. FAIL → self-vl on PNG → append ## Open **blocker** same turn.
+3. FAIL → **`read_image`** on PNG → append ## Open **blocker** same turn.
 4. PASS → Continue / short play / inventory; shot FAILs.
 5. Only then optional Suspected: from source. Re-check old open bugs by
    **re-clicking**, not by reading code.
