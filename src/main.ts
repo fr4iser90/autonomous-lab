@@ -650,9 +650,9 @@ class VoxelCraftGame {
         // Reset hurt timer for flash effect
         hitMob.hurtTimer = 0.3
 
-        // Update HP bar for the hit mob
+        // Update HP bar for the hit mob (billboard toward camera)
         if (hitMob.mesh) {
-          Mob.updateHPBar(hitMob.mesh, hitMob.def, hitMob.hp, hitMob.maxHp)
+          Mob.updateHPBar(hitMob.mesh, hitMob.def, hitMob.hp, hitMob.maxHp, this.renderer?.camera?.position)
         }
       }
 

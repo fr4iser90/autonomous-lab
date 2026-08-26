@@ -93,3 +93,14 @@
   - `main.ts`: `player.regenerate(dt)` called every frame after `player.update()`
 - **Gate:** 268/268 tests pass, build 544KB
 - **Visual:** Player slowly recovers HP when safe; damage resets the regen timer
+
+## P4-5 — Mob HP Bar Billboarding ✅
+- **Decision:** Make mob HP bars billboard (face the camera) so they are always readable from any angle
+- **Rationale:** HP bars existed but were static planes facing +Z — nearly invisible from most camera angles, defeating their purpose
+- **Changes:**
+  - `Mob.ts`: `updateHPBar()` accepts optional `cameraPos: THREE.Vector3` — calls `lookAt(cameraPos)` on HP bar + background planes; background always visible (bar hidden at 0 HP); simplified color to flat green/yellow/red
+  - `MobManager.ts`: `update()` passes `playerPos` as camera position to `updateHPBar()` for every mob each frame
+  - `main.ts`: Melee hit handler passes `renderer.camera.position` to `updateHPBar()` for instant post-hit feedback
+  - `Mob.ts`: HP bar background (`hpBarBg`) now always visible (was previously not managed separately)
+- **Gate:** 268/268 tests pass, build 544KB
+- **Visual:** HP bars now always face the player regardless of mob rotation or camera angle

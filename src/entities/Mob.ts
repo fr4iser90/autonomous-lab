@@ -119,22 +119,30 @@ export class Mob {
     return group
   }
 
-  static updateHPBar(mesh: THREE.Group | null, def: { width: number }, hp: number, _maxHp: number): void {
+  static updateHPBar(mesh: THREE.Group | null, def: { width: number }, hp: number, _maxHp: number, cameraPos?: THREE.Vector3): void {
     if (!mesh || !mesh.userData.hpBar) return
     const ratio = Math.max(0, hp / _maxHp)
     const hpBar = mesh.userData.hpBar as THREE.Mesh
+    const hpBarBg = mesh.userData.hpBarBg as THREE.Mesh
     const mat = hpBar.material as THREE.MeshBasicMaterial
+    // Billboard: make HP bar face the camera so it's always readable
+    if (cameraPos) {
+      hpBar.lookAt(cameraPos)
+      hpBarBg.lookAt(cameraPos)
+    }
+    // Update fill
     hpBar.scale.x = ratio
     hpBar.position.x = -(def.width + 0.2) * (1 - ratio) / 2
-    // Color: green -> yellow -> red
+    // Color: green (full) -> yellow (mid) -> red (low)
     if (ratio > 0.6) {
-      mat.color.setRGB(0, ratio * 0.5, 0)
+      mat.color.setRGB(0, 1, 0)
     } else if (ratio > 0.3) {
-      mat.color.setRGB(1, ratio, 0)
+      mat.color.setRGB(1, 1, 0)
     } else {
       mat.color.setRGB(1, 0, 0)
     }
     hpBar.visible = ratio > 0
+    hpBarBg.visible = true
   }
 
   static isLightSource(blockId: number): boolean {

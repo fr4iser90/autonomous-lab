@@ -2,7 +2,7 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** b950669 (Phase 4 P4-4: Health regeneration)
+**SHA:** TBD (Phase 4 P4-5: Mob HP bar billboarding)
 **Tests:** 268/268 passing | Build: ✅ 544KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-4 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
@@ -126,4 +126,12 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Damage reset:** `damageFreeTimer` reset to 0 when player takes damage from mobs or lava
 - **Respawn reset:** `damageFreeTimer` reset to 0 on player death/respawn (full HP = no regen needed)
 - **Game loop:** `player.regenerate(dt)` called after `player.update()` each frame
+- **Gate:** 268/268 tests pass, build 544KB
+
+### P4-5: Mob HP Bar Billboarding ✅
+- **Billboarding:** `Mob.updateHPBar()` now accepts optional `cameraPos` parameter — calls `lookAt(cameraPos)` on HP bar + background planes so they always face the player
+- **Visibility fix:** HP bar background always visible (even when HP=0, background remains); health bar hidden at 0 HP
+- **Color polish:** Green (full) → Yellow (mid) → Red (low) — simplified to flat colors for clarity instead of interpolated
+- **Call sites updated:** `MobManager.update()` passes `playerPos` as camera position; melee hit in `main.ts` passes `renderer.camera.position`
+- **Backward compatible:** `cameraPos` is optional — existing callers without it still work (no billboarding)
 - **Gate:** 268/268 tests pass, build 544KB
