@@ -28,6 +28,7 @@ pnpm run dev
 
 ```
 agent/* commit → Open agent PR → CI gate → Automerge → main → Pages
+(Pages also chains on Automerge `workflow_run`; GITHUB_TOKEN merges alone do not fire `push`.)
 ```
 
 ## DSH Autonomy
