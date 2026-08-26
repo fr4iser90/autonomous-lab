@@ -1,10 +1,14 @@
+<!-- BOILERPLATE_PLACEHOLDER: human-facing boilerplate README. On a game run, rewrite the playable sections for the shipped game; keep Pages URL + live-loop notes accurate. See BOILERPLATE.md -->
+
 # Autonomous Lab
 
 **Genre-agnostic boilerplate** for long public autonomy runs. CI gates + **automerge** + GitHub Pages so a run stays **live**. This repo does **not** ship game genres or overnight objectives — those come from whatever objective the human pastes into the agent for that run.
 
+**Ownership:** see [`BOILERPLATE.md`](BOILERPLATE.md) and [`AGENTS.md`](AGENTS.md). Scaffold toys under `src/` are **not** the product.
+
 **Play (live after green automerge):** https://fr4iser90.github.io/autonomous-lab/
 
-Local preview: `pnpm install && pnpm run dev` (or npm) → http://127.0.0.1:5173
+Local preview: `pnpm install && pnpm run dev` (or npm) → http://127.0.0.1:5173/autonomous-lab/
 
 ## Live loop
 
@@ -35,7 +39,8 @@ Then paste your run objective into the agent with this checkout as the workspace
 ## Autonomy shape
 
 ```text
-start with the pasted objective; keep gate green; push agent/* only; never push main/baseline; automerge + Pages follow green CI
+start with the pasted objective; keep gate green; push agent/* only; never push main/baseline;
+never edit BOILERPLATE_OWNED paths; automerge + Pages follow green CI
 ```
 
 ## One-time GitHub setup
@@ -53,5 +58,5 @@ start with the pasted objective; keep gate green; push agent/* only; never push 
 |---|---|
 | `npm test` / `pnpm test` | Vitest |
 | `npm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
-| `npm run gate` | test + build |
+| `npm run gate` | test + build (+ protect-boilerplate on agent PRs in CI) |
 | `npm run dev` | Vite on 5173 |

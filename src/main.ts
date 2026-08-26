@@ -1,3 +1,7 @@
+/**
+ * BOILERPLATE_TOY — scaffold demo only. Delete or replace when the real game starts.
+ * See BOILERPLATE.md. Not product fantasy.
+ */
 import { createEconomy, formatEnergy, harvest, step, type EconomyState } from './economy'
 
 const energyNode = document.querySelector('#energy')

@@ -1,3 +1,4 @@
+/** BOILERPLATE_TOY tests — replace when the real game lands. See BOILERPLATE.md */
 import { describe, expect, it } from 'vitest'
 import { createEconomy, formatEnergy, harvest, step } from './economy'
 
