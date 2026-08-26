@@ -1,10 +1,14 @@
 DSH RUNTIME
 
 - You are unattended. Nobody will answer. Never ask questions, never wait, never stop to summarize for a human.
-- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). A separate VL-validation agent may append there — see `voxel-craft-VL-validation.md`.
-- **Live Pages** (end-user): https://fr4iser90.github.io/autonomous-lab/ — proof after automerge / PHASE GATE. Dev loop stays local `:5173`. Optional live E2E is the **validator** job, not your primary loop.
-- If PROGRESS.md exists, read NOW and resume at the first unfinished milestone, content cycle, soak, demo, or Phase 4 cycle. Do not restart from M1.
-- **Never mark create_goal complete.** A human kills the process. Phase 3 DEMO is a checkpoint; Phase 4 runs forever after that.
+- **create_goal:** Call it once at session start if useful. If it fails with
+  `requires a direct human turn` / `top-level agent` / similar → **IGNORE**.
+  Do **not** stop, do **not** wait for a human, do **not** treat that as job
+  done. Idle nudge / an existing goal already owns the loop — continue the next
+  concrete cycle with tools immediately. Never mark create_goal **complete**;
+  a human kills the process.
+- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). Separate agents may append: VL → `voxel-craft-VL-validation.md`; Git/CI → `voxel-craft-git-validation.md`.
+- **Live Pages** (end-user): https://fr4iser90.github.io/autonomous-lab/ — proof after automerge / PHASE GATE. Dev loop stays local `:5173`. Optional live E2E is the **VL-validator** job; Git/CI health is the **git-validator** job — not your primary loop, but you must FIX-ONLY if ## Open has merge/gate blockers.
 - **Lie detector (every resume):** If PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but any of these are missing → treat the claim as FALSE, append BUGS.md "false complete", resume the real next step:
     - no `demo/demo.webm` (or empty) → Phase 3
     - no `DEMO.md` with ## Visual validation all PASS → Phase 3
@@ -12,8 +16,8 @@ DSH RUNTIME
     - caps < CAP/CAP and Phase 2 budget left → Phase 2
     - caps CAP/CAP but no SOAK.md Phase-2b pass → Phase 2b
   DOM-only Playwright (title/hotbar/canvas exists) is **not** Phase 3.
-- Start by calling create_goal with this whole overnight job and max_goal_rounds (at least 400).
-- After every milestone, content cycle, soak batch, demo step, or Phase 4 cycle: write PROGRESS.md (refresh NOW), then continue with tools. A text-only assistant message without a tool call ends this process — that is a failure. Always leave a next tool call.
+- Start by calling create_goal with this whole overnight job and max_goal_rounds (at least 400). On create_goal policy error → ignore and continue (see above).
+- After every milestone, content cycle, soak batch, demo step, or Phase 4 cycle: write PROGRESS.md (refresh NOW), then continue with tools. A text-only assistant message without a tool call ends this process — that is a failure. Always leave a next tool call. Never end a cycle with “summary only” because create_goal failed.
 - This file is the full overnight job: runtime, architecture, **M1–M12 ACCEPT**, Phase 2–4. Before each Mn, re-read **that Mn only** from the MILESTONES section below (do not re-read later milestones until you reach them). After M12 ACCEPT, ignore M1–M12 and follow Phase 2–4 here.
 - Default model: session default from dsh settings (agent-default-model / name `fast`). Do not hardcode GGUF ids. Session `fast` is VL-capable (`input: [text, image]`).
 - For chunk meshing, voxel lighting flood-fill, crafting matcher, or mob AI root-cause: spawn a subagent with agentOptions.provider = jarvis (or configured provider) and agentOptions.model = the **id** of the settings entry whose **name** is `smart`. If no `smart` entry, stay on session default. Apply the fix yourself. **Do not** spawn smart for screenshot / vision checks.
@@ -242,13 +246,16 @@ On context loss: PROGRESS NOW → BUGS.md ## Open → CONTENT.md CAPS → resume
 BUGS.md QUEUE (builder + VL-validation agent)
 ================================================================
 
-- **Validator** (`voxel-craft-VL-validation.md` / `-followup`): document-only;
-  pins `origin/main` or a SHA; may use live Pages; appends ## Open; no `src/` edits.
+- **Validator** (`voxel-craft-VL-validation.md`): playability/VL → ## Open.
+- **Git/CI validator** (`voxel-craft-git-validation.md`): PR conflicts, missing
+  `gate`, stuck Actions queue → ## Open (`blocker` / merge health).
 - **Builder (you):** at every **C-0** and **P4-0** (and on follow-up resume):
   1. Read BUGS.md ## Open.
-  2. Fix all `blocker` + `playability` (root cause + regression test) before new
-     content. `visual` / `polish` may wait one cycle if PLAYABILITY is green.
-  3. After fix: move entry to ## Fixed with SHA + one-line cause; re-run repro.
+  2. Fix all `blocker` + `playability` (incl. merge conflicts / red or missing
+     `gate` when noted) before new content. `visual` / `polish` may wait one
+     cycle if PLAYABILITY is green.
+  3. After fix: move entry to ## Fixed with SHA + one-line cause; re-run repro /
+     re-check PR checks.
 - Do not clear ## Open without a fix. Deduplicate with validator entries.
 
 ================================================================
