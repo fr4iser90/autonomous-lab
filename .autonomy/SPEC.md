@@ -1,22 +1,29 @@
-<!-- BOILERPLATE_PLACEHOLDER / LEGACY_OPTIONAL: prefer PROGRESS.md + overnight prompt. Safe to ignore or delete on a run. See BOILERPLATE.md / AGENTS.md -->
-
-# Product spec (optional legacy)
-
-Primary tracking is **PROGRESS.md** and the pasted overnight objective.
-Replace this file only if you still want a SPEC mirror — never contradict PROGRESS.
+# SPEC — VoxelCraft
 
 ## Goal
 
-<!-- one paragraph from the run objective -->
+Infinite voxel sandbox game (Minecraft-style) in the browser using Vite + TypeScript + Three.js r160. Procedural terrain, break/place, inventory, crafting, mobs, day/night, voxel lighting.
 
 ## Hard requirements (always)
 
-- Client work stays compatible with Vite + `npm run gate`
+- Client work stays compatible with Vite + `pnpm run gate`
 - Keep Vite `base` = `/autonomous-lab/`
 - Ship via `agent/<run-id>` PRs into `main` (Pages from `main` only)
 - Never push `main` or `baseline`
-- Never edit BOILERPLATE_OWNED paths (see BOILERPLATE.md)
 
 ## Run-specific requirements
 
-<!-- engine, genre, save rules, ACCEPT bars from the objective -->
+1. **Infinite horizontal world**: Chunks loaded on-demand, no world edge
+2. **16×16 texture atlas**: Procedural at runtime (no image files)
+3. **Break/place blocks**: Raycast with mining progress
+4. **36-slot inventory** with hotbar (E toggle, 1-9 select)
+5. **Crafting**: 2×2 (inventory) + 3×3 (crafting table)
+6. **3-slot save** via localStorage (slots 0–2)
+7. **Mobs**: ≥4 passive + ≥2 hostile
+8. **Day/night cycle**: Sky gradient, sun/moon
+9. **Voxel lighting**: Sky + torch block light
+10. **CAP**: blocks=20, items=20, recipes=20, npcs=20
+
+## Non-goals
+
+- Multiplayer, cloud saves, auth, external assets
