@@ -31,6 +31,7 @@ Rules:
 | Vite Pages `base` = `/autonomous-lab/` (do not change) | `PROGRESS.md`, `CONTENT.md`, `FEATURES.md`, `SOAK.md`, `BUGS.md`, `DEMO.md` |
 | CI/automerge/Pages wiring | `README.md` **`# Current run` only** (game playable section) |
 | `README.md` Lab header (above `# Current run`) | `package.json` deps the game needs (keep `gate` / `dev` scripts working) |
+| `SETUP.md` (host harness / hardware / settings) | |
 | Prefer leave `example-prompts/**` alone | |
 
 **Tracking surface for the run (primary):** `PROGRESS.md` (+ `CONTENT.md` / `FEATURES.md` / … as the overnight prompt requires).  
