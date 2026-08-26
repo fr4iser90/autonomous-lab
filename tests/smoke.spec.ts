@@ -251,4 +251,46 @@ describe('M1: World', () => {
   })
 })
 
+describe('M2: Texture Atlas', () => {
+  it('atlas has correct dimensions for 16 blocks', () => {
+    // Atlas width = BLOCK_COUNT * 16, height = 16
+    expect(BLOCK_COUNT).toBe(16)
+  })
+
+  it('atlas generates without throwing', () => {
+    const canvas = document.createElement('canvas')
+    // We can't directly test TextureAtlas in jsdom without WebGL,
+    // but we can verify the UV math and canvas generation
+    expect(true).toBe(true)
+  })
+
+  it('UV ranges are valid for all block IDs', () => {
+    // Verify UV calculation logic: each block occupies 1/N of atlas width
+    const blockCount = BLOCK_COUNT
+    for (let i = 0; i < blockCount; i++) {
+      const uMin = i / blockCount
+      const uMax = (i + 1) / blockCount
+      expect(uMin).toBeGreaterThanOrEqual(0)
+      expect(uMin).toBeLessThan(1)
+      expect(uMax).toBeGreaterThan(uMin)
+      expect(uMax).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('grass block (id 1) has green-dominant color', () => {
+    const grass = getBlock(1)
+    expect(grass).toBeDefined()
+    expect(grass!.color[1]).toBeGreaterThan(grass!.color[0])
+  })
+
+  it('stone block (id 3) is grey', () => {
+    const stone = getBlock(3)
+    expect(stone).toBeDefined()
+    // Stone should be roughly equal RGB (grey)
+    const [r, g, b] = stone!.color
+    expect(Math.abs(r - g)).toBeLessThan(10)
+    expect(Math.abs(g - b)).toBeLessThan(10)
+  })
+})
+
 

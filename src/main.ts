@@ -1,11 +1,13 @@
 // Main entry point for VoxelCraft
 // Handles title screen -> game loop transition
 
+import * as THREE from 'three'
 import { SaveService } from './services/SaveService'
 import { TitleScreen } from './ui/TitleScreen'
 import { InstructionsOverlay } from './ui/InstructionsOverlay'
 import { HUD } from './ui/HUD'
 import { Renderer } from './graphics/Renderer'
+import { MeshBuilder } from './graphics/MeshBuilder'
 import { World } from './world/World'
 import { Player } from './player/Player'
 
@@ -28,6 +30,7 @@ class VoxelCraftGame {
   private lastTime = 0
   private renderDistance: number = 6 // chunks
   private loadedChunks = new Set<string>()
+  private chunkMeshes = new Map<string, THREE.Mesh>()
 
   constructor() {
     this.canvas = document.createElement('canvas')
@@ -135,8 +138,8 @@ class VoxelCraftGame {
     if (this.titleScreen) this.titleScreen.remove()
     this.canvas.style.display = 'block'
 
-    // Initialize renderer
-    this.renderer = new Renderer(this.canvas)
+    // Initialize renderer (creates texture atlas)
+    this.renderer = new Renderer(this.canvas, this.world?.seed ?? 42)
 
     // Initialize HUD
     this.hud = new HUD()
@@ -176,6 +179,16 @@ class VoxelCraftGame {
       this.renderer = undefined
     }
 
+    // Clear chunk meshes from scene
+    if (this.renderer) {
+      for (const [, mesh] of this.chunkMeshes) {
+        this.renderer.scene.remove(mesh)
+        mesh.geometry.dispose()
+      }
+    }
+    this.chunkMeshes.clear()
+    this.loadedChunks.clear()
+
     if (this.hud) {
       this.hud.remove()
       this.hud = undefined
@@ -189,6 +202,28 @@ class VoxelCraftGame {
 
     this.canvas.style.display = 'none'
     if (this.animationId) cancelAnimationFrame(this.animationId)
+  }
+
+  private rebuildChunkMesh(chunkKey: string): void {
+    if (!this.renderer || !this.world) return
+
+    const [cx, cz] = chunkKey.split(',').map(Number)
+    const atlas = this.renderer.textureAtlas
+
+    // Remove old mesh if exists
+    const oldMesh = this.chunkMeshes.get(chunkKey)
+    if (oldMesh) {
+      this.renderer.scene.remove(oldMesh)
+      oldMesh.geometry.dispose()
+    }
+
+    const getBlockFn = (wx: number, wy: number, wz: number) => this.world!.getBlock(wx, wy, wz)
+    const mesh = MeshBuilder.buildChunk(cx, cz, getBlockFn, atlas)
+
+    if (mesh.geometry.getAttribute('position') && mesh.geometry.getAttribute('position').count > 0) {
+      this.renderer.scene.add(mesh)
+      this.chunkMeshes.set(chunkKey, mesh)
+    }
   }
 
   private gameLoop = (): void => {
@@ -223,7 +258,16 @@ class VoxelCraftGame {
         toRemove.push(key)
       }
     }
-    for (const key of toRemove) this.loadedChunks.delete(key)
+    for (const key of toRemove) {
+      this.loadedChunks.delete(key)
+      // Remove mesh from scene
+      const mesh = this.chunkMeshes.get(key)
+      if (mesh) {
+        this.renderer.scene.remove(mesh)
+        mesh.geometry.dispose()
+        this.chunkMeshes.delete(key)
+      }
+    }
 
     // Add nearby chunks
     for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
@@ -234,6 +278,7 @@ class VoxelCraftGame {
         if (!this.loadedChunks.has(key)) {
           world.loadChunk(cx, cz)
           this.loadedChunks.add(key)
+          this.rebuildChunkMesh(key)
         }
       }
     }
@@ -247,7 +292,7 @@ class VoxelCraftGame {
     // Debug info
     const pos = player.state.position
     this.hud?.setDebug(
-      `VoxelCraft M1\n` +
+      `VoxelCraft M2\n` +
       `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
       `Chunks: ${this.loadedChunks.size}\n` +
       `FPS: ${(1 / dt).toFixed(0)}`

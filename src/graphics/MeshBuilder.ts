@@ -1,13 +1,19 @@
-// MeshBuilder: Simple voxel mesh generation with face culling
+// MeshBuilder: Voxel mesh generation with face culling and procedural texture atlas UVs
 
 import * as THREE from 'three'
 import { getBlock } from '../data/blocks'
+import { TextureAtlas } from './TextureAtlas'
 
 export class MeshBuilder {
-  /** Build a simple colored mesh for a chunk's visible blocks */
-  static buildChunk(chunkX: number, chunkZ: number, getBlockFn: (wx: number, wy: number, wz: number) => number): THREE.Mesh {
+  /** Build a textured mesh for a chunk's visible blocks using a texture atlas */
+  static buildChunk(
+    chunkX: number,
+    chunkZ: number,
+    getBlockFn: (wx: number, wy: number, wz: number) => number,
+    atlas: TextureAtlas,
+  ): THREE.Mesh {
     const positions: number[] = []
-    const colors: number[] = []
+    const uvs: number[] = []
     const indices: number[] = []
 
     const CHUNK_WIDTH = 16
@@ -48,11 +54,12 @@ export class MeshBuilder {
           const blockDef = getBlock(blockId)
           if (!blockDef) continue
 
-          const [r, g, b] = blockDef.color
-          const color = [r / 255, g / 255, b / 255]
+          // Get UVs for all 6 faces of this block
+          const faceUVs = atlas.getUVsForBlock(blockId)
 
           // Check each face
-          for (const face of faces) {
+          for (let faceIdx = 0; faceIdx < faces.length; faceIdx++) {
+            const face = faces[faceIdx]
             const nx = face[0], ny = face[1], nz = face[2]
             const vi0 = face[3], vi1 = face[4], vi2 = face[5], vi3 = face[6]
 
@@ -64,11 +71,21 @@ export class MeshBuilder {
               if (neighborDef && !neighborDef.transparent) continue
             }
 
+            // Get the UV quad for this face
+            const uvQuad = atlas.getFaceUVs(blockId, faceIdx)
+            const [u0, v0, u1, v1, u2, v2, u3, v3] = uvQuad
+
+            // UV mapping for the quad: vertex order matches QUAD_VERTS indices
             const viArr = [vi0, vi1, vi2, vi3]
-            for (const vi_ of viArr) {
-              const v = QUAD_VERTS[vi_]
+            const uvArr = [
+              [u0, v0], [u1, v1], [u2, v2], [u3, v3]
+            ]
+
+            for (let vi_ = 0; vi_ < viArr.length; vi_++) {
+              const vi = viArr[vi_]
+              const v = QUAD_VERTS[vi]
               positions.push(wx + v[0], y + v[1], wz + v[2])
-              colors.push(color[0], color[1], color[2])
+              uvs.push(uvArr[vi_][0], uvArr[vi_][1])
             }
 
             indices.push(
@@ -87,10 +104,10 @@ export class MeshBuilder {
 
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
     geometry.setIndex(indices)
 
-    const material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.FrontSide })
+    const material = new THREE.MeshBasicMaterial({ map: atlas.texture })
     return new THREE.Mesh(geometry, material)
   }
 

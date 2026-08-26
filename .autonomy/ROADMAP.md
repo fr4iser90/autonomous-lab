@@ -4,18 +4,14 @@
 
 | Milestone | Description | Status |
 |---|---|---|
-| M1 | Vite + Three.js scaffold, title screen, save service | IN PROGRESS |
-| M2 | Texture atlas + 16 block types | PENDING |
-| M3 | Noise + chunk manager | PENDING |
-| M4 | Meshing with hidden-face culling | PENDING |
-| M5 | First-person player with collision | PENDING |
-| M6 | Raycast break/place with mining progress | PENDING |
-| M7 | Inventory + hotbar + SaveService | PENDING |
-| M8 | Crafting 2×2 and 3×3 | PENDING |
-| M9 | Biomes + world features (trees, caves, ores) | PENDING |
-| M10 | Voxel lighting (sky + torch) | PENDING |
-| M11 | Mobs (passive + hostile) | PENDING |
-| M12 | Day/night cycle + autosave + soak | PENDING |
+| M1 | Vite + Three.js scaffold, title screen, save service | COMPLETE ✅ |
+| M2 | Texture atlas + enhanced rendering | IN PROGRESS |
+| M3 | Raycast break/place with mining progress | PENDING |
+| M4 | Inventory + hotbar + crafting | PENDING |
+| M5 | Biomes + world features (trees, caves) | PENDING |
+| M6 | Voxel lighting (sky + torch) | PENDING |
+| M7 | Mobs (passive + hostile AI) | PENDING |
+| M8 | Day/night cycle + autosave | PENDING |
 
 ## Phase 2: Content Cycles
 - Cycles to reach CAP/CAP for all registries

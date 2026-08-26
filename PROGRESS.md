@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M1 — Vite + Three.js scaffold, title screen, save service
-**Status:** COMPLETE — gate green (30/30 tests, build succeeds)
+**Phase:** M2 — Texture atlas + enhanced rendering
+**Status:** IN PROGRESS — gate green (35/35 tests, build succeeds)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -17,7 +17,12 @@
   - World manager with chunk loading/unloading
   - HUD overlay (crosshair, debug info)
   - 30 Vitest smoke tests
-- M2: Texture atlas + enhanced rendering → PENDING
+- M2: Texture atlas + enhanced rendering → IN PROGRESS
+  - Procedural 16×16 per-block textures with noise-based variation
+  - Texture atlas (16 blocks in single-row canvas texture)
+  - MeshBuilder with UV coordinates per face
+  - CanvasTexture with NearestFilter (pixel-perfect voxel look)
+  - 5 new M2 smoke tests (total 35)
 - M3: Raycast break/place with mining progress → PENDING
 - M4: Inventory + hotbar + crafting → PENDING
 - M5: Biomes + world features (trees, caves) → PENDING
@@ -31,4 +36,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M2: Implement texture atlas and enhanced chunk meshing with per-face UVs.
+M2: Continue with UV per-face texture mapping (separate cells for top/bottom/sides).

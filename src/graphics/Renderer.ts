@@ -1,15 +1,17 @@
 // Renderer: Three.js scene management for VoxelCraft
-// Creates the WebGL canvas, camera, and basic lighting
+// Creates the WebGL canvas, camera, lighting, and procedural texture atlas
 
 import * as THREE from 'three'
+import { TextureAtlas } from './TextureAtlas'
 
 export class Renderer {
   private renderer: THREE.WebGLRenderer
   public scene: THREE.Scene
   public camera: THREE.PerspectiveCamera
   private canvas: HTMLCanvasElement
+  private readonly atlas: TextureAtlas
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, seed: number = 42) {
     this.canvas = canvas
 
     this.renderer = new THREE.WebGLRenderer({
@@ -36,6 +38,14 @@ export class Renderer {
     const sun = new THREE.DirectionalLight(0xffffff, 0.8)
     sun.position.set(50, 100, 50)
     this.scene.add(sun)
+
+    // Create procedural texture atlas
+    this.atlas = new TextureAtlas(seed)
+  }
+
+  /** Get the procedural texture atlas */
+  get textureAtlas(): TextureAtlas {
+    return this.atlas
   }
 
   get canvasElement(): HTMLCanvasElement {
@@ -58,6 +68,7 @@ export class Renderer {
   }
 
   dispose(): void {
+    this.atlas.dispose()
     this.renderer.dispose()
   }
 }

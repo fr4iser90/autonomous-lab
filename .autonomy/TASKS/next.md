@@ -1,28 +1,28 @@
-# Next Task: M1 — Vite + Three.js scaffold
+# Next Task: M2 — Texture Atlas + Enhanced Rendering
 
 ## Goal
-Build the VoxelCraft game scaffold with:
-1. Vite + TypeScript + Three.js r160 on the boilerplate
-2. Title screen with 3 save slots (Continue/New/Delete)
-3. SaveService with localStorage persistence
-4. Basic world generation (noise-based terrain)
-5. Three.js renderer with chunk meshing
-6. First-person player controller
-7. HUD overlay (crosshair, hotbar, debug)
-8. Vitest smoke tests for all modules
+Replace flat-color block rendering with a procedural 16×16 texture atlas. Each block type gets a unique texture generated at runtime (no image files).
 
 ## Deliverables
-- src/data/blocks.ts, items.ts, recipes.ts, npcs.ts
-- src/services/SaveService.ts
-- src/ui/TitleScreen.ts, HUD.ts, InventoryScreen.ts, InstructionsOverlay.ts
-- src/world/Noise.ts, Chunk.ts, World.ts
-- src/player/Player.ts
-- src/graphics/Renderer.ts, MeshBuilder.ts
-- src/main.ts (entry point)
-- tests/smoke.spec.ts
-- PROGRESS.md, CONTENT.md, README.md
+1. `src/graphics/TextureAtlas.ts` — Procedural texture generator + atlas texture creation
+   - 16×16 pixel per-block textures with variation (noise-based)
+   - Atlas layout: N blocks × 16×16 cells packed into a single texture
+   - Use THREE.CanvasTexture for runtime generation
+   - Expose `getUVForFace(blockId, faceIndex)` for consistent UV mapping
+2. Update `src/graphics/MeshBuilder.ts` — Per-face UV coordinates
+   - Generate UVs mapping each face to the correct atlas cell
+   - Switch from `vertexColors` to `map` (atlas texture)
+   - Keep hidden-face culling
+3. Update `src/graphics/Renderer.ts` — Apply atlas texture
+   - Create atlas once, reuse across chunks
+   - Apply to chunk meshes
+4. Add tests in `tests/smoke.spec.ts` — texture atlas smoke tests
+   - Atlas has correct dimensions
+   - Each block has a unique texture
+   - UV mapping is correct
+5. Update PROGRESS.md, CONTENT.md, ROADMAP.md
 
 ## Gate Criteria
-- `pnpm run gate` (test + build) passes
-- Playwright: title screen loads with 3 slot rows
-- Canvas renders terrain mesh (not black)
+- `pnpm run gate` passes
+- Atlas texture generates at runtime
+- Chunk meshes use texture atlas with UVs

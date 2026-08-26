@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "phase": "running",
+  "objective": "Build VoxelCraft — a fully playable first-person voxel sandbox game in the browser (Minecraft-style). Complete milestones M1 (scaffold ✅) through M12 (day/night + autosave + soak), then Phase 2 content cycles to CAP/CAP, Phase 3 DEMO video, and enter Phase 4 infinite improvement loop. Stack: Vite + TypeScript + Three.js r160, Vitest tests, Playwright demos. Gate: pnpm run gate must always pass.",
+  "iteration": 1,
+  "maxRounds": 50,
+  "updatedAt": "2026-08-26T00:16:55.911Z",
+  "runStartedAt": "2026-08-26T00:16:55.911Z",
+  "watchdogEnabled": false,
+  "note": "initialized via autonomy_init",
+  "blocker": ""
+}
