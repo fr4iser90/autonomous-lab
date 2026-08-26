@@ -24,6 +24,7 @@ import {
 
 import { CHUNK_WIDTH } from './world/Chunk'
 import { ChunkLighting, updateChunkLighting as calcLighting } from './physics/Lighting'
+import { DropManager } from './entities/DropManager'
 
 // Game states
 type GameState = 'title' | 'playing'
@@ -60,6 +61,8 @@ class VoxelCraftGame {
   // M8: Autosave
   private autosaveTimer: number = 0
   private readonly autosaveInterval: number = 60 // seconds
+  // M9: Drop items on ground
+  private dropManager?: DropManager
 
   // M4: Default starting inventory (items for testing)
   private readonly defaultInventoryItems = [
@@ -252,6 +255,9 @@ class VoxelCraftGame {
     // Initialize HUD
     this.hud = new HUD()
 
+    // M9: Initialize drop manager
+    this.dropManager = new DropManager(this.renderer!.scene)
+
     // Show instructions on first play
     const hasPlayed = sessionStorage.getItem('voxelcraft-has-played')
     if (!hasPlayed) {
@@ -293,6 +299,10 @@ class VoxelCraftGame {
       this.renderer.dispose()
       this.renderer = undefined
     }
+
+    // M9: Clear drops
+    this.dropManager?.clear()
+    this.dropManager = undefined
 
     // Clear chunk meshes from scene
     for (const [, mesh] of this.chunkMeshes) {
@@ -483,6 +493,35 @@ class VoxelCraftGame {
    * Mark a chunk as needing rebuild when a block changes.
    * Also updates lighting for affected chunks.
    */
+  /** M9: Insert a dropped item into the player's inventory. Returns count inserted. */
+  private insertItem(name: string, count: number): number {
+    // Simple item name to ID mapping
+    const nameToId: Record<string, number> = {
+      'Dirt': 1,
+      'Stone': 2,
+      'Wood': 3,
+      'Planks': 4,
+      'Stick': 5,
+      'Wooden Pickaxe': 6,
+      'Stone Pickaxe': 7,
+      'Iron Pickaxe': 8,
+      'Coal': 9,
+      'Iron Ingot': 10,
+      'Torch': 11,
+      'Crafting Table': 12,
+      'Apple': 13,
+      'Beef': 14,
+      'Cooked Beef': 15,
+    }
+    const itemId = nameToId[name] ?? 0
+    if (itemId <= 0 || count <= 0) return 0
+
+    const remaining = insertItem(this.inventory, itemId, count)
+    const inserted = count - remaining
+    if (inserted > 0) this.updateHotbarUI()
+    return inserted
+  }
+
   private markChunkDirty(wx: number, _wy: number, wz: number): void {
     if (!this.renderer || !this.world) return
     const cx = Math.floor(wx / CHUNK_WIDTH)
@@ -613,14 +652,19 @@ class VoxelCraftGame {
       }
     }
 
-    // M3: Update mining progress
+    // M3/M9: Update mining progress
     if (this.mouseDownLeft && this.blockInteraction) {
       const broken = this.blockInteraction.updateMining(dt)
       if (broken) {
-        // Rebuild the chunk where the block was broken
-        if (this.blockInteraction.state.minedBlock) {
-          const [bx, by, bz] = this.blockInteraction.state.minedBlock.position
-          this.markChunkDirty(bx, by, bz)
+        // Spawn a drop item at the broken block's position
+        if (this.dropManager) {
+          const drop = this.blockInteraction.getAndClearLastDrop()
+          if (drop) {
+            const bx = drop.position[0] + 0.5
+            const by = drop.position[1] + 0.5
+            const bz = drop.position[2] + 0.5
+            this.dropManager.spawnDrop(drop.itemId, bx, by, bz, drop.count)
+          }
         }
         this.mouseDownLeft = false
       }
@@ -632,6 +676,23 @@ class VoxelCraftGame {
       this.hud.updateMiningProgress(mine.progress, mine.maxProgress)
     } else if (this.hud) {
       this.hud.updateMiningProgress(0, 0)
+    }
+
+    // M9: Update drops and handle collection
+    if (this.dropManager && this.player) {
+      const playerPos = this.player.state.position
+      const playerBounds = this.player.getBounds()
+      this.dropManager.update(dt, playerPos, { minY: playerBounds.minY, maxY: playerBounds.maxY })
+
+      // Check for collection
+      const collected = this.dropManager.getLatestCollection()
+      if (collected && collected.count > 0) {
+        // Insert into inventory
+        const inserted = this.insertItem(collected.name, collected.count)
+        if (inserted > 0) {
+          this.hud?.showDropNotification(collected.name, inserted)
+        }
+      }
     }
 
     // M8: Update day/night cycle
@@ -663,9 +724,10 @@ class VoxelCraftGame {
     const pos = player.state.position
     if (!this.dayNightCycle || this.autosaveTimer < this.autosaveInterval) {
       this.hud?.setDebug(
-        `VoxelCraft M8\n` +
+        `VoxelCraft M9\n` +
         `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
         `Chunks: ${this.loadedChunks.size}\n` +
+        `Drops: ${this.dropManager ? this.dropManager.getDrops().length : 0}\n` +
         `FPS: ${(1 / dt).toFixed(0)}\n` +
         `Slot: ${this.selectedSlot + 1} | E=Inv`
       )

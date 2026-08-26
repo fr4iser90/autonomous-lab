@@ -5,6 +5,7 @@ import { World } from '../world/World'
 import { Mob } from './Mob'
 import type { MobEntity } from './Mob'
 import { MobCow, MobPig, MobChicken, MobZombie, MobSkeleton } from '../data/mobs'
+import { DropManager } from './DropManager'
 
 export interface MobConfig {
   cowCount: number
@@ -27,10 +28,16 @@ export class MobManager {
   private scene: THREE.Scene
   private config: MobConfig
   private playerHp: number = 20
+  private dropManager?: DropManager
 
   constructor(scene: THREE.Scene, config: MobConfig = DEFAULT_MOB_CONFIG) {
     this.scene = scene
     this.config = config
+  }
+
+  /** Attach drop manager for mob death drops */
+  setDropManager(dm: DropManager): void {
+    this.dropManager = dm
   }
 
   /** Spawn mobs at random positions on the surface */
@@ -164,6 +171,12 @@ export class MobManager {
 
   /** Remove a dead mob (dispose mesh, optionally add drops) */
   private removeMob(mob: MobEntity): void {
+    // Spawn drops before removing
+    if (this.dropManager) {
+      const drops = Mob.getDrops(mob)
+      this.dropManager.spawnMobDrops(mob.id, mob.position.x, mob.position.y, mob.position.z, drops)
+    }
+
     if (mob.mesh && mob.mesh.parent) {
       mob.mesh.parent.remove(mob.mesh)
     }

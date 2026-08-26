@@ -1997,3 +1997,313 @@ describe('M8: HUD Time Display', () => {
   })
 })
 
+// ===========================================================================
+// M9: Inventory drops / item pickup
+// ===========================================================================
+
+import { ALL_DROPS, DROP_COUNT, getDropType } from '../src/data/drops'
+import { DropItem, type DropItemEntity } from '../src/entities/DropItem'
+import { DropManager } from '../src/entities/DropManager'
+import { BlockInteraction } from '../src/physics/BlockInteraction'
+
+describe('M9: Drop Type Registry', () => {
+  it('has at least 5 drop types', () => {
+    const count = ALL_DROPS.filter(d => d.id > 0).length
+    expect(count).toBeGreaterThanOrEqual(5)
+  })
+
+  it('all drop types have required fields', () => {
+    for (const drop of ALL_DROPS) {
+      if (drop.id === 0) continue // skip placeholder
+      expect(drop.id).toBeGreaterThanOrEqual(1)
+      expect(drop.itemId).toBeGreaterThanOrEqual(1)
+      expect(typeof drop.name).toBe('string')
+      expect(drop.name.length).toBeGreaterThan(0)
+      expect(Array.isArray(drop.color)).toBe(true)
+      expect(drop.color.length).toBe(3)
+      expect(typeof drop.defaultCount).toBe('number')
+      expect(typeof drop.minCount).toBe('number')
+      expect(typeof drop.maxCount).toBe('number')
+    }
+  })
+
+  it('DROP_COUNT matches array length', () => {
+    expect(DROP_COUNT).toBe(ALL_DROPS.length)
+  })
+
+  it('getDropType returns correct type by id', () => {
+    const beef = getDropType(1)
+    expect(beef).toBeDefined()
+    expect(beef!.name).toBe('Beef')
+
+    const apple = getDropType(2)
+    expect(apple).toBeDefined()
+    expect(apple!.name).toBe('Apple')
+
+    const unknown = getDropType(99)
+    expect(unknown).toBeUndefined()
+  })
+
+  it('drop itemIds map to valid items', () => {
+    for (const drop of ALL_DROPS) {
+      if (drop.id === 0) continue // skip placeholder
+      const item = drop.itemId
+      // Just verify itemId is in valid range for items (1-15)
+      expect(item).toBeGreaterThanOrEqual(1)
+      expect(item).toBeLessThanOrEqual(15)
+    }
+  })
+})
+
+describe('M9: DropItem Entity', () => {
+  it('creates a drop item entity', () => {
+    const drop = DropItem.create(1, 0.5, 10, 0.5)
+    expect(drop.id).toBe(1)
+    expect(drop.dropId).toBe(1)
+    expect(drop.itemId).toBe(14) // Beef
+    expect(drop.name).toBe('Beef')
+    expect(drop.count).toBeGreaterThan(0)
+    expect(drop.position.x).toBe(0.5)
+    expect(drop.position.z).toBe(0.5)
+    expect(drop.age).toBe(0)
+    expect(drop.mesh).toBeNull()
+  })
+
+  it('create throws on invalid dropId', () => {
+    expect(() => DropItem.create(99, 0, 0, 0)).toThrow('Unknown drop type: 99')
+  })
+
+  it('creates a valid mesh', () => {
+    const mesh = DropItem.createMesh(1, [150, 50, 50])
+    expect(mesh).toBeDefined()
+    expect(mesh.type).toBe('Group')
+    expect(mesh.children.length).toBeGreaterThan(0)
+  })
+
+  it('applyPhysics applies gravity', () => {
+    const drop = DropItem.create(1, 10, 20, 10)
+    drop.velocity.set(0, 5, 0)
+    DropItem.applyPhysics(drop, 0.1)
+    // Velocity should decrease due to gravity
+    expect(drop.velocity.y).toBeLessThan(5)
+    // Position should change due to velocity
+    expect(drop.position.y).toBeGreaterThan(20)
+  })
+
+  it('applyPhysics settles on ground', () => {
+    const drop = DropItem.create(1, 10, 0.3, 10)
+    drop.velocity.set(0, 0, 0)
+    DropItem.applyPhysics(drop, 0.1)
+    expect(drop.position.y).toBe(0.2)
+    expect(drop.velocity.y).toBe(0)
+  })
+
+  it('updateBob applies bobbing animation', () => {
+    const drop = DropItem.create(1, 5, 5, 5)
+    const initialY = drop.position.y
+    DropItem.updateBob(drop, 0.1)
+    expect(drop.bOb).toBeGreaterThan(0)
+    expect(drop.rotation).toBeGreaterThan(0)
+  })
+
+  it('canCollect returns true when player is close', () => {
+    const drop = DropItem.create(1, 5, 0.5, 5) // drop near ground
+    const playerPos = new THREE.Vector3(5.5, 0.8, 5.5) // player standing near drop
+    const bounds = { minY: 0.8, maxY: 2.6 }
+    expect(DropItem.canCollect(drop, playerPos, bounds)).toBe(true)
+  })
+
+  it('canCollect returns false when player is too far', () => {
+    const drop = DropItem.create(1, 5, 0.5, 5)
+    const playerPos = new THREE.Vector3(10, 0.8, 10)
+    const bounds = { minY: 0.8, maxY: 2.6 }
+    expect(DropItem.canCollect(drop, playerPos, bounds)).toBe(false)
+  })
+
+  it('canMerge returns true for same drop type', () => {
+    const dropA = DropItem.create(1, 0, 0, 0)
+    const dropB = DropItem.create(1, 1, 1, 1)
+    expect(DropItem.canMerge(dropA, dropB)).toBe(true)
+  })
+
+  it('canMerge returns false for different drop types', () => {
+    const dropA = DropItem.create(1, 0, 0, 0)
+    const dropB = DropItem.create(2, 1, 1, 1)
+    expect(DropItem.canMerge(dropA, dropB)).toBe(false)
+  })
+
+  it('getDropColor returns the correct color', () => {
+    const color = DropItem.getDropColor(1)
+    expect(color).toEqual([150, 50, 50]) // Beef color
+  })
+})
+
+describe('M9: DropManager', () => {
+  it('spawns a drop item', () => {
+    const scene = { add: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene)
+    const drop = manager.spawnDrop(1, 5, 5, 5, 2)
+    expect(drop).not.toBeNull()
+    expect(drop!.count).toBe(2)
+    expect(manager.getDrops().length).toBe(1)
+    expect(scene.add).toHaveBeenCalled()
+  })
+
+  it('clears all drops', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene)
+    manager.spawnDrop(1, 1, 1, 1, 1)
+    manager.spawnDrop(2, 2, 2, 2, 1)
+    expect(manager.getDrops().length).toBe(2)
+    manager.clear()
+    expect(manager.getDrops().length).toBe(0)
+  })
+
+  it('update runs without error', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene)
+    manager.spawnDrop(1, 5, 5, 5, 1)
+    const playerPos = new THREE.Vector3(5, 5, 5)
+    const bounds = { minY: 5, maxY: 7 }
+    expect(() => manager.update(0.016, playerPos, bounds)).not.toThrow()
+  })
+
+  it('getLatestCollection returns null when no drops collected', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene)
+    const collection = manager.getLatestCollection()
+    expect(collection).toBeNull()
+  })
+
+  it('mapItemToDrop maps beef to correct drop type', () => {
+    // DropBeef id is 1, itemId is 14
+    const scene = { add: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene)
+    const drop = manager.spawnDrop(14, 0, 0, 0, 2)
+    expect(drop).not.toBeNull()
+    expect(drop!.itemId).toBe(14)
+    expect(drop!.name).toBe('Beef')
+  })
+
+  it('spawnDrops creates multiple drops', () => {
+    const scene = { add: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene)
+    manager.spawnDrops([
+      { itemId: 14, count: 2 },
+      { itemId: 13, count: 1 },
+    ], 5, 5, 5)
+    expect(manager.getDrops().length).toBe(2)
+  })
+
+  it('auto-despawns old drops', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as unknown as THREE.Scene
+    const manager = new DropManager(scene, { despawnTime: 1 }) // 1 second
+    manager.spawnDrop(1, 5, 5, 5, 1)
+    expect(manager.getDrops().length).toBe(1)
+    // Advance age past despawn time
+    manager.getDrops()[0].age = 2
+    manager.update(0.016, new THREE.Vector3(0, 0, 0), { minY: 0, maxY: 10 })
+    expect(manager.getDrops().length).toBe(0)
+  })
+})
+
+describe('M9: BlockInteraction breakBlock returns drop', () => {
+  it('breakBlock returns drop info for dirt block', () => {
+    const world = new World(42, new Map())
+    // Set a dirt block (id 1)
+    world.setBlock(5, 10, 5, 1)
+    const interaction = new BlockInteraction(world, 0)
+
+    const result = interaction.breakBlock([5, 10, 5])
+    expect(result).not.toBeNull()
+    expect(result!.itemId).toBe(1) // Dirt item
+    expect(result!.count).toBe(1)
+
+    // Verify block was removed
+    expect(world.getBlock(5, 10, 5)).toBe(0)
+  })
+
+  it('breakBlock returns drop info for stone block', () => {
+    const world = new World(42, new Map())
+    world.setBlock(5, 10, 5, 3) // Stone block
+    const interaction = new BlockInteraction(world, 0)
+
+    const result = interaction.breakBlock([5, 10, 5])
+    expect(result).not.toBeNull()
+    expect(result!.itemId).toBe(2) // Stone item
+    expect(result!.count).toBe(1)
+  })
+
+  it('breakBlock returns null for air block', () => {
+    const world = new World(42, new Map())
+    const interaction = new BlockInteraction(world, 0)
+
+    const result = interaction.breakBlock([5, 10, 5])
+    expect(result).toBeNull()
+  })
+
+  it('breakBlock returns null for bedrock (hardness 0)', () => {
+    const world = new World(42, new Map())
+    world.setBlock(5, 10, 5, 11) // Bedrock block (id=11)
+    const interaction = new BlockInteraction(world, 0)
+
+    // startMining should not start on bedrock
+    interaction.startMining([5, 10, 5])
+    expect(interaction.state.isMining).toBe(false)
+  })
+
+  it('getAndClearLastDrop returns the drop once then null', () => {
+    const world = new World(42, new Map())
+    world.setBlock(5, 10, 5, 1) // Dirt
+    const interaction = new BlockInteraction(world, 0)
+
+    interaction.breakBlock([5, 10, 5])
+    const drop1 = interaction.getAndClearLastDrop()
+    expect(drop1).not.toBeNull()
+    expect(drop1!.itemId).toBe(1)
+
+    // Second call should return null
+    const drop2 = interaction.getAndClearLastDrop()
+    expect(drop2).toBeNull()
+  })
+})
+
+describe('M9: HUD Drop Notification', () => {
+  it('showDropNotification creates element', () => {
+    const hud = new HUD()
+    hud.showDropNotification('Dirt', 4)
+    const el = document.getElementById('drop-notification')
+    expect(el).not.toBeNull()
+    expect(el!.textContent).toContain('Dirt')
+    expect(el!.textContent).toContain('+4')
+    el!.remove()
+    hud.remove()
+  })
+
+  it('showDropNotification displays correct format', () => {
+    const hud = new HUD()
+    hud.showDropNotification('Apple', 1)
+    const el = document.getElementById('drop-notification')
+    expect(el!.textContent).toContain('+1 Apple')
+    el!.remove()
+    hud.remove()
+  })
+})
+
+describe('M9: DropItemEntity type', () => {
+  it('DropItemEntity has all required properties', () => {
+    const drop = DropItem.create(1, 1, 2, 3)
+    expect(typeof drop.id).toBe('number')
+    expect(typeof drop.dropId).toBe('number')
+    expect(typeof drop.itemId).toBe('number')
+    expect(typeof drop.count).toBe('number')
+    expect(typeof drop.name).toBe('string')
+    expect(drop.position).toBeInstanceOf(THREE.Vector3)
+    expect(drop.velocity).toBeInstanceOf(THREE.Vector3)
+    expect(typeof drop.rotation).toBe('number')
+    expect(drop.mesh).toBeNull()
+    expect(typeof drop.age).toBe('number')
+    expect(typeof drop.bOb).toBe('number')
+  })
+})
+

@@ -24,6 +24,8 @@ export class BlockInteraction {
     minedBlock: null,
     isMining: false,
   }
+  /** The most recent drop from breakBlock, consumed on read */
+  public lastDrop: { itemId: number; count: number; position: [number, number, number] } | null = null
 
   constructor(
     private world: World,
@@ -46,7 +48,8 @@ export class BlockInteraction {
     if (!this.state.isMining || !this.state.minedBlock) return false
 
     const mine = this.state.minedBlock
-    const blockDef = getBlock(this.world.getBlock(...mine.position))
+    const blockId = this.world.getBlock(...mine.position)
+    const blockDef = getBlock(blockId)
     const hardness = blockDef ? blockDef.hardness : 1
 
     // Speed is inversely proportional to hardness
@@ -96,43 +99,33 @@ export class BlockInteraction {
 
   /**
    * Break the block at the given world position.
+   * @returns the item info dropped, or null if nothing drops
    */
-  breakBlock(position: [number, number, number]): void {
+  breakBlock(position: [number, number, number]): { itemId: number; count: number } | null {
     const blockId = this.world.getBlock(position[0], position[1], position[2])
     this.world.setBlock(position[0], position[1], position[2], 0)
 
-    // M4: Drop broken block as an item in inventory
+    // M4/M9: Get the item that drops from breaking this block
     if (blockId > 0) {
       const blockDef = getBlock(blockId)
       if (blockDef) {
         const itemId = this.blockToItem(blockId)
         if (itemId > 0) {
-          const existing = this.inventory[this.selectedSlot]
-          if (existing.itemId === itemId && existing.count > 0) {
-            const def = getItem(itemId)
-            if (def && existing.count < def.maxStack) {
-              existing.count++
-            } else {
-              for (const slot of this.inventory) {
-                if (slot.itemId <= 0 || slot.count <= 0) {
-                  slot.itemId = itemId
-                  slot.count = 1
-                  break
-                }
-              }
-            }
-          } else {
-            for (const slot of this.inventory) {
-              if (slot.itemId <= 0 || slot.count <= 0) {
-                slot.itemId = itemId
-                slot.count = 1
-                break
-              }
-            }
-          }
+          const drop = { itemId, count: 1, position }
+          this.lastDrop = drop
+          return drop
         }
       }
     }
+    this.lastDrop = null
+    return null
+  }
+
+  /** Consume and return the last drop, clearing the cache */
+  getAndClearLastDrop(): { itemId: number; count: number; position: [number, number, number] } | null {
+    const drop = this.lastDrop
+    this.lastDrop = null
+    return drop
   }
 
   private blockToItem(blockId: number): number {

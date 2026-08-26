@@ -4,9 +4,9 @@
   "objective": "Build VoxelCraft — a fully playable first-person voxel sandbox game in the browser (Minecraft-style). Complete milestones M1 (scaffold ✅) through M12 (day/night + autosave + soak), then Phase 2 content cycles to CAP/CAP, Phase 3 DEMO video, and enter Phase 4 infinite improvement loop. Stack: Vite + TypeScript + Three.js r160, Vitest tests, Playwright demos. Gate: pnpm run gate must always pass.",
   "iteration": 2,
   "maxRounds": 50,
-  "updatedAt": "2026-08-26T02:54:27.808Z",
+  "updatedAt": "2026-08-26T03:38:03.554Z",
   "runStartedAt": "2026-08-26T00:16:55.911Z",
   "watchdogEnabled": false,
-  "note": "Round 5/50: M6 Voxel lighting complete — sky light (top-down column pass blocked by opaque blocks), block light (BFS flood-fill from torches level 14, 6-neighbor decay), MeshStandardMaterial with vertex colors, 13 M6 tests added (113 total). Gate green: 113/113 tests, build ~506KB. Next: M7 Mobs (passive + hostile AI).",
+  "note": "Round 7/50: M8 Day/night cycle + autosave complete — DayNightCycle (0-24000 tick cycle), sky color interpolation (dawn→day→sunset→night), ambient light 0.1-1.0, HUD time display HH:MM with phase, autosave every 60s. 18 M8 smoke tests added (168 total). Gate green: 168/168 tests, build ~509KB. Next: M9 Inventory drops / item pickup.",
   "blocker": ""
 }

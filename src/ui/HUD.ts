@@ -196,6 +196,36 @@ export class HUD {
     this.timeOfDayEl.textContent = `${timeStr}  ${phase}`
   }
 
+  /** M9: Show a collection notification briefly */
+  showDropNotification(name: string, count: number): void {
+    // Remove any existing notification
+    const existing = document.getElementById('drop-notification')
+    if (existing) existing.remove()
+
+    const el = document.createElement('div')
+    el.id = 'drop-notification'
+    el.style.cssText = `
+      position: absolute; bottom: 140px; left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 14px;
+      background: rgba(0,0,0,0.7);
+      color: #aaffaa;
+      font-size: 14px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      text-shadow: 1px 1px 1px black;
+      transition: opacity 0.3s;
+    `
+    el.textContent = `+${count} ${name}`
+    this.container.appendChild(el)
+
+    // Fade out after 1.5 seconds
+    setTimeout(() => {
+      el.style.opacity = '0'
+      setTimeout(() => el.remove(), 300)
+    }, 1500)
+  }
+
   remove(): void {
     if (this.container.parentNode) {
       this.container.parentNode.removeChild(this.container)
