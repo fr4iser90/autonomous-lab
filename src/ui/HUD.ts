@@ -6,6 +6,7 @@ export class HUD {
   private hotbarEl: HTMLElement
   private heartsEl: HTMLElement
   private debugEl: HTMLElement
+  private miningProgressEl: HTMLElement
 
   constructor() {
     this.container = document.createElement('div')
@@ -82,6 +83,29 @@ export class HUD {
     this.debugEl.textContent = ''
     this.container.appendChild(this.debugEl)
 
+    // Mining progress bar
+    this.miningProgressEl = document.createElement('div')
+    this.miningProgressEl.id = 'mining-progress'
+    this.miningProgressEl.style.cssText = `
+      position: absolute; bottom: 110px; left: 50%;
+      transform: translateX(-50%);
+      width: 200px; height: 8px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      display: none;
+    `
+    const progressBar = document.createElement('div')
+    progressBar.id = 'mining-progress-fill'
+    progressBar.style.cssText = `
+      width: 0%; height: 100%;
+      background: #ffcc00;
+      transition: width 0.05s linear;
+    `
+    this.miningProgressEl.appendChild(progressBar)
+    this.container.appendChild(this.miningProgressEl)
+
     document.body.appendChild(this.container)
   }
 
@@ -127,6 +151,18 @@ export class HUD {
 
   setDebug(text: string): void {
     this.debugEl.textContent = text
+  }
+
+  /** Update mining progress bar visibility and fill */
+  updateMiningProgress(progress: number, maxProgress: number): void {
+    if (maxProgress <= 0) {
+      this.miningProgressEl.style.display = 'none'
+      return
+    }
+    this.miningProgressEl.style.display = 'block'
+    const fill = this.miningProgressEl.querySelector('#mining-progress-fill') as HTMLElement
+    const pct = Math.min(100, (progress / maxProgress) * 100)
+    fill.style.width = `${pct}%`
   }
 
   remove(): void {

@@ -26,6 +26,18 @@
 - Pure logic tests: registries, chunk gen, save service
 - UI tests: title screen, HUD, canvas rendering
 
+## Raycast: DDA voxel traversal
+- Amanatides & Woo algorithm for efficient voxel stepping
+- Returns hit position, face normal, and distance
+- 6-block reach distance (configurable)
+- Highlight overlay: wireframe box with color based on mining progress
+
+## Mining: Hold-to-break with progress bar
+- Speed inversely proportional to block hardness
+- HUD progress bar: fills from 0→100% as mining progresses
+- Block turns red as it's about to break, white when just started
+- Bedrock (hardness=0) is unbreakable
+
 ## Branch: agent/voxel-craft-20260825
 - Cut from origin/baseline
 - PR into main for Pages deploy

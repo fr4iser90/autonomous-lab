@@ -6,7 +6,7 @@
 |---|---|---|
 | M1 | Vite + Three.js scaffold, title screen, save service | COMPLETE ✅ |
 | M2 | Texture atlas + per-face UV mapping (3-row grid) | COMPLETE ✅ |
-| M3 | Raycast break/place with mining progress | PENDING |
+| M3 | Raycast break/place with mining progress | COMPLETE ✅ |
 | M4 | Inventory + hotbar + crafting | PENDING |
 | M5 | Biomes + world features (trees, caves) | PENDING |
 | M6 | Voxel lighting (sky + torch) | PENDING |

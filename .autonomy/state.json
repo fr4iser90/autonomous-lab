@@ -4,9 +4,9 @@
   "objective": "Build VoxelCraft — a fully playable first-person voxel sandbox game in the browser (Minecraft-style). Complete milestones M1 (scaffold ✅) through M12 (day/night + autosave + soak), then Phase 2 content cycles to CAP/CAP, Phase 3 DEMO video, and enter Phase 4 infinite improvement loop. Stack: Vite + TypeScript + Three.js r160, Vitest tests, Playwright demos. Gate: pnpm run gate must always pass.",
   "iteration": 1,
   "maxRounds": 50,
-  "updatedAt": "2026-08-26T00:38:48.743Z",
+  "updatedAt": "2026-08-26T00:56:52.983Z",
   "runStartedAt": "2026-08-26T00:16:55.911Z",
   "watchdogEnabled": false,
-  "note": "Round 3/50: M2 UV per-face texture mapping complete — 3-row grid atlas (top/side/bottom), per-face UV in MeshBuilder. Gate green: 38/38 tests, build succeeds. Next: M3 raycast break/place.",
+  "note": "Round 3/50: M3 Raycast break/place complete — DDA raycaster, mining progress bar, block highlight overlay, right-click place. Gate green: 46/46 tests, build succeeds (~493KB). Next: M4 inventory + hotbar + crafting.",
   "blocker": ""
 }

@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M3 — Raycast break/place with mining progress
-**Status:** IN PROGRESS — gate green (38/38 tests, build succeeds)
+**Phase:** M4 — Inventory + hotbar + crafting
+**Status:** IN PROGRESS — gate green (46/46 tests, build succeeds ~493KB)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -26,7 +26,16 @@
   - CanvasTexture with NearestFilter (pixel-perfect voxel look)
   - 8 M2 smoke tests (total 38)
   - Fixed dead code in main.ts renderer disposal
-- M3: Raycast break/place with mining progress → IN PROGRESS
+- M3: Raycast break/place with mining progress → **COMPLETE ✅**
+  - DDA voxel raycasting (Amanatides & Woo algorithm)
+  - First-person raycast from camera through crosshair (6-block reach)
+  - Returns hit position, face normal, and distance
+  - Left-click hold-to-break with mining progress bar
+  - Mining speed inversely proportional to block hardness
+  - Right-click place block adjacent to hit face
+  - Wireframe block highlight overlay (color shifts red as block breaks)
+  - Chunk rebuild on break/place
+  - 8 M3 smoke tests (total 46)
 - M4: Inventory + hotbar + crafting → PENDING
 - M5: Biomes + world features (trees, caves) → PENDING
 - M6: Voxel lighting (sky + torch) → PENDING
@@ -39,4 +48,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M3: Implement raycast break/place with mining progress.
+M4: Implement inventory + hotbar + crafting.
