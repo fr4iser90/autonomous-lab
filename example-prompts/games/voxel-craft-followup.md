@@ -24,18 +24,27 @@ BOILERPLATE OWNERSHIP (resume)
 - Toy/placeholder files are not the game. Tracking = PROGRESS.md (+ CONTENT/…).
 - `.autonomy/` is optional/legacy — do not treat it as primary truth.
 
+create_goal POLICY (critical)
+- Try create_goal once if you want. If it errors with **requires a direct human
+  turn** / **top-level agent** / similar → **IGNORE completely**.
+- That is a harness restriction, **not** a request for human input.
+- Do **not** stop, summarize as done, or wait. Continue cycles with tools.
+- Never mark create_goal complete. Human kills the process. Idle nudge keeps
+  the session alive.
+
 READ THE DATA FIRST (tracking surface — invent nothing)
 1. `git status` / current branch / recent commits. Confirm this is the lab clone
    on `agent/voxel-craft-…` (or the run id recorded in PROGRESS).
 2. Read **PROGRESS.md NOW** — phase, next step, last ACCEPT, SHA, pre-PR visual.
-3. Read **BUGS.md ## Open** — drain blocker/playability before new content
-   (entries may come from `voxel-craft-VL-validation.md` agent).
+3. Read **BUGS.md ## Open** — drain blocker/playability (incl. merge/gate notes
+   from `voxel-craft-git-validation.md` / VL validator) before new content.
 4. Read every other tracking doc that exists and is relevant:
    CONTENT.md, FEATURES.md, SOAK.md, DEMO.md, ASSETS.md,
    shared/design.md or shared/protocol.md, README.md.
 5. Skim the filesystem evidence (src/, demo/, tests/) against what PROGRESS claims.
-6. Check GitHub PR for this branch if tools allow: conflicts? red `gate`?
-   “PR already exists” is OK — push updates it; **conflicts/red gate are not OK**.
+6. Check GitHub PR for this branch if tools allow: conflicts? red/`Expected`
+   `gate`? stuck Actions queue? “PR already exists” is OK — push updates it;
+   **conflicts / missing green gate are not OK** — SAFE SYNC + FIX-ONLY first.
 
 - Lie detector: if PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but
   demo/demo.webm missing/empty, DEMO.md visual not all PASS, demo/frames/ incomplete,
@@ -49,8 +58,11 @@ SAFE SYNC FIRST (no work loss — see `voxel-craft.md` SAFE SYNC)
 3. If behind `origin/main` OR PR reports conflicts: **merge `origin/main`**
    (preferred) or rebase with backup + later `push --force-with-lease` on
    `agent/*` only. Never `reset --hard` to main. Never delete agent commits.
-4. Resolve conflicts without wiping game `src/`. Re-run `pnpm run gate` + UI smoke.
-5. Log `SYNC: …` in PROGRESS.md.
+4. Resolve conflicts without wiping game `src/`. **README:** keep Lab header from
+   main; keep/refresh `# Current run` for VoxelCraft. **PROGRESS:** keep agent NOW.
+5. Re-run `pnpm run gate` + UI smoke. Confirm PR checks: `gate` must report
+   success (not forever “Expected — Waiting for status”).
+6. Log `SYNC: …` in PROGRESS.md.
 
 PLAYABILITY TRIAGE (before more content cycles)
 - Drain BUGS.md ## Open (blocker/playability) first — then boot `pnpm run dev`.
@@ -66,9 +78,8 @@ PLAYABILITY TRIAGE (before more content cycles)
   CONTENT VISUAL (`demo/content/C<N>-<kind>-<id>.png` from `#game-canvas` while
   playing). HTML/NPC-stat tables / RGB swatch boards = FAIL — redo with rendered
   meshes. Title-screen PRE-PR is not enough.
-- Optional live E2E (end-user): https://fr4iser90.github.io/autonomous-lab/
-  after automerge — prefer the separate validator prompt
-  (`voxel-craft-VL-validation.md`); builder keeps local `:5173` as primary.
+- Optional live E2E: `voxel-craft-VL-validation.md`. Git/CI watchdog:
+  `voxel-craft-git-validation.md`. Builder stays on local `:5173` for play.
 
 INFINITY MODE (Phase 4 — re-arm on every follow-up)
 - If Phase 3 is truly done (demo artifact + DEMO.md visual PASS + frames when
@@ -79,17 +90,16 @@ INFINITY MODE (Phase 4 — re-arm on every follow-up)
 - Every P4-0: BUGS.md ## Open before new polish/feature.
 
 THEN CONTINUE
-1. create_goal with the same overnight objective as `voxel-craft.md` and
-   max_goal_rounds ≥ 400. Never mark complete on your own (human kills) —
-   Phase 4 runs forever unless STOP_AFTER_DEMO applies.
-2. If open blocker/playability bugs OR PR conflicted / gate red / UI smoke red:
-   FIX-ONLY (+ SAFE SYNC) until green and mergeable — do not pile new CAP
-   content on a dead title screen.
+1. create_goal optional; on policy error → ignore (see above). Never mark
+   complete. Phase 4 forever unless STOP_AFTER_DEMO.
+2. If open blocker/playability / PR conflicted / `gate` missing or red / UI smoke
+   red: FIX-ONLY (+ SAFE SYNC) until green and mergeable — do not pile new CAP
+   content on a dead title screen or a dirty PR.
 3. Resume at the **first unfinished** milestone / content cycle / soak / DEMO /
    Phase 4 cycle proven by docs + disk. Never restart M1 if later work exists.
 4. Obey `voxel-craft.md` LIVE LOOP (PRE-PR VISUAL + UI smoke + SAFE SYNC +
    `read_image`). File size alone ≠ visual PASS; do not spawn smart for screenshots.
-5. Keep tracking docs current. Always leave a next tool call.
+5. Keep tracking docs current. Always leave a next tool call (next P4/C cycle).
 6. Gate green. Never push `main` / `baseline`.
 
 If `voxel-craft.md` is missing from disk, recover rules from PROGRESS + CODE +
