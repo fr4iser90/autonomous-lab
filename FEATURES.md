@@ -17,3 +17,10 @@
 - **Rationale:** npcs=7/20 was lowest cap% (35%)
 - **Result:** npcs 7→10 (50% of CAP)
 - **Gate:** 244/244 tests pass, build 535KB, PRE-PR VISUAL: PASS
+
+## C4 — Add 10 recipes to reach CAP=20 ✅ DONE
+- **Decision:** Added 10 new recipes: Fence, Wall, Furnace, Barrel, Lantern, Bed, Cake, Iron Door, Trapdoor, Coal Block
+- **Rationale:** recipes=10/20 (50%) — lowest cap% alongside npcs
+- **Result:** recipes 10→20 (CAP reached!)
+- **Gate:** 244/244 tests pass, build 535KB
+- **Remaining gaps:** blocks=17/20 (85%), npcs=10/20 (50%)

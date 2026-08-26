@@ -9,12 +9,12 @@ Infinite voxel sandbox (Minecraft-style) — procedural terrain, break/place, in
 |---|---|---|
 | blocks | 17 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Lava, Air |
 | items | 20 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Water Bucket, Lava Bucket, Stone Sword, Iron Shovel, Air |
-| recipes | 10 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Sword, Cooked Beef, Iron Spade |
+| recipes | 20 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Sword, Cooked Beef, Iron Spade, Fence, Wall, Furnace, Barrel, Lantern, Bed, Cake, Iron Door, Trapdoor, Coal Block |
 | npcs | 10 | Cow, Pig, Sheep, Chicken, Fox, Bee, Rabbit, Zombie, Creeper, Wolf |
 
 ```
-CAPS: blocks=17/CAP items=20/CAP recipes=10/CAP npcs=10/CAP
-NEXT_CYCLE_PRIORITY: blocks (lowest at 17/20 = 85%)
+CAPS: blocks=17/CAP items=20/CAP recipes=20/CAP npcs=10/CAP
+NEXT_CYCLE_PRIORITY: blocks (17/20 = 85%)
 ```
 
 ## Block Details

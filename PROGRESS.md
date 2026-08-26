@@ -2,9 +2,9 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 2 — Content Cycles (C4 next)
-**SHA:** 15c522b (C3-pre committed)
+**SHA:** 8d92cee (C3 pushed)
 **Tests:** 244/244 passing | Build: ✅ 535KB
-**PR:** Open (C1+C2+C3-pre)
+**PR:** Open (C1+C2+C3+C4)
 **SYNC:** Resumed — verified branch synced, tracking docs updated
 
 ## Milestones M1–M12: ALL COMPLETE ✅
