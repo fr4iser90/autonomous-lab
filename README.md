@@ -16,7 +16,7 @@ and on the live site is **AI-generated** — used to probe **local LLM** capabil
 | **Live (last green automerge → Pages)** | https://fr4iser90.github.io/autonomous-lab/ |
 | **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
 | **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork; idle nudge; Docker) |
-| **This host's setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
+| **This host’s setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
 | **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
 
 Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
@@ -59,9 +59,10 @@ Broken `gate` → no merge → Pages stays on the last green `main`.
 ## Quick start (human)
 
 ```sh
-pnpm install
+pnpm install   # or npm install
 pnpm run gate
 pnpm run dev
+./scripts/new-run.sh <run-id>
 ```
 
 Paste an objective from `example-prompts/` (or your own) into the harness with
@@ -84,7 +85,7 @@ agent-default-model:
 # Register a second model with name: smart (Qwen3.8 … VL) for validation sessions.
 ```
 
-## DSH Autonomy
+## One-time GitHub setup
 
 1. Repo **Public**; Pages **Source = GitHub Actions**
 2. Rulesets: `protect-main` (PR + required **`gate`**), `protect-baseline` (you only)
@@ -104,36 +105,14 @@ agent-default-model:
 
 # Current run
 
-<!-- RUN_OWNED: agent updates this section for the shipped game. Keep the
+<!-- RUN_OWNED: agent replaces this section for the shipped game. Keep the
      Autonomous Lab header above intact. -->
 
-## VoxelCraft — Infinite Voxel Sandbox
+**Signal Ascent** — a Celestial-inspired layered prestige incremental (DOM UI).
+Harvest cosmic **Signal**, build **Relays**, buy **Resonators**, and **Ascend**
+through the Strata for permanent **Harmonics** multipliers.
 
-**Genre:** Voxel sandbox (Minecraft-style) · Vite + TypeScript + Three.js
-
-**Play:** https://fr4iser90.github.io/autonomous-lab/  
-Local: `pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
-
-### Features
-
-- Infinite procedural terrain with biomes
-- Break/place blocks with first-person controls
-- 3-slot save system with local persistence
-- Inventory + crafting (2×2 and 3×3 grids)
-- Mobs (passive + hostile)
-- Day/night cycle
-- Procedural block atlas (no image downloads)
-
-### Run scripts
-
-| Script | Meaning |
-|---|---|
-| `pnpm test` | Vitest |
-| `pnpm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
-| `pnpm run gate` | test + build |
-| `pnpm run dev` | Vite on 5173 |
-
-### Autonomy arc
-
-M1–M12 → Phase 2 content to CAP/CAP → Phase 2b soak → Phase 3 DEMO → Phase 4 infinite improve.  
-Drain `BUGS.md` ## Open at every cycle start. Optional validator: `example-prompts/games/voxel-craft-VL-validation.md`.
+- Live: https://fr4iser90.github.io/autonomous-lab/
+- Run branch: `agent/celestial-inc-20260826` · tracking: `PROGRESS.md`
+- Stack: Vite + TypeScript + DOM-only UI · 20 Hz engine · decimal big numbers
+- Status: M1 — title + play shell (economy lands M2, layers M5, prestige M8, Phase 2 specials at layers 10/20/30/40/50)
