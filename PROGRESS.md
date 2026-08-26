@@ -2,7 +2,7 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** P4-3 pending (Player melee attack — in progress)
+**SHA:** 6197833 (Phase 4 P4-3: Player melee attack on mobs)
 **Tests:** 268/268 passing | Build: ✅ 543KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-3 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
