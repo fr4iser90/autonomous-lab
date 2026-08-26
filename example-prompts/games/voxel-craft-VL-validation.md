@@ -102,7 +102,7 @@ LOOP
 ================================================================
 
 1. Pin → prefer Pages URL.
-2. **Click path A** → shot FAILs → BUGS.md.
+2. **Click path A** → shot FAILs → **`read_image`** → BUGS.md.
 3. Deepen only after A.
 4. Optional `VALIDATION:` one-liner in PROGRESS — BUGS.md is truth.
 5. Unattended: re-fetch / re-pin main / re-click Pages until human kills.
