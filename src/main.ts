@@ -313,6 +313,8 @@ class VoxelCraftGame {
     const player = this.player!
     this.mobManager?.setPlayerDamageHandler((damage: number) => {
       player.state.hp = Math.max(0, player.state.hp - damage)
+      // Phase 4 P4-4: Reset regen timer on damage
+      player.damageFreeTimer = 0
       // Play hit sound
       this.soundService?.play('hit')
       return player.state.hp
@@ -320,6 +322,7 @@ class VoxelCraftGame {
       // Player death: respawn at spawn point
       if (!this.player) return
       this.player.state.hp = 20 // full health on respawn
+      this.player.damageFreeTimer = 0
       this.player.state.velocity.set(0, 0, 0)
       // Reset position to spawn
       const spawnX = 0, spawnZ = 0
@@ -754,6 +757,9 @@ class VoxelCraftGame {
       const iz = Math.floor(z)
       return world.getBlock(ix, iy, iz) > 0
     }, isLiquid, isLava)
+
+    // Phase 4 P4-4: Health regeneration
+    player.regenerate(dt)
 
     // Manage chunk loading
     const pcx = Math.floor(player.state.position.x / CHUNK_WIDTH)

@@ -2,7 +2,7 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** 6197833 (Phase 4 P4-3: Player melee attack on mobs)
+**SHA:** TBD (Phase 4 P4-4: Health regeneration)
 **Tests:** 268/268 passing | Build: ✅ 543KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-3 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
@@ -118,4 +118,12 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Hurt flash:** `hurtTimer` reset on hit — mob mesh blinks red each frame until timer expires
 - **Hit sound:** `'hit'` sound plays on every successful melee hit
 - **Left-click flow:** Melee check runs first → if a mob is hit, skips block mining → else falls through to mining
-- **Gate:** 268/268 tests pass, build 543KB
+- **Gate:** 268/268 tests pass, build 544KB
+
+### P4-4: Health Regeneration ✅
+- **Damage-free timer:** `Player.damageFreeTimer` accumulates seconds since last damage taken
+- **Regeneration:** `Player.regenerate(dt)` — after 5s damage-free, heals 1 HP every 2 seconds until full
+- **Damage reset:** `damageFreeTimer` reset to 0 when player takes damage from mobs or lava
+- **Respawn reset:** `damageFreeTimer` reset to 0 on player death/respawn (full HP = no regen needed)
+- **Game loop:** `player.regenerate(dt)` called after `player.update()` each frame
+- **Gate:** 268/268 tests pass, build 544KB

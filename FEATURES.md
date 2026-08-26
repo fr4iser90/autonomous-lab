@@ -79,5 +79,17 @@
   - `MobManager.ts`: New `meleeHit()` — raycast cone check against hostile mobs within 3-block range and 30° cone
   - `main.ts`: New `performMelee()` — checks crosshair for mobs, deals damage from held item, applies knockback + hurt flash
   - `main.ts`: Left-click handler now tries melee first, falls through to block mining on miss
-- **Gate:** 268/268 tests pass, build 543KB
+- **Gate:** 268/268 tests pass, build 544KB
 - **Visual:** Mobs knock back and flash red when hit; hit sound plays; left-click on mobs damages them, left-click on blocks mines them
+
+## P4-4 — Health Regeneration ✅
+- **Decision:** Add player health regeneration — heals 1 HP every 2s after 5s without taking damage
+- **Rationale:** Players have no way to recover from combat damage without respawning; regeneration adds survival depth and reduces frustration
+- **Changes:**
+  - `Player.ts`: New `damageFreeTimer` property tracks seconds since last damage
+  - `Player.ts`: New `regenerate(dt, maxHp)` — heals 1 HP every 2s after 5s damage-free, stops at maxHp
+  - `main.ts`: `damageFreeTimer` reset to 0 on mob contact damage + lava damage
+  - `main.ts`: `damageFreeTimer` reset to 0 on player death/respawn
+  - `main.ts`: `player.regenerate(dt)` called every frame after `player.update()`
+- **Gate:** 268/268 tests pass, build 544KB
+- **Visual:** Player slowly recovers HP when safe; damage resets the regen timer
