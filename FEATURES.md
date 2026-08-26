@@ -123,3 +123,12 @@
   - **HurtFlash.ts fix:** Removed unused `this.scene` field and `opacity` destructuring to resolve TS6133 errors
 - **Gate:** 268/268 tests pass, build 551KB
 - **Audio:** 8 concurrent ambient streams with unique timbres, 3–12s random intervals
+
+## P4-8 — Mob Death Particles
+- **Decision:** Add colored particle burst effect when mobs die, matching each mob type's RGB color
+- **Rationale:** Mobs vanished without visual feedback — killing felt flat. Particles confirm kills and add satisfaction.
+- **Changes:**
+  - `Particle.ts`: New `spawnMobDeath(x, y, z, color)` — 15 particles burst from mob center, gravity, 1.0s lifetime
+  - `MobManager.ts`: `setParticleManager()` setter; `removeMob()` calls `spawnMobDeath()` with mob's `def.color`
+  - `main.ts`: Wires `particleManager` into `mobManager.setParticleManager()`
+- **Gate:** 268/268 tests pass, build 552KB

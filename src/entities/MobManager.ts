@@ -7,6 +7,7 @@ import type { MobEntity } from './Mob'
 import { MobCow, MobPig, MobChicken, MobZombie, MobSkeleton } from '../data/mobs'
 import { DropManager } from './DropManager'
 import { SoundService } from '../services/SoundService'
+import type { ParticleManager } from '../effects/Particle'
 import { Projectile } from './Projectile'
 import type { ProjectileEntity } from './Projectile'
 
@@ -33,6 +34,7 @@ export class MobManager {
   private config: MobConfig
   private dropManager?: DropManager
   private soundService?: SoundService
+  private particleManager?: ParticleManager
   private mobsKilledCount: number = 0
   private onPlayerDamaged?: (damage: number) => number // returns new HP
   private onPlayerDeath?: () => void // called when HP reaches 0
@@ -57,6 +59,11 @@ export class MobManager {
   /** Attach sound service for mob sounds */
   setSoundService(ss: SoundService): void {
     this.soundService = ss
+  }
+
+  /** Attach particle manager for mob death effects */
+  setParticleManager(pm: ParticleManager): void {
+    this.particleManager = pm
   }
 
   /** Attach player damage handler (returns new HP after mob contact damage) */
@@ -373,6 +380,14 @@ export class MobManager {
     if (this.dropManager) {
       const drops = Mob.getDrops(mob)
       this.dropManager.spawnMobDrops(mob.id, mob.position.x, mob.position.y, mob.position.z, drops)
+    }
+
+    // P4-8: Spawn death particles matching mob color
+    if (this.particleManager) {
+      this.particleManager.spawnMobDeath(
+        mob.position.x, mob.position.y, mob.position.z,
+        mob.def.color,
+      )
     }
 
     if (mob.mesh && mob.mesh.parent) {
