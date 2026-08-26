@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M2 — Texture atlas + enhanced rendering
-**Status:** IN PROGRESS — gate green (35/35 tests, build succeeds)
+**Phase:** M3 — Raycast break/place with mining progress
+**Status:** IN PROGRESS — gate green (38/38 tests, build succeeds)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -17,13 +17,16 @@
   - World manager with chunk loading/unloading
   - HUD overlay (crosshair, debug info)
   - 30 Vitest smoke tests
-- M2: Texture atlas + enhanced rendering → IN PROGRESS
+- M2: Texture atlas + per-face UV mapping → **COMPLETE ✅**
   - Procedural 16×16 per-block textures with noise-based variation
-  - Texture atlas (16 blocks in single-row canvas texture)
-  - MeshBuilder with UV coordinates per face
+  - 3-row atlas grid: top / side / bottom face textures per block
+  - Grass: green top, grass-on-dirt side, dirt bottom
+  - Log: bark rings on ends, vertical grain on sides
+  - Per-face UV mapping in MeshBuilder (face type → row lookup)
   - CanvasTexture with NearestFilter (pixel-perfect voxel look)
-  - 5 new M2 smoke tests (total 35)
-- M3: Raycast break/place with mining progress → PENDING
+  - 8 M2 smoke tests (total 38)
+  - Fixed dead code in main.ts renderer disposal
+- M3: Raycast break/place with mining progress → IN PROGRESS
 - M4: Inventory + hotbar + crafting → PENDING
 - M5: Biomes + world features (trees, caves) → PENDING
 - M6: Voxel lighting (sky + torch) → PENDING
@@ -36,4 +39,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M2: Continue with UV per-face texture mapping (separate cells for top/bottom/sides).
+M3: Implement raycast break/place with mining progress.

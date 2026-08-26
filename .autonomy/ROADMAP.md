@@ -5,7 +5,7 @@
 | Milestone | Description | Status |
 |---|---|---|
 | M1 | Vite + Three.js scaffold, title screen, save service | COMPLETE ✅ |
-| M2 | Texture atlas + enhanced rendering | IN PROGRESS |
+| M2 | Texture atlas + per-face UV mapping (3-row grid) | COMPLETE ✅ |
 | M3 | Raycast break/place with mining progress | PENDING |
 | M4 | Inventory + hotbar + crafting | PENDING |
 | M5 | Biomes + world features (trees, caves) | PENDING |

@@ -180,11 +180,8 @@ class VoxelCraftGame {
     }
 
     // Clear chunk meshes from scene
-    if (this.renderer) {
-      for (const [, mesh] of this.chunkMeshes) {
-        this.renderer.scene.remove(mesh)
-        mesh.geometry.dispose()
-      }
+    for (const [, mesh] of this.chunkMeshes) {
+      mesh.geometry.dispose()
     }
     this.chunkMeshes.clear()
     this.loadedChunks.clear()

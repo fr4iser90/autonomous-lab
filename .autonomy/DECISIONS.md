@@ -16,7 +16,11 @@
 
 ## Textures: Procedural 16×16 atlas
 - Generated at runtime, no image files
-- Per-block face colors for rendering
+- 3-row grid: top-face / side-face / bottom-face textures per block
+- Grass: green top, grass-on-dirt side, brown bottom
+- Log: bark rings on ends, vertical grain on sides
+- Dirt: brown on all faces (sides slightly darker)
+- NearestFilter for pixel-perfect voxel look
 
 ## Testing: Vitest for logic, Playwright for UI
 - Pure logic tests: registries, chunk gen, save service

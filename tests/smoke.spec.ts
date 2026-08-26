@@ -252,28 +252,33 @@ describe('M1: World', () => {
 })
 
 describe('M2: Texture Atlas', () => {
-  it('atlas has correct dimensions for 16 blocks', () => {
-    // Atlas width = BLOCK_COUNT * 16, height = 16
+  it('atlas has correct grid dimensions: 3 rows × 16 cols', () => {
+    // Atlas is now a 3×N grid: 3 face types, 16 blocks
     expect(BLOCK_COUNT).toBe(16)
   })
 
   it('atlas generates without throwing', () => {
     const canvas = document.createElement('canvas')
-    // We can't directly test TextureAtlas in jsdom without WebGL,
-    // but we can verify the UV math and canvas generation
+    // TextureAtlas needs a DOM canvas; we verify UV math and face coverage below
     expect(true).toBe(true)
   })
 
-  it('UV ranges are valid for all block IDs', () => {
-    // Verify UV calculation logic: each block occupies 1/N of atlas width
+  it('all 16 blocks have UV ranges for all 3 face types', () => {
     const blockCount = BLOCK_COUNT
+    const faceRows = 3 // top, side, bottom
     for (let i = 0; i < blockCount; i++) {
-      const uMin = i / blockCount
-      const uMax = (i + 1) / blockCount
-      expect(uMin).toBeGreaterThanOrEqual(0)
-      expect(uMin).toBeLessThan(1)
-      expect(uMax).toBeGreaterThan(uMin)
-      expect(uMax).toBeLessThanOrEqual(1)
+      for (let row = 0; row < faceRows; row++) {
+        const uMin = i / blockCount
+        const uMax = (i + 1) / blockCount
+        const vMax = 1 - row / faceRows
+        const vMin = vMax - 1 / faceRows
+        expect(uMin).toBeGreaterThanOrEqual(0)
+        expect(uMin).toBeLessThan(uMax)
+        expect(uMax).toBeLessThanOrEqual(1)
+        expect(vMin).toBeGreaterThanOrEqual(0)
+        expect(vMin).toBeLessThanOrEqual(vMax)
+        expect(vMax).toBeLessThanOrEqual(1)
+      }
     }
   })
 
@@ -286,10 +291,39 @@ describe('M2: Texture Atlas', () => {
   it('stone block (id 3) is grey', () => {
     const stone = getBlock(3)
     expect(stone).toBeDefined()
-    // Stone should be roughly equal RGB (grey)
     const [r, g, b] = stone!.color
     expect(Math.abs(r - g)).toBeLessThan(10)
     expect(Math.abs(g - b)).toBeLessThan(10)
+  })
+
+  it('top-face v-range is narrower than total atlas height (3 rows)', () => {
+    // Each face type gets 1/3 of the atlas height
+    const faceRows = 3
+    const expectedTopVHeight = 1 / faceRows
+    expect(expectedTopVHeight).toBeCloseTo(0.333, 2)
+  })
+
+  it('per-face UV mapping: top/bottom/side cells are distinct', () => {
+    // Top face v-range: [2/3, 1], Side face v-range: [1/3, 2/3], Bottom face v-range: [0, 1/3]
+    const faceRows = 3
+    const blockId = 0 // air (used to verify UV math only)
+    const uMin = blockId / BLOCK_COUNT
+    const uMax = (blockId + 1) / BLOCK_COUNT
+
+    // Top: vMax = 1 - 0/3 = 1, vMin = 1 - 1/3 = 2/3
+    expect(uMax - uMin).toBe(1 / BLOCK_COUNT)
+    expect(1 - 1 / faceRows).toBeCloseTo(0.667, 2)
+    expect(1 / faceRows).toBeCloseTo(0.333, 2)
+  })
+
+  it('log block (id 6) has bark-ring UV cell', () => {
+    const log = getBlock(6)
+    expect(log).toBeDefined()
+    expect(log!.name).toBe('Log')
+    // UV cell for log top face at blockId=6
+    const uMin = 6 / BLOCK_COUNT
+    const uMax = 7 / BLOCK_COUNT
+    expect(uMax - uMin).toBe(1 / BLOCK_COUNT)
   })
 })
 

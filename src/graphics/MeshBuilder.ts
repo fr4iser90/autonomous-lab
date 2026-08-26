@@ -1,11 +1,14 @@
-// MeshBuilder: Voxel mesh generation with face culling and procedural texture atlas UVs
+// MeshBuilder: Voxel mesh generation with face culling and per-face UVs
 
 import * as THREE from 'three'
 import { getBlock } from '../data/blocks'
-import { TextureAtlas } from './TextureAtlas'
+import { TextureAtlas, type FaceType } from './TextureAtlas'
 
 export class MeshBuilder {
-  /** Build a textured mesh for a chunk's visible blocks using a texture atlas */
+  /**
+   * Build a textured mesh for a chunk's visible blocks using a texture atlas
+   * with per-face UV mapping (top / side / bottom).
+   */
   static buildChunk(
     chunkX: number,
     chunkZ: number,
@@ -19,23 +22,23 @@ export class MeshBuilder {
     const CHUNK_WIDTH = 16
     const CHUNK_HEIGHT = 96
 
-    // Each face: [normalX, normalY, normalZ, i0, i1, i2, i3] where i* are vertex indices into quad vertices
-    const faces: Array<[number, number, number, number, number, number, number]> = [
-      // +X face (right)
-      [ 1, 0, 0, 5, 6, 7, 4],
-      // -X face (left)
-      [-1, 0, 0, 0, 1, 2, 3],
-      // +Y face (top)
-      [ 0, 1, 0, 7, 6, 2, 3],
-      // -Y face (bottom)
-      [ 0,-1, 0, 4, 5, 1, 0],
-      // +Z face (front)
-      [ 0, 0, 1, 4, 5, 1, 0],
-      // -Z face (back)
-      [ 0, 0,-1, 7, 6, 2, 3],
+    // Each face: [normalX, normalY, normalZ, i0, i1, i2, i3]
+    // Face 0: +X (right)     → side
+    // Face 1: -X (left)      → side
+    // Face 2: +Y (top)       → top
+    // Face 3: -Y (bottom)    → bottom
+    // Face 4: +Z (front)     → side
+    // Face 5: -Z (back)      → side
+    const faces: Array<{ normal: [number, number, number]; verts: [number, number, number, number]; faceType: FaceType }> = [
+      { normal: [ 1, 0, 0], verts: [5, 6, 7, 4], faceType: 'side' },   // +X
+      { normal: [-1, 0, 0], verts: [0, 1, 2, 3], faceType: 'side' },   // -X
+      { normal: [ 0, 1, 0], verts: [7, 6, 2, 3], faceType: 'top'  },   // +Y
+      { normal: [ 0,-1, 0], verts: [4, 5, 1, 0], faceType: 'bottom' }, // -Y
+      { normal: [ 0, 0, 1], verts: [4, 5, 1, 0], faceType: 'side' },   // +Z
+      { normal: [ 0, 0,-1], verts: [7, 6, 2, 3], faceType: 'side' },   // -Z
     ]
 
-    // Quad vertices: [x, y, z]
+    // Quad vertices: [x, y, z] — local block space
     const QUAD_VERTS: [number, number, number][] = [
       [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
       [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1],
@@ -54,14 +57,11 @@ export class MeshBuilder {
           const blockDef = getBlock(blockId)
           if (!blockDef) continue
 
-          // Get UVs for all 6 faces of this block
-          const faceUVs = atlas.getUVsForBlock(blockId)
-
           // Check each face
-          for (let faceIdx = 0; faceIdx < faces.length; faceIdx++) {
-            const face = faces[faceIdx]
-            const nx = face[0], ny = face[1], nz = face[2]
-            const vi0 = face[3], vi1 = face[4], vi2 = face[5], vi3 = face[6]
+          for (const face of faces) {
+            const [nx, ny, nz] = face.normal
+            const [vi0, vi1, vi2, vi3] = face.verts
+            const faceType = face.faceType
 
             const neighborBlock = getBlockFn(wx + nx, y + ny, wz + nz)
 
@@ -71,26 +71,23 @@ export class MeshBuilder {
               if (neighborDef && !neighborDef.transparent) continue
             }
 
-            // Get the UV quad for this face
-            const uvQuad = atlas.getFaceUVs(blockId, faceIdx)
+            // Get the UV quad for this face type
+            const uvQuad = atlas.getFaceUVQuad(blockId, faceType)
             const [u0, v0, u1, v1, u2, v2, u3, v3] = uvQuad
+            const uvArr: [number, number][] = [[u0, v0], [u1, v1], [u2, v2], [u3, v3]]
 
-            // UV mapping for the quad: vertex order matches QUAD_VERTS indices
+            // Write vertices
             const viArr = [vi0, vi1, vi2, vi3]
-            const uvArr = [
-              [u0, v0], [u1, v1], [u2, v2], [u3, v3]
-            ]
-
-            for (let vi_ = 0; vi_ < viArr.length; vi_++) {
-              const vi = viArr[vi_]
+            for (let i = 0; i < 4; i++) {
+              const vi = viArr[i]
               const v = QUAD_VERTS[vi]
               positions.push(wx + v[0], y + v[1], wz + v[2])
-              uvs.push(uvArr[vi_][0], uvArr[vi_][1])
+              uvs.push(uvArr[i][0], uvArr[i][1])
             }
 
             indices.push(
               vertCount, vertCount + 1, vertCount + 2,
-              vertCount, vertCount + 2, vertCount + 3
+              vertCount, vertCount + 2, vertCount + 3,
             )
             vertCount += 4
           }
@@ -111,10 +108,12 @@ export class MeshBuilder {
     return new THREE.Mesh(geometry, material)
   }
 
-  /** Build a simple mesh for a small set of blocks (for testing) */
+  /** Build a simple unit cube with a solid color (for testing) */
   static buildCube(color: [number, number, number]): THREE.Mesh {
     const geometry = new THREE.BoxGeometry(1, 1, 1)
-    const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color[0] / 255, color[1] / 255, color[2] / 255) })
+    const material = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(color[0] / 255, color[1] / 255, color[2] / 255),
+    })
     return new THREE.Mesh(geometry, material)
   }
 }

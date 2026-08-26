@@ -1,28 +1,27 @@
-# Next Task: M2 — Texture Atlas + Enhanced Rendering
+# Next Task: M3 — Raycast Break/Place with Mining Progress
 
 ## Goal
-Replace flat-color block rendering with a procedural 16×16 texture atlas. Each block type gets a unique texture generated at runtime (no image files).
+Implement first-person raycasting to break and place blocks, with mining progress (hold to break) and smooth placement feedback.
 
 ## Deliverables
-1. `src/graphics/TextureAtlas.ts` — Procedural texture generator + atlas texture creation
-   - 16×16 pixel per-block textures with variation (noise-based)
-   - Atlas layout: N blocks × 16×16 cells packed into a single texture
-   - Use THREE.CanvasTexture for runtime generation
-   - Expose `getUVForFace(blockId, faceIndex)` for consistent UV mapping
-2. Update `src/graphics/MeshBuilder.ts` — Per-face UV coordinates
-   - Generate UVs mapping each face to the correct atlas cell
-   - Switch from `vertexColors` to `map` (atlas texture)
-   - Keep hidden-face culling
-3. Update `src/graphics/Renderer.ts` — Apply atlas texture
-   - Create atlas once, reuse across chunks
-   - Apply to chunk meshes
-4. Add tests in `tests/smoke.spec.ts` — texture atlas smoke tests
-   - Atlas has correct dimensions
-   - Each block has a unique texture
-   - UV mapping is correct
-5. Update PROGRESS.md, CONTENT.md, ROADMAP.md
+1. `src/physics/Raycaster.ts` — First-person raycast from camera through crosshair
+   - Casts ray through world, returns first solid block hit
+   - Returns hit position, normal, and block position
+   - Supports configurable max distance (e.g., 6 blocks reach)
+2. `src/physics/BlockInteraction.ts` — Break and place logic
+   - Left click: start mining, show progress indicator, break on completion
+   - Right click: place selected block (if hotbar has it)
+   - Mining progress scales with block hardness
+3. Update `src/main.ts` — Wire up mouse events
+   - Left click = start mining, hold = progress, release = break if done
+   - Right click = place block
+   - Block position highlight overlay
+4. Update HUD — Show mining progress bar
+5. Add tests in `tests/smoke.spec.ts` — raycast hit detection
+6. Update PROGRESS.md, ROADMAP.md
 
 ## Gate Criteria
 - `pnpm run gate` passes
-- Atlas texture generates at runtime
-- Chunk meshes use texture atlas with UVs
+- Raycast hits correct blocks
+- Block breaking shows progress
+- Block placement works
