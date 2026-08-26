@@ -1,62 +1,33 @@
-<!--
-  README has TWO parts:
-  1) AUTONOMOUS LAB (below, until "Current run") — preserve on agent/*; human/baseline updates only.
-  2) Current run — RUN_OWNED; overnight agent rewrites for the shipped game.
-  See BOILERPLATE.md
--->
+<!-- BOILERPLATE_PLACEHOLDER: human-facing boilerplate README. On a game run, rewrite the playable sections for the shipped game; keep Pages URL + live-loop notes accurate. See BOILERPLATE.md -->
 
 # Autonomous Lab
 
-Public sandbox for **long unattended agent runs**. Most of what you see in `src/`
-and on the live site is **AI-generated** — used to probe **local LLM** capability
-(coding, vision, overnight persistence), not as a hand-authored product.
+**Genre-agnostic boilerplate** for long public autonomy runs. CI gates + **automerge** + GitHub Pages so a run stays **live**. This repo does **not** ship game genres or overnight objectives — those come from whatever objective the human pastes into the agent for that run.
 
-| | |
-|---|---|
-| **Live (last green automerge → Pages)** | https://fr4iser90.github.io/autonomous-lab/ |
-| **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
-| **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork; idle nudge; Docker) |
-| **This host’s setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
-| **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
+**Ownership:** see [`BOILERPLATE.md`](BOILERPLATE.md) and [`AGENTS.md`](AGENTS.md). Scaffold toys under `src/` are **not** the product.
 
-Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
+**Play (live after green automerge):** https://fr4iser90.github.io/autonomous-lab/
 
-## Prompt routing (short)
+Local preview: `pnpm install && pnpm run dev` (or npm) → http://127.0.0.1:5173/autonomous-lab/
 
-| Session | Paste | Model |
-|---|---|---|
-| Overnight / follow-up / idle nudge | `*-craft.md` / `*-followup.md` (+ harness nudge) | **fast** + `read_image` (~50–60 tok/s) |
-| VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** + `read_image` (~15–20 tok/s) |
-| Git / CI validation | `*-git-validation.md` (+ follow-up) | **fast** — PR / `gate` / Actions queue |
-
-Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
-
-## Live loop & gates
+## Live loop
 
 ```
-agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash)
-  → main → Pages
+agent/* commit → Open agent PR → CI gate → Automerge (squash) → main → Pages
 ```
 
-Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fire `push`).
+Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges alone do not fire `push`).
 
-| Check / surface | Role |
+| Surface | Meaning |
 |---|---|
-| `gate` | Required: Vitest + production build |
-| `protect-boilerplate` | Agent PRs must not edit workflows / `AGENTS.md` / `BOILERPLATE.md` / … |
-| Automerge | Squash `agent/*` → `main` when gate is green |
-| Pages | Deploys **only** from `main` (what outsiders play) |
-| PRE-PR / PHASE GATE | Prompt law: playable shot + vision when available before publish / phase change |
+| `baseline` | Frozen boilerplate |
+| `agent/<run-id>` | Experiment branch (follow commits here) |
+| `main` | Automerge target + Pages |
+| Actions `CI` / `Open agent PR` / `Automerge agent PRs` | Automation |
 
-Broken `gate` → no merge → Pages stays on the last green `main`.
+Broken `gate` → no merge → Pages stays on last green `main`.
 
-| Branch | Meaning |
-|---|---|
-| `baseline` | Frozen boilerplate reset |
-| `agent/<run-id>` | One autonomy experiment |
-| `main` | Live playable line + Pages |
-
-## Quick start (human)
+## Quick start
 
 ```sh
 pnpm install   # or npm install
@@ -65,54 +36,29 @@ pnpm run dev
 ./scripts/new-run.sh <run-id>
 ```
 
-Paste an objective from `example-prompts/` (or your own) into the harness with
-this checkout as the workspace. Set overnight **CAP** in the prompt (often `CAP = 20`
-for a short lab; raise for long runs).
+Then paste your run objective into the agent with this checkout as the workspace.
 
-Optional second agent: playability/VL **validation only** on **smart** →
-`example-prompts/games/*-VL-validation.md` (writes `BUGS.md`; does not ship code).
+## Autonomy shape
 
-## Example DSH settings
-
-See **[`SETUP.md`](SETUP.md)** for the full yaml used on this Strix Halo box
-(`fast` = Qwen3.6 VL, `smart` = Qwen3.8 VL). Minimal shape:
-
-```yaml
-# Example only — do not commit real tokens. Full copy in SETUP.md.
-agent-default-model:
-  provider: jarvis
-  model: Qwen3.6-35B-A3B-MTP-UD-Q4_K_XL-VL   # name: fast
-# Register a second model with name: smart (Qwen3.8 … VL) for validation sessions.
+```text
+start with the pasted objective; keep gate green; push agent/* only; never push main/baseline;
+never edit BOILERPLATE_OWNED paths; automerge + Pages follow green CI
 ```
 
 ## One-time GitHub setup
 
-1. Repo **Public**; Pages **Source = GitHub Actions**
-2. Rulesets: `protect-main` (PR + required **`gate`**), `protect-baseline` (you only)
-3. Actions → Workflow permissions: **Read and write** + allow Actions to create PRs
-4. Bootstrap: workflows must exist on the default branch once; then agent automerge works
+1. Repo **Public**; Pages **Source = GitHub Actions** (not Jekyll/Static HTML templates)
+2. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
+3. Settings → Actions → General → Workflow permissions:
+   - **Read and write permissions**
+   - ✅ **Allow GitHub Actions to create and approve pull requests**
+4. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
 
 ## Scripts
 
 | Script | Meaning |
 |---|---|
-| `pnpm test` / `npm test` | Vitest |
-| `pnpm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
-| `pnpm run gate` | test + build |
-| `pnpm run dev` | Vite on 5173 |
-
----
-
-# Current run
-
-<!-- RUN_OWNED: agent replaces this section for the shipped game. Keep the
-     Autonomous Lab header above intact. -->
-
-**Signal Ascent** — a Celestial-inspired layered prestige incremental (DOM UI).
-Harvest cosmic **Signal**, build **Relays**, buy **Resonators**, and **Ascend**
-through the Strata for permanent **Harmonics** multipliers.
-
-- Live: https://fr4iser90.github.io/autonomous-lab/
-- Run branch: `agent/celestial-inc-20260826` · tracking: `PROGRESS.md`
-- Stack: Vite + TypeScript + DOM-only UI · 20 Hz engine · decimal big numbers
-- Status: M1 — title + play shell (economy lands M2, layers M5, prestige M8, Phase 2 specials at layers 10/20/30/40/50)
+| `npm test` / `pnpm test` | Vitest |
+| `npm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
+| `npm run gate` | test + build (+ protect-boilerplate on agent PRs in CI) |
+| `npm run dev` | Vite on 5173 |
