@@ -10,6 +10,7 @@ import { SaveService } from '../src/services/SaveService'
 import { mulberry32, smoothNoise, fbm } from '../src/world/Noise'
 import { Chunk, CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH } from '../src/world/Chunk'
 import { World } from '../src/world/World'
+import { ChunkLighting, calculateSkyLight, updateChunkLighting, isLightSource, getLightSourceLevel } from '../src/physics/Lighting'
 
 describe('M1: Block Registry', () => {
   it('has at least 12 base block types', () => {
@@ -1191,6 +1192,259 @@ describe('M4: Multiple craft operations', () => {
     const result = quickCraft(grid, inv)
     expect(result).toBeDefined()
     expect(inv[0].count).toBe(12) // 8 + 4 = 12 planks (stacked)
+  })
+})
+
+// M6: Voxel Lighting (sky + torch)
+
+describe('M6: Sky Light', () => {
+  it('surface blocks receive sky light level 15', () => {
+    const chunk = new Chunk(0, 0, 42)
+    const lighting = new ChunkLighting()
+    calculateSkyLight(chunk, lighting)
+
+    // Find surface height
+    let surfaceY = 0
+    for (let y = 95; y >= 0; y--) {
+      if (chunk.getBlock(8, y, 8) !== 0) { surfaceY = y; break }
+    }
+
+    const skyLevel = lighting.getSkyLight(8, surfaceY, 8)
+    expect(skyLevel).toBe(15)
+  })
+
+  it('sky light decreases with depth', () => {
+    const chunk = new Chunk(0, 0, 42)
+    const lighting = new ChunkLighting()
+    calculateSkyLight(chunk, lighting)
+
+    // Find surface
+    let surfaceY = 0
+    for (let y = 95; y >= 0; y--) {
+      if (chunk.getBlock(8, y, 8) !== 0) { surfaceY = y; break }
+    }
+
+    const surfaceSky = lighting.getSkyLight(8, surfaceY, 8)
+    const deepSky = lighting.getSkyLight(8, Math.max(0, surfaceY - 10), 8)
+
+    expect(surfaceSky).toBe(15)
+    expect(deepSky).toBeLessThan(15)
+  })
+
+  it('bottom of chunk has low sky light', () => {
+    const chunk = new Chunk(0, 0, 42)
+    const lighting = new ChunkLighting()
+    calculateSkyLight(chunk, lighting)
+
+    const bottomSky = lighting.getSkyLight(8, 1, 8)
+    expect(bottomSky).toBeLessThan(5)
+  })
+
+  it('sky light is deterministic', () => {
+    const chunk1 = new Chunk(3, 7, 12345)
+    const chunk2 = new Chunk(3, 7, 12345)
+    const lighting1 = new ChunkLighting()
+    const lighting2 = new ChunkLighting()
+
+    calculateSkyLight(chunk1, lighting1)
+    calculateSkyLight(chunk2, lighting2)
+
+    // Compare all sky light values
+    for (let x = 0; x < 16; x++) {
+      for (let z = 0; z < 16; z++) {
+        for (let y = 0; y < 96; y++) {
+          expect(lighting1.getSkyLight(x, y, z)).toBe(lighting2.getSkyLight(x, y, z))
+        }
+      }
+    }
+  })
+})
+
+describe('M6: Torch Block Light', () => {
+  it('torch at surface emits light level 14', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    // Find surface and place torch
+    let surfaceY = 0
+    for (let y = 95; y >= 0; y--) {
+      if (chunk.getBlock(8, y, 8) !== 0) { surfaceY = y; break }
+    }
+    // Place torch at surface+1 (in air, on top of surface block)
+    chunk.setBlock(8, surfaceY + 1, 8, 15) // BlockTorch
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    const torchLight = lighting.getBlockLight(8, surfaceY + 1, 8)
+    expect(torchLight).toBe(14)
+  })
+
+  it('torch light decays with distance', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    // Create a small air pocket at y=50 so torch light can propagate
+    for (let x = 0; x < 16; x++) {
+      for (let z = 0; z < 16; z++) {
+        chunk.setBlock(x, 50, z, 0) // air
+      }
+    }
+    // Place torch at center
+    chunk.setBlock(8, 50, 8, 15)
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    // At torch: level 14
+    expect(lighting.getBlockLight(8, 50, 8)).toBe(14)
+    // One block away: level 13
+    expect(lighting.getBlockLight(9, 50, 8)).toBe(13)
+    // Two blocks away: level 12
+    expect(lighting.getBlockLight(10, 50, 8)).toBe(12)
+    // 7 blocks away: level 7
+    const far = lighting.getBlockLight(15, 50, 8)
+    expect(far).toBe(7)
+  })
+
+  it('torch light level 7 at distance 7 from source', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    // Create air pocket
+    for (let x = 0; x < 16; x++) {
+      for (let z = 0; z < 16; z++) {
+        chunk.setBlock(x, 50, z, 0)
+      }
+    }
+    // Place torch at center
+    chunk.setBlock(8, 50, 8, 15)
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    // 7 blocks away (x=15): level 14-7=7
+    const level7 = lighting.getBlockLight(15, 50, 8)
+    expect(level7).toBe(7)
+    // Edge of chunk: light decays but doesn't reach 0 within chunk
+    expect(level7).toBeGreaterThan(0)
+  })
+
+  it('light propagates through air', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    // Create air pocket
+    for (let x = 0; x < 16; x++) {
+      for (let z = 0; z < 16; z++) {
+        chunk.setBlock(x, 50, z, 0)
+      }
+    }
+    // Place torch at x=0
+    chunk.setBlock(0, 50, 8, 15)
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    // Air at x=3 should still receive torch light
+    const airLight = lighting.getBlockLight(3, 50, 8)
+    expect(airLight).toBeGreaterThan(0)
+  })
+
+  it('opaque blocks block torch light', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    // Create air pocket
+    for (let x = 0; x < 16; x++) {
+      for (let z = 0; z < 16; z++) {
+        chunk.setBlock(x, 50, z, 0)
+      }
+    }
+    // Place torch at x=0, z=8
+    chunk.setBlock(0, 50, 8, 15)
+    // Place stone wall across ALL z at x=4 to fully block light
+    for (let z = 0; z < 16; z++) {
+      chunk.setBlock(4, 50, z, 3) // BlockStone
+    }
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    // Light at x=3 (before wall)
+    const beforeWall = lighting.getBlockLight(3, 50, 8)
+    expect(beforeWall).toBeGreaterThan(0)
+    // Light at x=5 (behind wall) — should be blocked (0)
+    const behindWall = lighting.getBlockLight(5, 50, 8)
+    expect(behindWall).toBe(0)
+  })
+
+  it('isLightSource returns true for torch', () => {
+    expect(isLightSource(15)).toBe(true)
+    expect(isLightSource(3)).toBe(false) // stone
+    expect(isLightSource(1)).toBe(false) // grass
+  })
+
+  it('getLightSourceLevel returns 14 for torch', () => {
+    expect(getLightSourceLevel(15)).toBe(14)
+    expect(getLightSourceLevel(3)).toBe(0)
+  })
+})
+
+describe('M6: Combined Lighting', () => {
+  it('total light = max(sky, block)', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    // Find surface
+    let surfaceY = 0
+    for (let y = 95; y >= 0; y--) {
+      if (chunk.getBlock(8, y, 8) !== 0) { surfaceY = y; break }
+    }
+
+    // Create an underground air pocket so torch light can propagate
+    for (let x = 0; x < 16; x++) {
+      for (let z = 0; z < 16; z++) {
+        chunk.setBlock(x, surfaceY - 2, z, 0)
+      }
+    }
+    // Place torch in the underground pocket
+    chunk.setBlock(8, surfaceY - 2, 8, 15)
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    const sky = lighting.getSkyLight(8, surfaceY - 2, 8)
+    const block = lighting.getBlockLight(8, surfaceY - 2, 8)
+    const total = lighting.getTotalLight(8, surfaceY - 2, 8)
+
+    expect(total).toBe(Math.max(sky, block))
+    expect(total).toBeGreaterThan(sky) // torch makes it brighter underground
+  })
+
+  it('underground area is darker than surface without torch', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+
+    let surfaceY = 0
+    for (let y = 95; y >= 0; y--) {
+      if (chunk.getBlock(8, y, 8) !== 0) { surfaceY = y; break }
+    }
+
+    const lighting = new ChunkLighting()
+    updateChunkLighting(chunk, world, lighting)
+
+    const surfaceLight = lighting.getTotalLight(8, surfaceY, 8)
+    const undergroundLight = lighting.getTotalLight(8, surfaceY - 8, 8)
+
+    expect(surfaceLight).toBeGreaterThan(undergroundLight)
   })
 })
 

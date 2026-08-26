@@ -9,7 +9,7 @@
 | M3 | Raycast break/place with mining progress | COMPLETE ✅ |
 | M4 | Inventory + hotbar + crafting | COMPLETE ✅ |
 | M5 | Biomes + world features (trees, caves, ores) | COMPLETE ✅ |
-| M6 | Voxel lighting (sky + torch) | PENDING |
+| M6 | Voxel lighting (sky + torch) | COMPLETE ✅ |
 | M7 | Mobs (passive + hostile AI) | PENDING |
 | M8 | Day/night cycle + autosave | PENDING |
 

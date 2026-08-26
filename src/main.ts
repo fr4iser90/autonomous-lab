@@ -22,6 +22,7 @@ import {
 } from './data/inventory'
 
 import { CHUNK_WIDTH } from './world/Chunk'
+import { ChunkLighting, updateChunkLighting as calcLighting } from './physics/Lighting'
 
 // Game states
 type GameState = 'title' | 'playing'
@@ -51,6 +52,8 @@ class VoxelCraftGame {
   private selectedSlot = 0 // hotbar slot 0-8
   // M4: Shared inventory (36 slots)
   private inventory: Array<{ itemId: number; count: number }> = createInventory()
+  // M6: Per-chunk lighting data
+  private chunkLightings = new Map<string, ChunkLighting>()
 
   // M4: Default starting inventory (items for testing)
   private readonly defaultInventoryItems = [
@@ -288,6 +291,7 @@ class VoxelCraftGame {
     }
     this.chunkMeshes.clear()
     this.loadedChunks.clear()
+    this.chunkLightings.clear()
 
     if (this.hud) {
       this.hud.remove()
@@ -411,7 +415,8 @@ class VoxelCraftGame {
     }
 
     const getBlockFn = (wx: number, wy: number, wz: number) => this.world!.getBlock(wx, wy, wz)
-    const mesh = MeshBuilder.buildChunk(cx, cz, getBlockFn, atlas)
+    const lighting = this.chunkLightings.get(chunkKey) || null
+    const mesh = MeshBuilder.buildChunk(cx, cz, getBlockFn, atlas, lighting, 0, 0)
 
     if (mesh.geometry.getAttribute('position') && mesh.geometry.getAttribute('position').count > 0) {
       this.renderer.scene.add(mesh)
@@ -467,15 +472,44 @@ class VoxelCraftGame {
 
   /**
    * Mark a chunk as needing rebuild when a block changes.
+   * Also updates lighting for affected chunks.
    */
   private markChunkDirty(wx: number, _wy: number, wz: number): void {
-    if (!this.renderer) return
+    if (!this.renderer || !this.world) return
     const cx = Math.floor(wx / CHUNK_WIDTH)
     const cz = Math.floor(wz / CHUNK_WIDTH)
     const key = `${cx},${cz}`
     if (this.loadedChunks.has(key)) {
+      this.updateChunkLighting(cx, cz)
       this.rebuildChunkMesh(key)
+      // Also rebuild neighbor chunks if torch was placed/broken
+      const [ncx, ncz] = [cx + 1, cz], [ncx2, ncz2] = [cx - 1, cz], [ncx3, ncz3] = [cx, cz + 1], [ncx4, ncz4] = [cx, cz - 1]
+      for (const [nx, nz] of [[ncx, ncz], [ncx2, ncz2], [ncx3, ncz3], [ncx4, ncz4]] as [number, number][]) {
+        const nkey = `${nx},${nz}`
+        if (this.loadedChunks.has(nkey)) {
+          this.updateChunkLighting(nx, nz)
+          this.rebuildChunkMesh(nkey)
+        }
+      }
     }
+  }
+
+  /**
+   * M6: Calculate lighting for a chunk.
+   */
+  private updateChunkLighting(cx: number, cz: number): void {
+    if (!this.world) return
+    const key = `${cx},${cz}`
+    const chunk = this.world.getChunk(cx, cz)
+    if (!chunk) return
+
+    let lighting = this.chunkLightings.get(key)
+    if (!lighting) {
+      lighting = new ChunkLighting()
+      this.chunkLightings.set(key, lighting)
+    }
+
+    calcLighting(chunk, this.world!, lighting)
   }
 
   private gameLoop = (): void => {
@@ -529,6 +563,8 @@ class VoxelCraftGame {
         if (!this.loadedChunks.has(key)) {
           world.loadChunk(cx, cz)
           this.loadedChunks.add(key)
+          // M6: Calculate lighting for new chunk
+          this.updateChunkLighting(cx, cz)
           this.rebuildChunkMesh(key)
         }
       }

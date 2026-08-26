@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M5 — Biomes + world features
-**Status:** COMPLETE — gate green (100/100 tests, build succeeds ~501KB)
+**Phase:** M6 — Voxel lighting (sky + torch)
+**Status:** COMPLETE — gate green (113/113 tests, build succeeds ~506KB)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -54,7 +54,16 @@
   - Tree generation: 3-5 block trunk + rounded leaf canopy
   - Forest biomes have 15% tree density, plains 5%
   - 12 M5 smoke tests (total 100)
-- M6: Voxel lighting (sky + torch) → PENDING
+- M6: Voxel lighting (sky + torch) → **COMPLETE ✅**
+  - `ChunkLighting` class with skyLight + blockLight Uint8Arrays per chunk (16×96×16)
+  - Sky light: top-down column pass, blocked by opaque blocks (15→0)
+  - Block light: BFS flood-fill from torches (level 14, decays 1/block, 6-neighbor)
+  - `isLightSource()` and `getLightSourceLevel()` helpers
+  - MeshBuilder: lighting-aware vertex colors (brightness = 0.25 + light/15 × 0.75)
+  - Switched from MeshBasicMaterial to MeshStandardMaterial with vertexColors
+  - Lighting calculated on chunk load and after block changes (including neighbors for torch propagation)
+  - BlockTorch at id=15: transparent, solid=false, color [255, 200, 50]
+  - 13 M6 smoke tests (total 113)
 - M7: Mobs (passive + hostile AI) → PENDING
 - M8: Day/night cycle + autosave → PENDING
 
@@ -64,4 +73,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M6: Voxel lighting (sky + torch).
+M7: Mobs (passive + hostile AI).
