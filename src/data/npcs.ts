@@ -35,19 +35,26 @@ export const NPCCChicken: NPCDef = {
   dropItemId: 13, dropCount: 1, color: [255, 255, 255], spawnBiomes: ['plains', 'forest', 'jungle', 'desert'], size: 0.6
 }
 
+// Passive mobs
+export const NPCRabbit: NPCDef = {
+  id: 7, name: 'Rabbit', hostile: false, hp: 3, speed: 0.8, damage: 0,
+  dropItemId: 14, dropCount: 1, color: [200, 200, 200], spawnBiomes: ['plains', 'forest', 'snow'], size: 0.5
+}
+
 // Hostile mobs
 export const NPCZombie: NPCDef = {
-  id: 5, name: 'Zombie', hostile: true, hp: 20, speed: 0.7, damage: 3,
+  id: 8, name: 'Zombie', hostile: true, hp: 20, speed: 0.7, damage: 3,
   dropItemId: 10, dropCount: 1, color: [34, 120, 34], spawnBiomes: ['plains', 'forest', 'desert', 'highlands', 'snow'], size: 1.0
 }
 
 export const NPCCreeper: NPCDef = {
-  id: 6, name: 'Creeper', hostile: true, hp: 20, speed: 0.6, damage: 10,
+  id: 9, name: 'Creeper', hostile: true, hp: 20, speed: 0.6, damage: 10,
   dropItemId: 10, dropCount: 2, color: [34, 150, 34], spawnBiomes: ['plains', 'forest', 'desert', 'highlands', 'snow'], size: 1.0
 }
 
 export const ALL_NPCS: ReadonlyArray<NPCDef> = [
   NPCCow, NPCPig, NPCSheep, NPCCChicken,
+  NPCRabbit,
   NPCZombie, NPCCreeper,
 ]
 

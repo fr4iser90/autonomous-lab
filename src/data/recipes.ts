@@ -47,13 +47,13 @@ export const RECIPE_IRON_PICKAXE: Recipe = {
 }
 
 export const RECIPE_WOODEN_AXE: Recipe = {
-  id: 8, resultItemId: 20, resultCount: 1, width: 3, height: 3,
-  pattern: [[4, 4, 0], [4, 5, 0], [0, 5, 0]]
+  id: 8, resultItemId: 6, resultCount: 1, width: 3, height: 3,
+  pattern: [[4, 4, 0], [4, 5, 0], [0, 5, 0]] // 2 planks + 2 sticks → wooden pickaxe
 }
 
 export const RECIPE_WOODEN_SWORD: Recipe = {
-  id: 9, resultItemId: 21, resultCount: 1, width: 2, height: 3,
-  pattern: [[4, 0], [4, 0], [5, 0]]
+  id: 9, resultItemId: 7, resultCount: 1, width: 2, height: 3,
+  pattern: [[4, 0], [4, 0], [5, 0]] // 2 planks + 1 stick → stone pickaxe
 }
 
 export const RECIPE_COOKED_BEEF: Recipe = {

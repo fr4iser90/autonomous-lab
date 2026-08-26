@@ -7,14 +7,14 @@ Infinite voxel sandbox (Minecraft-style) — procedural terrain, break/place, in
 
 | Registry | Count | Entries |
 |---|---|---|
-| blocks | 16 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Air |
-| items | 16 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Air |
+| blocks | 17 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Lava, Air |
+| items | 18 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Water Bucket, Lava Bucket, Air |
 | recipes | 10 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Axe, Wooden Sword, Cooked Beef |
-| npcs | 6 | Cow, Pig, Sheep, Chicken, Zombie, Creeper |
+| npcs | 7 | Cow, Pig, Sheep, Chicken, Rabbit, Zombie, Creeper |
 
 ```
-CAPS: blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
-NEXT_CYCLE_PRIORITY: M2 texture atlas + enhanced rendering
+CAPS: blocks=17/CAP items=18/CAP recipes=10/CAP npcs=7/CAP
+NEXT_CYCLE_PRIORITY: recipes
 ```
 
 ## Block Details
@@ -67,5 +67,6 @@ NEXT_CYCLE_PRIORITY: M2 texture atlas + enhanced rendering
 | 2 | Pig | false | 4 | 0.5 | 0 | Beef |
 | 3 | Sheep | false | 4 | 0.5 | 0 | Leaves |
 | 4 | Chicken | false | 2 | 0.6 | 0 | Apple |
-| 5 | Zombie | true | 20 | 0.7 | 3 | Iron Ingot |
-| 6 | Creeper | true | 20 | 0.6 | 10 | Iron Ingot |
+| 7 | Rabbit | false | 3 | 0.8 | 0 | Beef |
+| 8 | Zombie | true | 20 | 0.7 | 3 | Iron Ingot |
+| 9 | Creeper | true | 20 | 0.6 | 10 | Iron Ingot |

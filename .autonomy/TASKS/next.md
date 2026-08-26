@@ -1,25 +1,26 @@
-# Next Task: M6 — Voxel Lighting (sky + torch)
+# Next Task: Phase 2 — Content Cycle 1 (Reach CAP for all registries)
 
 ## Goal
-Implement a simple voxel lighting system with sky light and torch light.
+Fill out block, item, recipe, and NPC registries to reach CAP targets: blocks=20, items=20, recipes=20, npcs=20.
 
-## Deliverables
-1. `src/physics/Lighting.ts` — Lighting data model
-   - Light level per block: 0–15 (4-bit)
-   - Sky light propagation (decreases by 1 per block height)
-   - Torch emits light level 14 in radius 8
-   - `updateLighting(world)` — full lighting pass
+## Current State
+- Blocks: 17 (id 0-16: Air, Dirt, Grass, Stone, Cobblestone, Planks, Log, Leaves, Sand, Bedrock, Torch, CraftingTable, CoalOre, IronOre, GoldOre, Water, Lava)
+- Items: 17 (id 0-16)
+- Recipes: need to check current count
+- NPCs: need to check current count
+- CAP targets: blocks=20, items=20, recipes=20, npcs=20
 
-2. Update `src/graphics/MeshBuilder.ts` — Lighting-aware colors
-   - Vertex color adjusted by light level (darker = less light)
-   - Torch blocks glow (self-lit)
-
-3. Update `src/main.ts` — Wire lighting update on chunk rebuild
-   - After break/place: call lighting pass for affected chunks
-
-4. Add tests in `tests/smoke.spec.ts` — lighting operations
+## Deliverables (Phase 2 Cycle 1)
+1. Add 3 new blocks (total 20): e.g., Brick, Glass, DiamondOre
+2. Add 3 new items (total 20): e.g., Brick item, Glass item, Diamond
+3. Add recipes for new blocks/items (reach 20 total)
+4. Add NPCs to reach 20 total (if needed)
+5. Update texture atlas for new blocks
+6. Add recipes for new blocks (e.g., glass from sand, brick from clay)
+7. Gate: `pnpm run gate` must pass
 
 ## Gate Criteria
 - `pnpm run gate` passes
-- Torch placed on wall illuminates nearby blocks
-- Underground areas are darker than surface
+- All registries reach or approach CAP targets
+- Texture atlas updated with new cells
+- All new blocks have UV mappings and colors
