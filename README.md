@@ -15,10 +15,20 @@ and on the live site is **AI-generated** — used to probe **local LLM** capabil
 |---|---|
 | **Live (last green automerge → Pages)** | https://fr4iser90.github.io/autonomous-lab/ |
 | **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
-| **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork of DeepSeek harness; idle follow-up prompting; Dockerized for server deploy) |
+| **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork; idle nudge; Docker) |
+| **This host’s setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
 | **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
 
 Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
+
+## Prompt routing (short)
+
+| Session | Paste | Model |
+|---|---|---|
+| Overnight / follow-up / idle nudge | `*-craft.md` / `*-followup.md` (+ harness nudge) | **fast** (~50–60 tok/s here) |
+| VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** (~15–20 tok/s here) |
+
+Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
 
 ## Live loop & gates
 
@@ -58,46 +68,20 @@ Paste an objective from `example-prompts/` (or your own) into the harness with
 this checkout as the workspace. Set overnight **CAP** in the prompt (often `CAP = 20`
 for a short lab; raise for long runs).
 
-Optional second agent: playability/VL **validation only** →
+Optional second agent: playability/VL **validation only** on **smart** →
 `example-prompts/games/*-VL-validation.md` (writes `BUGS.md`; does not ship code).
 
-## Example DSH settings (local models)
+## Example DSH settings
 
-Copy/merge into `~/.dsh/settings.yaml`. Model **ids** must match your
-Jarvis/`models.ini` section names. Replace URL and `KEY`. Roles that prompts
-look up by **name**: `fast` (default) and `smart` (hard problems + vision).
+See **[`SETUP.md`](SETUP.md)** for the full yaml used on this Strix Halo box
+(`fast` = Qwen3.6 VL, `smart` = Qwen3.8 VL). Minimal shape:
 
 ```yaml
-# Example only — do not commit real tokens.
-llm-pi-ai:
-  providers:
-    jarvis:
-      displayName: Jarvis llama.cpp
-      api: openai-completions
-      streamIdleTimeoutMs: 1000000
-      baseURL: https://example.com/v1
-      headers:
-        Authorization: Bearer KEY
-      compat:
-        thinkingFormat: qwen
-      models:
-        - id: YOUR-FAST-GGUF-ID
-          name: fast
-          contextWindow: 87552
-          maxTokens: 32768
-          input: [ text, image ]
-        - id: YOUR-SMART-GGUF-ID
-          name: smart
-          contextWindow: 65536
-          maxTokens: 32768
-          input: [ text, image ]
-
+# Example only — do not commit real tokens. Full copy in SETUP.md.
 agent-default-model:
   provider: jarvis
-  model: YOUR-FAST-GGUF-ID
-
-permission:
-  defaultPreset: danger-full-access
+  model: Qwen3.6-35B-A3B-MTP-UD-Q4_K_XL-VL   # name: fast
+# Register a second model with name: smart (Qwen3.8 … VL) for validation sessions.
 ```
 
 ## One-time GitHub setup

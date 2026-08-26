@@ -24,6 +24,7 @@ Files and dirs are tagged:
   delete or rewrite that block; only update `# Current run` below it.
 - Prefer not to edit `example-prompts/**` on overnight runs (human maintains
   objectives / VL-validation prompts).
+- **`SETUP.md`** — human host notes (harness, hardware, settings); do not rewrite.
 
 ## BOILERPLATE_PLACEHOLDER / TOY → become RUN_OWNED
 
