@@ -16,6 +16,12 @@ WHAT THIS JOB WAS
 - Stack: Three.js r128 + WebSocket server + Vite client
 - Planned arc: Milestones → soak → Phase 3 DEMO → Phase 4 (unless STOP_AFTER_DEMO in PROGRESS)
 
+BOILERPLATE OWNERSHIP (resume)
+- Read `BOILERPLATE.md` if present. Never edit BOILERPLATE_OWNED paths (workflows,
+  AGENTS.md, BOILERPLATE.md, scripts/new-run.sh, LICENSE, Vite base).
+- Toy/placeholder files are not the game. Tracking = PROGRESS.md (+ CONTENT/…).
+- `.autonomy/` is optional/legacy — do not treat it as primary truth.
+
 READ THE DATA FIRST (tracking surface — invent nothing)
 1. `git status` / current branch / recent commits. Confirm this is the lab clone
    on `agent/moba-…` (or the run id recorded in PROGRESS).

@@ -9,12 +9,20 @@ start from scratch. You do **not** re-clone or reinvent the game.
 WHAT THIS JOB WAS
 - Full overnight law: `voxel-craft.md` (same `example-prompts/games/` folder, or
   already applied in this checkout). Re-open that file for ACCEPT, LIVE LOOP,
-  architecture, and Phase rules — this follow-up only tells you **how to resume**.
+  SAFE SYNC, TESTING HARNESS, architecture, and Phase rules — this follow-up
+  only tells you **how to resume**.
 - Game: VoxelCraft — first-person voxel sandbox (Minecraft-style)
 - Branch pattern: `agent/voxel-craft-*` (use the existing run branch in PROGRESS /
   git; do not invent a second product tree)
 - Stack: Vite + TypeScript + Three.js (procedural atlas; solo; 3 save slots)
-- Planned arc: M1–M12 → Phase 2 content cycles to CAP/CAP → Phase 2b soak → Phase 3 DEMO video → Phase 4 infinite improve
+- Planned arc: M1–M12 → Phase 2 content cycles to CAP/CAP → Phase 2b soak →
+  Phase 3 DEMO video → Phase 4 infinite improve
+
+BOILERPLATE OWNERSHIP (resume)
+- Read `BOILERPLATE.md` if present. Never edit BOILERPLATE_OWNED paths (workflows,
+  AGENTS.md, BOILERPLATE.md, scripts/new-run.sh, LICENSE, Vite base).
+- Toy/placeholder files are not the game. Tracking = PROGRESS.md (+ CONTENT/…).
+- `.autonomy/` is optional/legacy — do not treat it as primary truth.
 
 READ THE DATA FIRST (tracking surface — invent nothing)
 1. `git status` / current branch / recent commits. Confirm this is the lab clone
@@ -24,65 +32,62 @@ READ THE DATA FIRST (tracking surface — invent nothing)
    CONTENT.md, FEATURES.md, SOAK.md, BUGS.md, DEMO.md, ASSETS.md,
    shared/design.md or shared/protocol.md, README.md.
 4. Skim the filesystem evidence (src/, demo/, tests/) against what PROGRESS claims.
+5. Check GitHub PR for this branch if tools allow: conflicts? red `gate`?
+   “PR already exists” is OK — push updates it; **conflicts/red gate are not OK**.
 
 - Lie detector: if PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but
   demo/demo.webm missing/empty, DEMO.md visual not all PASS, demo/frames/ incomplete,
   caps < CAP/CAP with Phase 2 budget left, or no SOAK.md Phase-2b pass → treat as FALSE,
   append BUGS.md "false complete", resume the real gap. DOM-only Playwright ≠ Phase 3.
 
+SAFE SYNC FIRST (no work loss — see `voxel-craft.md` SAFE SYNC)
+1. `git fetch origin`
+2. Commit or stash WIP; create `backup/<run-id>-<shortSHA>` at HEAD **before**
+   any merge/rebase.
+3. If behind `origin/main` OR PR reports conflicts: **merge `origin/main`**
+   (preferred) or rebase with backup + later `push --force-with-lease` on
+   `agent/*` only. Never `reset --hard` to main. Never delete agent commits.
+4. Resolve conflicts without wiping game `src/`. Re-run `pnpm run gate` + UI smoke.
+5. Log `SYNC: …` in PROGRESS.md.
+
+PLAYABILITY TRIAGE (before more content cycles)
+- Boot `pnpm run dev`; run TESTING HARNESS **D** (UI smoke): click Create New
+  World / Continue; **fail on any pageerror**.
+- Known class of bug: using `renderer.scene` (or similar) before `Renderer` is
+  constructed → title looks clickable but New World no-ops. Fix init order;
+  add a regression assertion to UI smoke / vitest; only then continue Phase 2/4.
+- Seed input must affect the created world when filled.
+- Screenshot alone / file size is not PASS — spawn smart/VL when available.
+- Content cycles: each new block/item/recipe/npc needs **CONTENT VISUAL**
+  (`demo/content/C<N>-<kind>-<id>.png`) — title-screen PRE-PR is not enough.
+
 INFINITY MODE (Phase 4 — re-arm on every follow-up)
 - If Phase 3 is truly done (demo artifact + DEMO.md visual PASS + frames when
-  required) and STOP_AFTER_DEMO is not set → you are in **Phase 4 infinite
-  improve**. Continue P4 cycles forever until a human kills the process.
-- Never treat PHASE3-DONE / DEMO done as "job finished". That is only a
-  checkpoint. Do not mark create_goal complete; do not idle; next tool = P4 cycle.
-- If PROGRESS already shows Phase 4 / cycle-N: resume that cycle (or N+1 if
-  the last cycle ACCEPT is proven). Do not fall back to M1 or re-record DEMO
-  unless the lie detector says the demo is fake/incomplete.
+  required) and STOP_AFTER_DEMO is not set → **Phase 4 infinite improve** forever
+  until a human kills the process.
+- Never treat PHASE3-DONE as job finished. Do not mark create_goal complete.
+- If already on Phase 4 / cycle-N: resume that cycle (or N+1 if ACCEPT proven).
 
 THEN CONTINUE
 1. create_goal with the same overnight objective as `voxel-craft.md` and
-   max_goal_rounds ≥ 400. Never mark complete on your own (human kills) — Phase 4 runs forever
-   unless `voxel-craft.md` explicitly allows STOP_AFTER_DEMO.
-2. Resume at the **first unfinished** milestone / content cycle / soak / DEMO /
+   max_goal_rounds ≥ 400. Never mark complete on your own (human kills) —
+   Phase 4 runs forever unless STOP_AFTER_DEMO applies.
+2. If PR conflicted / gate red / UI smoke red: FIX-ONLY (+ SAFE SYNC) until
+   green and mergeable — do not pile new CAP content on a dead title screen.
+3. Resume at the **first unfinished** milestone / content cycle / soak / DEMO /
    Phase 4 cycle proven by docs + disk. Never restart M1 if later work exists.
-3. Obey `voxel-craft.md` LIVE LOOP before every push/PR — including **PRE-PR VISUAL**
-   (Playwright screenshot + smart/VL analysis when available; PASS required).
-4. Keep tracking docs current every ACCEPT/cycle. Always leave a next tool call.
-5. Gate: `pnpm run gate` (or npm) must stay green. Never push `main` / `baseline`.
-- Prefer re-reading only the current Mn / Phase section from the main prompt.
+4. Obey `voxel-craft.md` LIVE LOOP (PRE-PR VISUAL + UI smoke + SAFE SYNC +
+   smart/VL). File size alone ≠ visual PASS.
+5. Keep tracking docs current. Always leave a next tool call.
+6. Gate green. Never push `main` / `baseline`.
 
-If `voxel-craft.md` is missing from disk, recover rules from PROGRESS + CODE + this
-checkout's AGENTS.md branch/gate rules only — still do not greenfield.
-
+If `voxel-craft.md` is missing from disk, recover rules from PROGRESS + CODE +
+AGENTS.md branch/gate only — still do not greenfield.
 
 ================================================================
 PHASE GATE (before EVERY phase change — Pages must show the finished phase)
 ================================================================
 
-Do **not** start the next phase until this gate PASSes. Applies to:
-  milestones-complete → Phase 2, Phase 2 → Phase 2b/soak, soak → Phase 3,
-  Phase 3 → Phase 4, and any other named phase jump in this prompt.
-
-1. PLAYABLE CHECK: boot the game; capture ≥1 Playwright screenshot of the
-   playable surface for the phase you just finished (title + in-world / HUD as
-   appropriate). Must look coherent and playable — not black, not error page.
-2. VL / smart (**required when available**): MUST spawn the settings model
-   named `smart` / vision-capable and pass the screenshot **path**. Read-tool
-   "binary file" errors do **not** excuse skipping smart. Require PASS
-   ("playable for this phase"). On FAIL: fix, re-shot, re-validate — do not
-   advance phase, do not push. File size/dimensions alone = FAIL / not a PASS.
-   Only if no smart/VL in settings: Read/self-check the image; FAIL still blocks.
-3. Log in PROGRESS.md NOW: `PHASE_GATE: <from>→<to> PASS`, screenshot path,
-   validator (smart/VL id or self-read).
-4. Run the full LIVE LOOP (PRE-PR VISUAL may reuse the phase-gate shot if it
-   is fresh and PASS). Push `agent/*` → CI → automerge → **Pages must update**
-   so the live site shows this phase's finished, playable state **before** you
-   begin the next phase.
-5. Only after automerge/Pages path is underway (PR merged or open with green
-   gate + automerge candidate) may you write NEXT phase into PROGRESS and start
-   the next phase's first task.
-
-FORBIDDEN: jumping M12→Phase2 / 2→2b / 2b→3 / 3→4 (or template equivalents)
-without PHASE_GATE PASS + LIVE LOOP publish toward main/Pages.
-
+Do **not** start the next phase until this gate PASSes (full text in
+`voxel-craft.md`): playable screenshot + smart/VL when available + LIVE LOOP so
+Pages shows the finished phase before the next phase begins.

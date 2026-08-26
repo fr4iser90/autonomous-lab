@@ -16,6 +16,12 @@ WHAT THIS JOB WAS
 - Stack: Vite + TypeScript + DOM UI (no Phaser/Three/WebSocket)
 - Planned arc: Milestones → soak → Phase 3 DEMO → Phase 4 infinite improve
 
+BOILERPLATE OWNERSHIP (resume)
+- Read `BOILERPLATE.md` if present. Never edit BOILERPLATE_OWNED paths (workflows,
+  AGENTS.md, BOILERPLATE.md, scripts/new-run.sh, LICENSE, Vite base).
+- Toy/placeholder files are not the game. Tracking = PROGRESS.md (+ CONTENT/…).
+- `.autonomy/` is optional/legacy — do not treat it as primary truth.
+
 READ THE DATA FIRST (tracking surface — invent nothing)
 1. `git status` / current branch / recent commits. Confirm this is the lab clone
    on `agent/incremental-…` (or the run id recorded in PROGRESS).

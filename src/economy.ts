@@ -1,4 +1,7 @@
 /**
+ * BOILERPLATE_TOY — scaffold economy demo only. Delete or replace when the real game starts.
+ * See BOILERPLATE.md. Not product fantasy.
+ *
  * Pure economy step used by the UI and unit tests.
  * Keep production math out of DOM handlers.
  */

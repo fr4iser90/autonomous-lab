@@ -13,6 +13,12 @@ WHAT THIS JOB WAS
 - Kind: arcade / twin-stick / action template
 - Branch: whatever `agent/<run-id>` PROGRESS.md / git already use.
 
+BOILERPLATE OWNERSHIP (resume)
+- Read `BOILERPLATE.md` if present. Never edit BOILERPLATE_OWNED paths (workflows,
+  AGENTS.md, BOILERPLATE.md, scripts/new-run.sh, LICENSE, Vite base).
+- Toy/placeholder files are not the game. Tracking = PROGRESS.md (+ CONTENT/…).
+- `.autonomy/` is optional/legacy — do not treat it as primary truth.
+
 READ THE DATA FIRST (tracking surface — invent nothing)
 1. `git status` / current `agent/*` branch / recent commits.
 2. Read **PROGRESS.md NOW** — phase, next step, last ACCEPT, SHA, pre-PR visual.

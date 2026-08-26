@@ -32,6 +32,27 @@ Live: https://fr4iser90.github.io/autonomous-lab/
 Follow the clone's AGENTS.md for branch/gate rules only. This prompt owns the game;
 the boilerplate owns none of the genre.
 
+================================================================
+BOILERPLATE OWNERSHIP (do not confuse toys with the game)
+================================================================
+
+The clone is a **toolchain**. Read `BOILERPLATE.md` + `AGENTS.md` (branch/gate +
+ownership only). Markers:
+
+- `BOILERPLATE_OWNED` — never edit on `agent/*` (workflows, AGENTS.md,
+  BOILERPLATE.md, scripts/new-run.sh, LICENSE, Vite `base` `/autonomous-lab/`).
+- `BOILERPLATE_TOY` / `BOILERPLATE_PLACEHOLDER` — replace; not design authority
+  (`src/economy.ts`, harvest UI, stub PROGRESS/CONTENT until rewritten).
+- **RUN_OWNED** — your game: `src/` (real game), `tests/`, `demo/`, PROGRESS,
+  CONTENT, FEATURES, SOAK, BUGS, DEMO, game README.
+
+Tracking = **PROGRESS.md** (+ CONTENT/FEATURES/…). `.autonomy/` is legacy/optional —
+do not use it as the primary tracker; do not invent a second product there.
+
+On SAFE SYNC conflicts: keep agent game `src/` + run docs; never "fix"
+BOILERPLATE_OWNED by copying agent edits over workflows.
+
+
 BEFORE any game code / greenfield scaffold:
 
 1. If cwd is already a clone of fr4iser90/autonomous-lab with `origin` set:

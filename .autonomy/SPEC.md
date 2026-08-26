@@ -1,8 +1,9 @@
-# Product spec (fill per run)
+<!-- BOILERPLATE_PLACEHOLDER / LEGACY_OPTIONAL: prefer PROGRESS.md + overnight prompt. Safe to ignore or delete on a run. See BOILERPLATE.md / AGENTS.md -->
 
-Replace this file at autonomy start from the **active run objective** (whatever the human pasted into the agent).
+# Product spec (optional legacy)
 
-Do not treat the boilerplate toy UI as the product fantasy.
+Primary tracking is **PROGRESS.md** and the pasted overnight objective.
+Replace this file only if you still want a SPEC mirror — never contradict PROGRESS.
 
 ## Goal
 
@@ -14,11 +15,8 @@ Do not treat the boilerplate toy UI as the product fantasy.
 - Keep Vite `base` = `/autonomous-lab/`
 - Ship via `agent/<run-id>` PRs into `main` (Pages from `main` only)
 - Never push `main` or `baseline`
+- Never edit BOILERPLATE_OWNED paths (see BOILERPLATE.md)
 
 ## Run-specific requirements
 
 <!-- engine, genre, save rules, ACCEPT bars from the objective -->
-
-## Non-goals
-
-<!-- from the objective; never bake a specific game into baseline -->

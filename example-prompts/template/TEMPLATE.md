@@ -37,6 +37,13 @@ agent to **consume** the lab as boilerplate — paste from
 Never local-only `git init`. Never push `main`/`baseline`. Prefer `pnpm install`.
 Keep Vite `base` `/autonomous-lab/`. Set `{{GAME_SLUG}}` per game.
 
+## Boilerplate ownership
+
+Every game prompt must include a **BOILERPLATE OWNERSHIP** block: agents must not
+edit `BOILERPLATE_OWNED` paths (workflows, AGENTS.md, BOILERPLATE.md, …). Toys
+marked `BOILERPLATE_TOY` are not the product. Tracking = PROGRESS/CONTENT — not
+`.autonomy` as primary. See repo `BOILERPLATE.md`.
+
 
 ---
 

@@ -14,7 +14,13 @@ DSH RUNTIME
 - This file is the full overnight job: runtime, architecture, **M1–M12 ACCEPT**, Phase 2–4. Before each Mn, re-read **that Mn only** from the MILESTONES section below (do not re-read later milestones until you reach them). After M12 ACCEPT, ignore M1–M12 and follow Phase 2–4 here.
 - Default model: session default from dsh settings (agent-default-model / name `fast`). Do not hardcode GGUF ids.
 - For chunk meshing, voxel lighting flood-fill, crafting matcher, or mob AI root-cause: spawn a subagent with agentOptions.provider = jarvis (or configured provider) and agentOptions.model = the **id** of the settings entry whose **name** is `smart`. If no `smart` entry, stay on session default. Apply the fix yourself.
-- Vision (VL) / smart: for **every** PRE-PR VISUAL, PHASE GATE, DEMO frame, and milestone screenshot — **MUST spawn** the settings model named `smart` (or strongest VL) with the image **path** when that model exists. Confirm playable/coherent (terrain, HUD, not black canvas) — never invent block rules. "Read: binary file" is normal for PNG; still call smart. File size/dimensions alone never PASS. Only if no smart/VL in settings: self-read frames; log PASS/FAIL in DEMO.md / PROGRESS.md.
+- Vision (VL) / smart: for **every** PRE-PR VISUAL, PHASE GATE, DEMO frame,
+  milestone screenshot, and **every new content id** (block/item/recipe/npc) —
+  **MUST spawn** the settings model named `smart` (or strongest VL) with the
+  image **path** when that model exists. Confirm the **new thing is actually
+  visible** (not only title screen / button count). "Read: binary file" is
+  normal for PNG; still call smart. File size/dimensions alone never PASS.
+  Only if no smart/VL in settings: self-read frames; log PASS/FAIL.
 - Playwright: if mcp__playwright__* tools exist, use them for DEMO and visual checks. Otherwise npx playwright / bash. Vitest is the fast loop; browsers at milestone end, UI content cycles, Phase 3, and UI Phase 4 cycles.
 - Stack: Vite + TypeScript + Three.js r128 (CDN or bundled). Pin three in package.json. Work inside the boilerplate clone (see BOILERPLATE REPO block).
 - Preview: stop `kill "$(cat .game.pid)"` / `fuser -k "$(cat .game.port)/tcp"` when those files exist; confirm port free; `npm run dev` in background; write `$!` to `.game.pid` and bound port to `.game.port`; health-check HTTP before Playwright. Never `pkill`/`killall`/`pgrep` by interpreter name. `pnpm install` (prefer) before first dev start.
@@ -28,6 +34,27 @@ Repo: https://github.com/fr4iser90/autonomous-lab
 Live: https://fr4iser90.github.io/autonomous-lab/
 Follow the clone's AGENTS.md for branch/gate rules only. This prompt owns the game;
 the boilerplate owns none of the genre.
+
+================================================================
+BOILERPLATE OWNERSHIP (do not confuse toys with the game)
+================================================================
+
+The clone is a **toolchain**. Read `BOILERPLATE.md` + `AGENTS.md` (branch/gate +
+ownership only). Markers:
+
+- `BOILERPLATE_OWNED` — never edit on `agent/*` (workflows, AGENTS.md,
+  BOILERPLATE.md, scripts/new-run.sh, LICENSE, Vite `base` `/autonomous-lab/`).
+- `BOILERPLATE_TOY` / `BOILERPLATE_PLACEHOLDER` — replace; not design authority
+  (`src/economy.ts`, harvest UI, stub PROGRESS/CONTENT until rewritten).
+- **RUN_OWNED** — your game: `src/` (real game), `tests/`, `demo/`, PROGRESS,
+  CONTENT, FEATURES, SOAK, BUGS, DEMO, game README.
+
+Tracking = **PROGRESS.md** (+ CONTENT/FEATURES/…). `.autonomy/` is legacy/optional —
+do not use it as the primary tracker; do not invent a second product there.
+
+On SAFE SYNC conflicts: keep agent game `src/` + run docs; never "fix"
+BOILERPLATE_OWNED by copying agent edits over workflows.
+
 
 BEFORE any game code / greenfield scaffold:
 
@@ -64,6 +91,11 @@ LIVE LOOP (after EVERY milestone ACCEPT, content cycle, soak batch, DEMO
 checkpoint, and Phase 4 cycle — this is how outsiders follow progress live):
 
 0. PRE-PR VISUAL (mandatory — BEFORE commit / push / open or update PR):
+   - Run TESTING HARNESS **D** (UI smoke): Create New World / Continue must
+     work with **zero pageerror**; fail → FIX-ONLY, no push.
+   - If this slice **added content** (block/item/recipe/npc/biome visual/…):
+     include **CONTENT VISUAL** shots (see section below) — not only the title
+     screen. Title-only / "7 buttons exist" is **not** enough for a content cycle.
    - Capture ≥1 Playwright screenshot of the current ACCEPT surface (PNG under
      `demo/pre-pr/` or the milestone/cycle folder). Must not be black/empty.
    - **MUST spawn `smart` / vision-capable subagent** when that model exists in
@@ -80,17 +112,23 @@ checkpoint, and Phase 4 cycle — this is how outsiders follow progress live):
    - Record in PROGRESS.md NOW: screenshot path + validator (`smart`/`VL` id —
      required when available — or `self-read` only if no smart/VL) + PASS.
      No PASS → no push.
-1. `pnpm run gate` (or `npm run gate`) green locally.
+1. `pnpm run gate` (or `npm run gate`) green locally — includes UI smoke when
+   `test:ui` / Playwright harness exists (see TESTING HARNESS D).
 2. Commit on `agent/<run-id>` with a short message (include the pre-PR screenshot
    artifact when it is new/updated).
-3. Push with github_* tools (or `git push -u origin HEAD`). Never push to
-   `main` / `baseline`. Never force-push.
-4. Open/update the PR into `main` if tools/Actions require it. CI `gate` →
-   automerge squash → Pages rebuilds the live site.
-5. After automerge: rebase onto `origin/main` (or merge `main`) before the next
-   chunk so each PR stays small.
-6. Refresh PROGRESS.md NOW: branch, latest commit SHA, Pages URL, next step,
-   last pre-PR visual PASS. Always leave a next tool call.
+3. Run **SAFE SYNC** (below): check if rebase/merge with `origin/main` is needed
+   **without losing work**; fix PR conflicts before relying on automerge.
+4. Push with github_* tools (or `git push -u origin HEAD`). Never push to
+   `main` / `baseline`. Never force-push `main`/`baseline`.
+5. Open/update the PR into `main` if tools/Actions require it. If GitHub says
+   PR already exists → OK (push updates it). CI `gate` → automerge squash →
+   Pages. If Checks show **conflicts** or red gate → do NOT start the next
+   content cycle as “published”; SAFE SYNC + fix until green/mergeable.
+6. After automerge (or after SAFE SYNC merge of main into agent): ensure agent
+   tip contains `origin/main`; keep each PR small.
+7. Refresh PROGRESS.md NOW: branch, latest commit SHA, Pages URL, next step,
+   last pre-PR visual PASS, sync status (ahead/behind main). Always leave a
+   next tool call.
 
 FORBIDDEN (instant revert / stop and redo correctly):
 - Greenfield Vite/npm tree that ignores the boilerplate clone
@@ -102,6 +140,60 @@ FORBIDDEN (instant revert / stop and redo correctly):
 - Declaring visual PASS from file size / dimensions / PNG header alone (must
   spawn smart/VL when available; binary Read failure is not a skip)
 - Starting the next phase without PHASE GATE PASS + LIVE LOOP toward main/Pages
+- Claiming a content cycle ACCEPT with only a title-screen screenshot / button
+  count / file-size check — missing CONTENT VISUAL for each new id
+- `git reset --hard` / deleting the agent branch / discarding uncommitted game
+  work to “make rebase easy”
+- Force-push without `--force-with-lease` on `agent/*`, or any force-push when
+  a backup ref was not created first
+
+================================================================
+SAFE SYNC (rebase/merge check — never lose the current stand)
+================================================================
+
+Run before every push that should automerge, on every follow-up resume, and
+whenever GitHub reports PR conflicts / failing required `gate`.
+
+GOAL: bring `agent/<run-id>` up to date with `origin/main` **without losing**
+commits or uncommitted work on the agent branch.
+
+STEPS (in order):
+1. `git fetch origin`
+2. **Save the stand first (mandatory):**
+   - If dirty: commit WIP on `agent/<run-id>` (preferred) OR
+     `git stash push -u -m "sync-stash-$(date -u +%Y%m%dT%H%M%SZ)"` and
+     record the stash ref in PROGRESS.md.
+   - Create a backup ref you can restore:  
+     `git branch backup/<run-id>-<shortSHA> HEAD`  
+     (or lightweight tag `backup/<run-id>-<shortSHA>`). Never delete backups
+     in the same session.
+3. Measure divergence:  
+   `git rev-list --left-right --count origin/main...HEAD`  
+   → `behind ahead`. If `behind == 0`, log `SYNC: up-to-date` in PROGRESS and
+   skip to push. If `behind > 0`, sync is required.
+4. **Preferred (safest, no force-push):**  
+   `git merge origin/main` into `agent/<run-id>`.  
+   Resolve conflicts. Keep **agent game code** (`src/`, `tests/`, `demo/`) when
+   both changed unless main clearly has a boilerplate-only fix. For docs
+   (`PROGRESS.md`, `CONTENT.md`, …) keep the agent run’s NOW/CAPS truth.
+   Boilerplate-only paths (CI workflows you did not intentionally change) may
+   take `main`.
+5. **Optional rebase** (only if merge history is too noisy):  
+   `git rebase origin/main` after step 2 backup. On conflict: fix, `git add`,
+   `git rebase --continue`. Abort with `git rebase --abort` and fall back to
+   merge if stuck. After rebase, push agent with  
+   `git push --force-with-lease` **only** on `agent/<run-id>` (never main/
+   baseline). If lease rejects → fetch, inspect, do not `--force`.
+6. Prove recovery path still exists: `git rev-parse backup/<run-id>-…` still
+   points at the pre-sync tip.
+7. `pnpm run gate` (+ UI smoke D) green after sync. Log in PROGRESS:  
+   `SYNC: merged|rebased origin/main; backup=<ref>; behind=0`.
+8. If PR conflict list is non-empty on GitHub after push → sync failed; fix
+   remaining files; do not claim Pages updated.
+
+NEVER: `git reset --hard origin/main`, delete `agent/*`, `push --force` to
+main/baseline, or continue Phase 2/4 while the PR is conflicted/red if the
+LIVE LOOP was supposed to publish this slice.
 
 ================================================================
 PHASE GATE (before EVERY phase change — Pages must show the finished phase)
@@ -251,14 +343,43 @@ PROJECT LAYOUT
   shared/design.md  README.md
 
 ================================================================
-TESTING HARNESS (M1 — use forever)
+TESTING HARNESS (M1 — use forever; grow these tests, do not delete)
 ================================================================
 
 A) vitest: registry counts vs CONTENT.md; chunk (0,0) seed 42 stable height;
    wooden pickaxe recipe; each C-cycle new id; SaveService 3-slot isolation.
-B) Playwright: no console errors; screenshot not black; 3 slot rows;
-   Continue/New world; reload + Continue restores a placed block.
+B) Playwright smoke (DOM): no pageerror/console error on title load; screenshot
+   not black; 3 slot rows; seed input focusable.
 C) soak-core: 60s chunk walks + 100 random break/place without crash.
+D) **UI interaction + render gate (mandatory from M1 onward — keep in repo):**
+   Maintain `tests/ui-smoke.spec.ts` and/or `demo/ui-smoke.mjs` + package script
+   `test:ui`. Run **before every LIVE LOOP push** and wire into `gate` when
+   Playwright is installed (`gate` = unit tests + build + ui-smoke, or `gate`
+   then `test:ui` explicitly if CI needs splitting — document in PROGRESS).
+
+   UI-SMOKE MUST FAIL the job if any of these happen:
+   1. `pageerror` / uncaught exception after load or after clicking
+      `#create-world-btn` / Continue (e.g. `Cannot read properties of undefined
+      (reading 'scene')` = init-order bug → FIX before any content cycle).
+   2. Click **Create New World** (with optional `#seed-input`) does not leave
+      title playable state within ~3s: expect `#game-canvas` visible (or title
+      removed) AND zero pageerrors. Seed field value must be honored when set
+      (world seed matches input or documented parse rule).
+   3. After enter-world: canvas pixel sample not uniform black/empty; HUD or
+      crosshair present when designed; no frozen error overlay.
+   4. At least one real input reaction in-world when milestone requires it:
+      inject WASD or click → player position or break-progress or place changes
+      (assert numerically / via exposed debug hook — not “button exists”).
+   5. Init-order / dependency smokes in vitest where pure: factories that need
+      a renderer/scene must be constructed only after that object exists (guard
+      test or lint comment in DECISIONS if architecture pins the order).
+
+   Record UI-SMOKE PASS/FAIL + command in PROGRESS.md. FAIL → FIX-ONLY; no
+   push claiming LIVE LOOP success.
+
+E) Regression rule: every bug found in play (click dead, black canvas, seed
+   ignored, crash on New World) becomes a permanent automated test in D/A
+   before the next content cycle. Append BUGS.md with the failing assertion.
 
 ================================================================
 MILESTONES (M1–M12 — full ACCEPT in this file)
@@ -339,6 +460,37 @@ M12 Day/night cycle, sky gradient, sun/moon, hostile spawn at night /
     or independent.
 
 ================================================================
+CONTENT VISUAL (every new block / item / recipe / npc — mandatory)
+================================================================
+
+Whenever you **add or visibly change** registry content, you must leave
+screenshot evidence that the thing appears in-game — not registry-only.
+
+PATHS (commit these):
+  demo/content/C<N>-<kind>-<id>.png     e.g. C3-npc-rabbit.png, C5-block-basalt.png
+  demo/cycles/cycle-N.png               overview after the cycle (world/HUD)
+  demo/pre-pr/…                         LIVE LOOP shot (may duplicate overview)
+
+PER NEW ID — capture what matches the kind:
+  - **block:** place or find the block in world; shot shows its face/atlas clearly
+    (not buried / not 1px). Prefer creative give / debug place if needed.
+  - **item:** hotbar or inventory open with the item icon/stack visible.
+  - **recipe:** crafting grid (2×2 or 3×3) with inputs + result visible, or
+    crafted output in inventory immediately after craft.
+  - **npc/mob:** entity visible in world (spawn near player / wait / debug spawn);
+    body readable, not a black frame.
+  - **multi-add in one cycle:** one PNG **per new id** (not one title shot for 3
+    NPCs). Overview cycle-N.png is extra, not a substitute.
+
+VALIDATION:
+  - Zero pageerror during the capture path (enter world if needed).
+  - smart/VL when available: PASS must say the **named** content is visible.
+  - Title screen alone = FAIL for content cycles.
+  - Log paths + ids in FEATURES.md result + PROGRESS NOW.
+
+No CONTENT VISUAL for each new id → cycle ACCEPT is false; do not push as done.
+
+================================================================
 PHASE 2 — content cycles until caps = CAP
 ================================================================
 
@@ -355,9 +507,11 @@ CYCLE (C1, C2, …)
        Optional micro-polish only if ≤3 extra files and zero registry adds.
        REJECT duplicate id, >2 items + >1 block, or category already at CAP.
   C-2  Atlas + registry + gameplay hook + CONTENT.md + vitest for the new id.
-  C-3  `npm test` green; UI change → `demo/cycles/cycle-N.png`; FEATURES result;
-       Commit on `agent/<run-id>`; tag `cycle-N` optional; push + PR so Pages updates (LIVE LOOP).
-  C-4  PROGRESS NOW with CAPS. Next tool = C-0 for N+1.
+  C-3  `npm test` green; **CONTENT VISUAL** for every new id this cycle
+       (`demo/content/C<N>-…png`) + `demo/cycles/cycle-N.png` overview;
+       smart/VL PASS on those paths when available; FEATURES result lists
+       screenshot paths. Then LIVE LOOP (UI smoke + PRE-PR + SAFE SYNC + push).
+  C-4  PROGRESS NOW with CAPS + content screenshot paths. Next tool = C-0 for N+1.
 
 During Phase 2: no large refactors. Lowest cap % first; keep registries within ~10.
 
@@ -424,8 +578,10 @@ After CAP/CAP, may grow content past CAP or polish — still one change per cycl
            cave tweak, tool tier, villager stub, boat/minecart-lite.
         Cap ~8 files. REJECT rewrite, new engine, multiplayer, cloud saves, >2h.
   P4-2  Smallest change; update CONTENT.md / design.md if registries or save schema change.
-  P4-3  vitest green; visual → demo/cycles/cycle-N.*; mini-soak; storyboard change →
-        re-record demo/demo.webm keep .prev; commit `cycle N: <A|B> <goal>`; tag `cycle-N`.
+  P4-3  vitest green; if new block/item/recipe/npc → **CONTENT VISUAL** per id
+        under `demo/content/`; always `demo/cycles/cycle-N.*`; smart/VL when
+        available; mini-soak; storyboard change → re-record demo/demo.webm keep
+        .prev; commit `cycle N: <A|B> <goal>`; tag `cycle-N`.
         Push agent branch (LIVE LOOP); never push main/baseline. Zip every 10 cycles → releases/ (optional).
   P4-4  PROGRESS NOW. Next tool = cycle N+1. Handoff every 5 cycles.
 

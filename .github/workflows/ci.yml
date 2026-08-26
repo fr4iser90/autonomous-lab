@@ -11,8 +11,51 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  protect-boilerplate:
+    if: >
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'agent/')) ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/agent/'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Deny edits to BOILERPLATE_OWNED paths on agent branches
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1 2>/dev/null || git fetch origin main
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="$(git merge-base HEAD origin/main || echo origin/main)"
+          fi
+          echo "Diff base: $BASE"
+          # Paths agents must not change (see BOILERPLATE.md)
+          mapfile -t bad < <(git diff --name-only "$BASE"...HEAD -- \
+            '.github/workflows' \
+            'AGENTS.md' \
+            'BOILERPLATE.md' \
+            'scripts/new-run.sh' \
+            'LICENSE' \
+            || true)
+          if [[ ${#bad[@]} -gt 0 && -n "${bad[0]-}" ]]; then
+            echo "::error::Agent branch touched BOILERPLATE_OWNED paths:"
+            printf ' - %s\n' "${bad[@]}"
+            echo "See BOILERPLATE.md — revert these files to main/baseline versions."
+            exit 1
+          fi
+          # Vite base must stay project Pages path
+          if git diff "$BASE"...HEAD -- 'vite.config.ts' | grep -E "^\+.*base:" | grep -v "/autonomous-lab/"; then
+            echo "::error::vite.config.ts base must remain '/autonomous-lab/'"
+            exit 1
+          fi
+          echo "protect-boilerplate: OK"
+
   gate:
     runs-on: ubuntu-latest
+    needs: [protect-boilerplate]
+    # On main pushes there is no protect job — make needs optional via if
+    if: always() && (needs.protect-boilerplate.result == 'success' || needs.protect-boilerplate.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
