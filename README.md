@@ -25,8 +25,8 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 
 | Session | Paste | Model |
 |---|---|---|
-| Overnight / follow-up / idle nudge | `*-craft.md` / `*-followup.md` (+ harness nudge) | **fast** self-vl (~50–60 tok/s) |
-| VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** self-vl (~15–20 tok/s) |
+| Overnight / follow-up / idle nudge | `*-craft.md` / `*-followup.md` (+ harness nudge) | **fast** + `read_image` (~50–60 tok/s) |
+| VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** + `read_image` (~15–20 tok/s) |
 
 Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
 

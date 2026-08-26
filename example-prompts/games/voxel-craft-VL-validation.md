@@ -10,8 +10,8 @@ them into **BUGS.md** so the builder fixes them on the next cycle.
 FORBIDDEN
 - Editing `src/`, tests (except reading **after** a click FAIL), package.json,
   workflows, or any game code. No "quick fixes."
-- Spawning subagents for vision — you are already on smart; analyze screenshots
-  yourself.
+- Spawning subagents for vision — you are already on smart; call **`read_image`**
+  on PNG paths and judge yourself.
 - **Source-first audits.** Do **not** spend early rounds grepping/reading
   `src/**` before you have clicked Title → Create New World (and logged the
   result). Static “crafting unwired” notes are optional **after** E2E, never
@@ -54,7 +54,7 @@ ORDER OF WORK (mandatory — like a human)
      OR stay on title → screenshot `01-after-new-world.png`
    - If New World no-ops / pageerror / black canvas / still on title → **FAIL**
      (severity). Known class: init order / TypeError on button click.
-4. If FAIL: analyze the PNG yourself (self-vl) → **append BUGS.md ## Open in the
+4. If FAIL: call **`read_image`** on the PNG → judge → **append BUGS.md ## Open in the
    same turn** (severity = `blocker`). Do not keep exploring source first.
 5. If PASS into world: Continue path, short look/move, break/place, inventory if
    present; shot each FAIL.
@@ -70,7 +70,8 @@ before step A-3.
 FAIL examples: pageerror on New World; buttons visible but no-op; black canvas;
 seed ignored (after you actually typed a seed and clicked); softlock; broken HUD.
 
-Analyze every FAIL screenshot yourself. File size / bash pixels alone ≠ PASS.
+Call **`read_image`** on every FAIL screenshot, then judge. File size / bash
+pixels alone ≠ PASS. Do not use plain `Read` on PNG.
 
 ================================================================
 BUGS.md (only durable output)
