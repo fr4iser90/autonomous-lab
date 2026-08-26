@@ -12,7 +12,8 @@
 - **Cleaned:** Removed duplicate RECIPE_WOODEN_AXE (id=8) which referenced wrong item IDs
 - **Gate:** 244/244 tests pass, build 535KB
 
-## C3 — Add more NPCs (3 new)
-- **Decision:** Add 3 new NPCs to grow from 7→10 (35%→50% of CAP)
-- **Rationale:** npcs=7/20 is lowest cap% (35%). Next lowest is blocks=17 (85%) and recipes=10 (50%).
-- **Candidates:** Fox, Wolf (passive), Dolphin (passive)
+## C3 — Add 3 new NPCs (Fox, Bee, Wolf) ✅ DONE
+- **Decision:** Add Fox (id=5, passive, speed 1.0), Bee (id=6, passive, speed 1.2), Wolf (id=10, hostile, speed 1.1)
+- **Rationale:** npcs=7/20 was lowest cap% (35%)
+- **Result:** npcs 7→10 (50% of CAP)
+- **Gate:** 244/244 tests pass, build 535KB, PRE-PR VISUAL: PASS

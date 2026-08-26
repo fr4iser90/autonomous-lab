@@ -41,6 +41,16 @@ export const NPCRabbit: NPCDef = {
   dropItemId: 14, dropCount: 1, color: [200, 200, 200], spawnBiomes: ['plains', 'forest', 'snow'], size: 0.5
 }
 
+export const NPCFox: NPCDef = {
+  id: 5, name: 'Fox', hostile: false, hp: 5, speed: 1.0, damage: 0,
+  dropItemId: 14, dropCount: 1, color: [205, 127, 50], spawnBiomes: ['forest', 'highlands', 'snow'], size: 0.7
+}
+
+export const NPCBee: NPCDef = {
+  id: 6, name: 'Bee', hostile: false, hp: 1, speed: 1.2, damage: 1,
+  dropItemId: 13, dropCount: 1, color: [255, 215, 0], spawnBiomes: ['plains', 'forest', 'jungle'], size: 0.2
+}
+
 // Hostile mobs
 export const NPCZombie: NPCDef = {
   id: 8, name: 'Zombie', hostile: true, hp: 20, speed: 0.7, damage: 3,
@@ -52,10 +62,15 @@ export const NPCCreeper: NPCDef = {
   dropItemId: 10, dropCount: 2, color: [34, 150, 34], spawnBiomes: ['plains', 'forest', 'desert', 'highlands', 'snow'], size: 1.0
 }
 
+export const NPCWolf: NPCDef = {
+  id: 10, name: 'Wolf', hostile: true, hp: 8, speed: 1.1, damage: 2,
+  dropItemId: 14, dropCount: 1, color: [169, 169, 169], spawnBiomes: ['forest', 'highlands', 'snow'], size: 0.9
+}
+
 export const ALL_NPCS: ReadonlyArray<NPCDef> = [
   NPCCow, NPCPig, NPCSheep, NPCCChicken,
-  NPCRabbit,
-  NPCZombie, NPCCreeper,
+  NPCFox, NPCBee, NPCRabbit,
+  NPCZombie, NPCCreeper, NPCWolf,
 ]
 
 export function getNPC(id: number): NPCDef | undefined {
