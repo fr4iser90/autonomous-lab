@@ -67,7 +67,11 @@ SAFE SYNC FIRST (no work loss — see `voxel-craft.md` SAFE SYNC)
 PLAYABILITY TRIAGE (before more content cycles)
 - Drain BUGS.md ## Open (blocker/playability) first — then boot `pnpm run dev`.
 - Run TESTING HARNESS **D** (UI smoke): click Create New
-  World / Continue; **fail on any pageerror**.
+  World / Continue; **fail on any pageerror**. On FAIL → append + **commit**
+  BUGS.md on `agent/*`, FIX-ONLY.
+- **PLAY CHECK** (see `voxel-craft.md`): Phase 4 every **5** cycles, Phase 2
+  every **10** — in-world 30–60s, `demo/play-check/…png`, **`read_image`**. Do
+  not skip because a separate VL validator exists.
 - Known class of bug: using `renderer.scene` (or similar) before `Renderer` is
   constructed → title looks clickable but New World no-ops. Fix init order;
   add a regression assertion to UI smoke / vitest; only then continue Phase 2/4.
@@ -87,7 +91,8 @@ INFINITY MODE (Phase 4 — re-arm on every follow-up)
   until a human kills the process.
 - Never treat PHASE3-DONE as job finished. Do not mark create_goal complete.
 - If already on Phase 4 / cycle-N: resume that cycle (or N+1 if ACCEPT proven).
-- Every P4-0: BUGS.md ## Open before new polish/feature.
+- Every P4-0: BUGS.md ## Open before new polish/feature. Every **5** cycles:
+  **PLAY CHECK** must PASS before P4-1 (not optional; not delegated to VL agent).
 
 THEN CONTINUE
 1. create_goal optional; on policy error → ignore (see above). Never mark
