@@ -1,33 +1,51 @@
-<!-- BOILERPLATE_PLACEHOLDER: human-facing boilerplate README. On a game run, rewrite the playable sections for the shipped game; keep Pages URL + live-loop notes accurate. See BOILERPLATE.md -->
+<!--
+  README has TWO parts:
+  1) AUTONOMOUS LAB (below, until "Current run") — preserve on agent/*; human/baseline updates only.
+  2) Current run — RUN_OWNED; overnight agent rewrites for the shipped game.
+  See BOILERPLATE.md
+-->
 
 # Autonomous Lab
 
-**Genre-agnostic boilerplate** for long public autonomy runs. CI gates + **automerge** + GitHub Pages so a run stays **live**. This repo does **not** ship game genres or overnight objectives — those come from whatever objective the human pastes into the agent for that run.
+Public sandbox for **long unattended agent runs**. Most of what you see in `src/`
+and on the live site is **AI-generated** — used to probe **local LLM** capability
+(coding, vision, overnight persistence), not as a hand-authored product.
 
-**Ownership:** see [`BOILERPLATE.md`](BOILERPLATE.md) and [`AGENTS.md`](AGENTS.md). Scaffold toys under `src/` are **not** the product.
-
-**Play (live after green automerge):** https://fr4iser90.github.io/autonomous-lab/
-
-Local preview: `pnpm install && pnpm run dev` (or npm) → http://127.0.0.1:5173/autonomous-lab/
-
-## Live loop
-
-```
-agent/* commit → Open agent PR → CI gate → Automerge (squash) → main → Pages
-```
-
-Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges alone do not fire `push`).
-
-| Surface | Meaning |
+| | |
 |---|---|
-| `baseline` | Frozen boilerplate |
-| `agent/<run-id>` | Experiment branch (follow commits here) |
-| `main` | Automerge target + Pages |
-| Actions `CI` / `Open agent PR` / `Automerge agent PRs` | Automation |
+| **Live (last green automerge → Pages)** | https://fr4iser90.github.io/autonomous-lab/ |
+| **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
+| **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork of DeepSeek harness; idle follow-up prompting; Dockerized for server deploy) |
+| **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
 
-Broken `gate` → no merge → Pages stays on last green `main`.
+Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
 
-## Quick start
+## Live loop & gates
+
+```
+agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash)
+  → main → Pages
+```
+
+Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fire `push`).
+
+| Check / surface | Role |
+|---|---|
+| `gate` | Required: Vitest + production build |
+| `protect-boilerplate` | Agent PRs must not edit workflows / `AGENTS.md` / `BOILERPLATE.md` / … |
+| Automerge | Squash `agent/*` → `main` when gate is green |
+| Pages | Deploys **only** from `main` (what outsiders play) |
+| PRE-PR / PHASE GATE | Prompt law: playable shot + vision when available before publish / phase change |
+
+Broken `gate` → no merge → Pages stays on the last green `main`.
+
+| Branch | Meaning |
+|---|---|
+| `baseline` | Frozen boilerplate reset |
+| `agent/<run-id>` | One autonomy experiment |
+| `main` | Live playable line + Pages |
+
+## Quick start (human)
 
 ```sh
 pnpm install   # or npm install
@@ -36,29 +54,74 @@ pnpm run dev
 ./scripts/new-run.sh <run-id>
 ```
 
-Then paste your run objective into the agent with this checkout as the workspace.
+Paste an objective from `example-prompts/` (or your own) into the harness with
+this checkout as the workspace. Set overnight **CAP** in the prompt (often `CAP = 20`
+for a short lab; raise for long runs).
 
-## Autonomy shape
+Optional second agent: playability/VL **validation only** →
+`example-prompts/games/*-VL-validation.md` (writes `BUGS.md`; does not ship code).
 
-```text
-start with the pasted objective; keep gate green; push agent/* only; never push main/baseline;
-never edit BOILERPLATE_OWNED paths; automerge + Pages follow green CI
+## Example DSH settings (local models)
+
+Copy/merge into `~/.dsh/settings.yaml`. Model **ids** must match your
+Jarvis/`models.ini` section names. Replace URL and `KEY`. Roles that prompts
+look up by **name**: `fast` (default) and `smart` (hard problems + vision).
+
+```yaml
+# Example only — do not commit real tokens.
+llm-pi-ai:
+  providers:
+    jarvis:
+      displayName: Jarvis llama.cpp
+      api: openai-completions
+      streamIdleTimeoutMs: 1000000
+      baseURL: https://example.com/v1
+      headers:
+        Authorization: Bearer KEY
+      compat:
+        thinkingFormat: qwen
+      models:
+        - id: YOUR-FAST-GGUF-ID
+          name: fast
+          contextWindow: 87552
+          maxTokens: 32768
+          input: [ text, image ]
+        - id: YOUR-SMART-GGUF-ID
+          name: smart
+          contextWindow: 65536
+          maxTokens: 32768
+          input: [ text, image ]
+
+agent-default-model:
+  provider: jarvis
+  model: YOUR-FAST-GGUF-ID
+
+permission:
+  defaultPreset: danger-full-access
 ```
 
 ## One-time GitHub setup
 
-1. Repo **Public**; Pages **Source = GitHub Actions** (not Jekyll/Static HTML templates)
-2. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
-3. Settings → Actions → General → Workflow permissions:
-   - **Read and write permissions**
-   - ✅ **Allow GitHub Actions to create and approve pull requests**
-4. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
+1. Repo **Public**; Pages **Source = GitHub Actions**
+2. Rulesets: `protect-main` (PR + required **`gate`**), `protect-baseline` (you only)
+3. Actions → Workflow permissions: **Read and write** + allow Actions to create PRs
+4. Bootstrap: workflows must exist on the default branch once; then agent automerge works
 
 ## Scripts
 
 | Script | Meaning |
 |---|---|
-| `npm test` / `pnpm test` | Vitest |
-| `npm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
-| `npm run gate` | test + build (+ protect-boilerplate on agent PRs in CI) |
-| `npm run dev` | Vite on 5173 |
+| `pnpm test` / `npm test` | Vitest |
+| `pnpm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
+| `pnpm run gate` | test + build |
+| `pnpm run dev` | Vite on 5173 |
+
+---
+
+# Current run
+
+<!-- RUN_OWNED: agent replaces this section for the shipped game. Keep the
+     Autonomous Lab header above intact. -->
+
+**No game shipped on this branch yet** — scaffold toys under `src/` only.
+After an overnight run automerges, `main` shows the live game here (and on Pages).
