@@ -19,12 +19,17 @@ Files and dirs are tagged:
 - `scripts/new-run.sh`
 - `LICENSE`
 - Vite `base: '/autonomous-lab/'` in `vite.config.ts` (you may edit other vite options the game needs)
+- **`README.md` Lab header** — everything from the top through the `---` before
+  `# Current run` (purpose, harness link, gates, settings example). Do **not**
+  delete or rewrite that block; only update `# Current run` below it.
+- Prefer not to edit `example-prompts/**` on overnight runs (human maintains
+  objectives / VL-validation prompts).
 
 ## BOILERPLATE_PLACEHOLDER / TOY → become RUN_OWNED
 
 Replace when the overnight objective / game prompt starts:
 
-- `PROGRESS.md`, `CONTENT.md`, `BUGS.md`, `README.md` (game sections)
+- `PROGRESS.md`, `CONTENT.md`, `BUGS.md`, `README.md` **`# Current run` only**
 - `index.html`, `src/**`, `tests/**`
 - `.autonomy/**` — **optional/legacy**; prefer `PROGRESS.md`. Safe to leave untouched or delete; do not use as primary tracker.
 
@@ -32,10 +37,15 @@ Replace when the overnight objective / game prompt starts:
 
 When merging `origin/main` into `agent/*`:
 
-1. **BOILERPLATE_OWNED** → take `main` / keep workflow files unchanged.
-2. **RUN_OWNED game** (`src/`, `tests/`, `demo/`, run docs) → keep **agent** version.
+1. **BOILERPLATE_OWNED** (incl. README Lab header) → keep Lab header; take
+   workflow / AGENTS / BOILERPLATE from main when those conflict.
+2. **RUN_OWNED game** (`src/`, `tests/`, `demo/`, run docs, README `# Current run`)
+   → keep **agent** version.
 3. Never `reset --hard` to main to “clear” conflicts.
 
 ## After the first game merge
 
-Once a game has automerged into `main`, `main` **is** the live game. Further `agent/*` work continues that line — do not re-introduce toy economy UI or “waiting for objective” placeholders unless starting a **new** run from `baseline`.
+Once a game has automerged into `main`, `main` **is** the live game. Further
+`agent/*` work continues that line — do not re-introduce toy economy UI or
+“waiting for objective” placeholders unless starting a **new** run from
+`baseline`. Keep the Autonomous Lab README header; refresh **Current run**.
