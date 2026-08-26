@@ -2,7 +2,7 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** TBD (Phase 4 P4-5: Mob HP bar billboarding)
+**SHA:** fde2cf1 (Phase 4 P4-5: Mob HP bar billboarding)
 **Tests:** 268/268 passing | Build: ✅ 544KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-4 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
