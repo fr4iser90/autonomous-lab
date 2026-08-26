@@ -2,8 +2,8 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** fde2cf1 (Phase 4 P4-5: Mob HP bar billboarding)
-**Tests:** 268/268 passing | Build: ✅ 544KB
+**SHA:** TBD (Phase 4 P4-6: Block breaking particles) — P4-6 code committed, gate green, awaiting SHA after push
+**Tests:** 268/268 passing | Build: ✅ 546KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-5 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
 
@@ -135,3 +135,11 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Call sites updated:** `MobManager.update()` passes `playerPos` as camera position; melee hit in `main.ts` passes `renderer.camera.position`
 - **Backward compatible:** `cameraPos` is optional — existing callers without it still work (no billboarding)
 - **Gate:** 268/268 tests pass, build 544KB
+
+### P4-6: Block Breaking Particles ✅
+- **Particle system:** New `src/effects/Particle.ts` — `ParticleManager` with `spawnBlockBreak(x, y, z, color)` and per-frame `update(dt)`
+- **Particle physics:** 12 particles per break, random outward velocity, gravity (-8 m/s²), fade alpha over 1.5s lifetime, shrink proportionally
+- **Color match:** Particles use the block's RGB color via `getBlock()` for accurate visual feedback
+- **Memory safety:** Dead particles removed from scene; geometry + material disposed to prevent leaks
+- **Integration:** Spawned in `main.ts` game loop after block break; updated every frame
+- **Gate:** 268/268 tests pass, build 546KB

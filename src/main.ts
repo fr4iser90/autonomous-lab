@@ -15,6 +15,7 @@ import { World } from './world/World'
 import { Player } from './player/Player'
 import { raycast, getRayFromCamera } from './physics/Raycaster'
 import { BlockInteraction } from './physics/BlockInteraction'
+import { getBlock } from './data/blocks'
 import { InventoryScreen } from './ui/InventoryScreen'
 import {
   createInventory,
@@ -31,6 +32,7 @@ import { MobManager } from './entities/MobManager'
 import { Mob } from './entities/Mob'
 import { WaterSystem } from './services/WaterSystem'
 import { AchievementService } from './services/AchievementService'
+import { ParticleManager } from './effects/Particle'
 
 // Game states
 type GameState = 'title' | 'playing'
@@ -85,6 +87,8 @@ class VoxelCraftGame {
   // M10: Sound effects
   private soundService?: SoundService
   private mobManager?: MobManager
+  // Phase 4 P4-6: Block breaking particles
+  private particleManager = new ParticleManager()
 
   // M4: Default starting inventory (items for testing)
   private readonly defaultInventoryItems = [
@@ -186,6 +190,8 @@ class VoxelCraftGame {
     this.renderer = new Renderer(this.canvas, this.world.seed)
     this.blockHighlight = createHighlightBox(0xffffff)
     this.renderer.scene.add(this.blockHighlight)
+    // Phase 4 P4-6: Attach particle system scene
+    this.particleManager.attachScene(this.renderer.scene)
 
     // M7/M10: Spawn mobs
     const seed = this.world.seed
@@ -844,6 +850,15 @@ class VoxelCraftGame {
       if (broken) {
         this.blocksMinedCount++
         this.achievementService.updateStats({ blocksMined: this.blocksMinedCount })
+        // Phase 4 P4-6: Spawn block-breaking particles
+        const brokenPos = this.blockInteraction.state.minedBlock?.position
+        if (brokenPos) {
+          const blockId = world.getBlock(brokenPos[0], brokenPos[1], brokenPos[2])
+          const blockDef = getBlock(blockId)
+          if (blockDef && blockDef.color) {
+            this.particleManager.spawnBlockBreak(brokenPos[0], brokenPos[1], brokenPos[2], blockDef.color)
+          }
+        }
         // Spawn a drop item at the broken block's position
         if (this.dropManager) {
           const drop = this.blockInteraction.getAndClearLastDrop()
@@ -865,6 +880,9 @@ class VoxelCraftGame {
     } else if (this.hud) {
       this.hud.updateMiningProgress(0, 0)
     }
+
+    // Phase 4 P4-6: Update block-breaking particles
+    this.particleManager.update(dt)
 
     // Phase 4 P4-1: Update player HP hearts each frame
     if (this.hud && this.player) {

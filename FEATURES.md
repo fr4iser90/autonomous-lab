@@ -104,3 +104,12 @@
   - `Mob.ts`: HP bar background (`hpBarBg`) now always visible (was previously not managed separately)
 - **Gate:** 268/268 tests pass, build 544KB
 - **Visual:** HP bars now always face the player regardless of mob rotation or camera angle
+
+## P4-6 — Block Breaking Particles ✅
+- **Decision:** Add visual particle burst when breaking blocks — satisfying block-break feedback like Minecraft
+- **Rationale:** Blocks disappear instantly when broken with no visual feedback; particles add satisfying "pop" and confirm break action
+- **Changes:**
+  - `Particle.ts` (new): `ParticleManager` — `spawnBlockBreak(x, y, z, color)` creates 12 particles with random outward velocity; `update(dt)` applies gravity, fades alpha over 1.5s lifetime, shrinks proportionally, disposes dead particles to prevent memory leaks
+  - `main.ts`: `ParticleManager` instantiated, scene attached, particles spawned on block break via `getBlock()` lookup for color match, updated every frame in game loop
+- **Gate:** 268/268 tests pass, build 546KB
+- **Visual:** 12 colored cubes burst outward from each broken block, falling with gravity and fading — matches the broken block's color
