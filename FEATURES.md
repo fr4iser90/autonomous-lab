@@ -24,3 +24,11 @@
 - **Result:** recipes 10→20 (CAP reached!)
 - **Gate:** 244/244 tests pass, build 535KB
 - **Remaining gaps:** blocks=17/20 (85%), npcs=10/20 (50%)
+
+## C5 — Add 10 NPCs to reach CAP=20
+- **Decision:** Add Donkey, Ocelot, Panda, Parrot, Turtle (passive), Cat, Mooshroom (passive), Skeleton, Spider, Witch (hostile)
+- **Rationale:** npcs=10/20 (50%) — second lowest cap%
+- **Also:** Fixed getNPC() to use .find() instead of broken array indexing
+- **Result:** npcs 10→20 (CAP reached!)
+- **Gate:** 244/244 tests pass, build 535KB
+- **Remaining gaps:** blocks=17/20 (85% — only remaining gap)

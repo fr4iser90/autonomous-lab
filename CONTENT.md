@@ -10,11 +10,11 @@ Infinite voxel sandbox (Minecraft-style) — procedural terrain, break/place, in
 | blocks | 17 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Lava, Air |
 | items | 20 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Water Bucket, Lava Bucket, Stone Sword, Iron Shovel, Air |
 | recipes | 20 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Sword, Cooked Beef, Iron Spade, Fence, Wall, Furnace, Barrel, Lantern, Bed, Cake, Iron Door, Trapdoor, Coal Block |
-| npcs | 10 | Cow, Pig, Sheep, Chicken, Fox, Bee, Rabbit, Zombie, Creeper, Wolf |
+| npcs | 20 | Cow, Pig, Sheep, Chicken, Fox, Bee, Rabbit, Zombie, Creeper, Wolf, Donkey, Ocelot, Panda, Parrot, Turtle, Cat, Mooshroom, Skeleton, Spider, Witch |
 
 ```
-CAPS: blocks=17/CAP items=20/CAP recipes=20/CAP npcs=10/CAP
-NEXT_CYCLE_PRIORITY: blocks (17/20 = 85%)
+CAPS: blocks=17/CAP items=20/CAP recipes=20/CAP npcs=20/CAP
+NEXT_CYCLE_PRIORITY: blocks (17/20 = 85% — only remaining gap)
 ```
 
 ## Block Details
@@ -73,3 +73,13 @@ NEXT_CYCLE_PRIORITY: blocks (17/20 = 85%)
 | 8 | Zombie | true | 20 | 0.7 | 3 | Iron Ingot |
 | 9 | Creeper | true | 20 | 0.6 | 10 | Iron Ingot |
 | 10 | Wolf | true | 8 | 1.1 | 2 | Beef |
+| 11 | Donkey | false | 15 | 0.7 | 0 | Beef |
+| 12 | Ocelot | false | 4 | 1.3 | 0 | Apple |
+| 13 | Panda | false | 6 | 0.4 | 0 | Apple |
+| 14 | Parrot | false | 2 | 1.5 | 0 | Apple |
+| 15 | Turtle | false | 3 | 0.3 | 0 | Beef |
+| 16 | Cat | false | 5 | 0.9 | 0 | Apple |
+| 17 | Mooshroom | false | 10 | 0.5 | 0 | Cooked Beef |
+| 18 | Skeleton | true | 15 | 0.6 | 2 | Coal |
+| 19 | Spider | true | 8 | 1.0 | 2 | Beef |
+| 20 | Witch | true | 25 | 0.5 | 5 | Torch |
