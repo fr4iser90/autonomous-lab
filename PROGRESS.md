@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M6 — Voxel lighting (sky + torch)
-**Status:** COMPLETE — gate green (113/113 tests, build succeeds ~506KB)
+**Phase:** M7 — Mobs (passive + hostile AI)
+**Status:** COMPLETE — gate green (146/146 tests, build succeeds ~506KB)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -64,7 +64,17 @@
   - Lighting calculated on chunk load and after block changes (including neighbors for torch propagation)
   - BlockTorch at id=15: transparent, solid=false, color [255, 200, 50]
   - 13 M6 smoke tests (total 113)
-- M7: Mobs (passive + hostile AI) → PENDING
+- M7: Mobs (passive + hostile AI) → **COMPLETE ✅**
+  - 5 mob types: Cow, Pig, Chicken (passive), Zombie, Skeleton (hostile)
+  - `Mob` class with AI states: idle, wander, chase, flee, hurt
+  - Passive mobs flee from player within 6 blocks, wander otherwise
+  - Hostile mobs chase player within 16 blocks, wander otherwise
+  - Mob physics: gravity, ground detection, collision avoidance, jumping
+  - Mob meshes: body + head + legs + HP bar (color-coded green/yellow/red)
+  - `MobManager`: spawn with seeded PRNG, update loop, damage, death drops
+  - Damage system: mobs deal contact damage, player HP tracked
+  - Death drops: cow drops beef (1-3), chicken drops apple, hostile mobs drop nothing
+  - 33 M7 smoke tests (total 146)
 - M8: Day/night cycle + autosave → PENDING
 
 ## CAPS
@@ -73,4 +83,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M7: Mobs (passive + hostile AI).
+M8: Day/night cycle + autosave.

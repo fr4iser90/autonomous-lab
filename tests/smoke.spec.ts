@@ -1448,4 +1448,377 @@ describe('M6: Combined Lighting', () => {
   })
 })
 
+// ===== M7: Mobs (Passive + Hostile AI) =====
+import { ALL_MOBS, MOB_COUNT, getMobDef, MobCow, MobPig, MobZombie } from '../src/data/mobs'
+import { Mob, MobEntity } from '../src/entities/Mob'
+import { MobManager, DEFAULT_MOB_CONFIG } from '../src/entities/MobManager'
+import * as THREE from 'three'
+import { vi } from 'vitest'
+
+describe('M7: Mob Registry', () => {
+  it('has 5 mob types', () => {
+    expect(ALL_MOBS).toHaveLength(5)
+  })
+
+  it('3 passive + 2 hostile', () => {
+    const passive = ALL_MOBS.filter(m => m.type === 'passive').length
+    const hostile = ALL_MOBS.filter(m => m.type === 'hostile').length
+    expect(passive).toBe(3)
+    expect(hostile).toBe(2)
+  })
+
+  it('all mobs have valid definitions', () => {
+    for (const mob of ALL_MOBS) {
+      expect(typeof mob.name).toBe('string')
+      expect(mob.name.length).toBeGreaterThan(0)
+      expect(mob.hp).toBeGreaterThan(0)
+      expect(mob.speed).toBeGreaterThan(0)
+      expect(Array.isArray(mob.color)).toBe(true)
+      expect(mob.color.length).toBe(3)
+    }
+  })
+
+  it('passive mobs have 0 damage', () => {
+    for (const mob of ALL_MOBS) {
+      if (mob.type === 'passive') {
+        expect(mob.damage).toBe(0)
+      }
+    }
+  })
+
+  it('hostile mobs have positive damage', () => {
+    for (const mob of ALL_MOBS) {
+      if (mob.type === 'hostile') {
+        expect(mob.damage).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('getMobDef returns correct mobs', () => {
+    expect(getMobDef(1)?.name).toBe('Cow')
+    expect(getMobDef(2)?.name).toBe('Pig')
+    expect(getMobDef(99)).toBeUndefined()
+  })
+
+  it('MOB_COUNT matches array length', () => {
+    expect(MOB_COUNT).toBe(ALL_MOBS.length)
+  })
+})
+
+describe('M7: Mob Physics', () => {
+  it('Mob.create finds ground level', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const mob = Mob.create(1, 8, 64, 8, world)
+    expect(mob).not.toBeNull()
+    expect(mob!.position.y).toBeGreaterThan(0)
+  })
+
+  it('Mob.create returns null for invalid mob id', () => {
+    const world = new World(42)
+    const mob = Mob.create(99, 8, 64, 8, world)
+    expect(mob).toBeNull()
+  })
+
+  it('Mob.isSolid returns false for air', () => {
+    const world = new World(42)
+    expect(Mob.isSolid(world, 8, 10, 8)).toBe(false)
+  })
+
+  it('Mob.isSolid returns true for stone', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const mob = Mob.create(1, 8, 64, 8, world)
+    if (mob) {
+      const stoneY = Math.floor(mob.position.y) - 1
+      expect(Mob.isSolid(world, 8, stoneY, 8)).toBe(true)
+    }
+  })
+
+  it('Mob.applyPhysics applies gravity', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    const startY = mob.position.y
+    Mob.applyPhysics(mob, 0.1, world)
+    expect(mob.position.y).toBeLessThan(startY)
+  })
+
+  it('Mob.applyPhysics stops at ground', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(8, 64, 8),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 8, spawnZ: 8,
+    }
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    Mob.applyPhysics(mob, 10, world)
+    const blockBelow = Mob.isSolid(world, Math.floor(mob.position.x), Math.floor(mob.position.y - 0.5), Math.floor(mob.position.z))
+    expect(blockBelow).toBe(true)
+    expect(mob.velocity.y).toBe(0)
+  })
+
+  it('Mob.moveToward moves toward target', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    const startX = mob.position.x
+    Mob.moveToward(mob, 10, 0, 1, world, 5)
+    expect(mob.position.x).toBeGreaterThan(startX)
+  })
+
+  it('Mob.moveToward respects collision', () => {
+    const world = new World(42)
+    world.loadChunk(0, 0)
+    const chunk = world.getChunk(0, 0)!
+    const surfaceY = 95
+    for (let z = 0; z < 16; z++) {
+      chunk.setBlock(8, surfaceY, z, 3) // stone
+    }
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(8, surfaceY + 1, 8),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 8, spawnZ: 8,
+    }
+    Mob.moveToward(mob, 8, 9, 1, world, 10)
+    expect(mob.position.x).toBe(8)
+  })
+})
+
+describe('M7: Mob AI', () => {
+  it('hostile mob enters chase state when player is close', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 20, maxHp: 20,
+      state: 'wander', wanderTarget: null, wanderTimer: 999, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    Mob.updateAI(mob, 0.1, new THREE.Vector3(5, 64, 0), world)
+    expect(mob.state).toBe('chase')
+  })
+
+  it('hostile mob wanders when player is far', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 20, maxHp: 20,
+      state: 'wander', wanderTarget: null, wanderTimer: 999, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    Mob.updateAI(mob, 0.1, new THREE.Vector3(100, 64, 100), world)
+    expect(mob.state).toBe('wander')
+  })
+
+  it('passive mob enters flee state when player is close', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 999, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    Mob.updateAI(mob, 0.1, new THREE.Vector3(2, 64, 0), world)
+    expect(mob.state).toBe('flee')
+  })
+
+  it('passive mob wanders when player is far', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobPig, type: 'passive',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 999, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    Mob.updateAI(mob, 0.1, new THREE.Vector3(100, 64, 100), world)
+    expect(mob.state).toBe('wander')
+  })
+
+  it('hurt mob exits hurt state after timer', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 15, maxHp: 20,
+      state: 'hurt', wanderTarget: null, wanderTimer: 0, hurtTimer: 0.3,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const world = new World(42)
+    Mob.updateAI(mob, 0.2, new THREE.Vector3(5, 64, 0), world)
+    Mob.updateAI(mob, 0.2, new THREE.Vector3(5, 64, 0), world)
+    expect(mob.hurtTimer).toBeLessThanOrEqual(0)
+    expect(mob.state).toBe('chase')
+  })
+})
+
+describe('M7: Mob Combat', () => {
+  it('Mob.damage reduces HP', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 20, maxHp: 20,
+      state: 'chase', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const dead = Mob.damage(mob, 5)
+    expect(dead).toBe(false)
+    expect(mob.hp).toBe(15)
+  })
+
+  it('Mob.damage kills mob when HP reaches 0', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 5, maxHp: 20,
+      state: 'chase', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const dead = Mob.damage(mob, 5)
+    expect(dead).toBe(true)
+    expect(mob.hp).toBe(0)
+  })
+
+  it('hostile mob damages player on contact', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 20, maxHp: 20,
+      state: 'chase', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const contact = Mob.checkPlayerContact(mob, new THREE.Vector3(0, 64, 0), 20)
+    expect(contact).not.toBeNull()
+    expect(contact!.damage).toBe(3)
+    expect(contact!.newHp).toBe(17)
+  })
+
+  it('passive mob does not damage player', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 10, maxHp: 10,
+      state: 'wander', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const contact = Mob.checkPlayerContact(mob, new THREE.Vector3(0, 64, 0), 20)
+    expect(contact).toBeNull()
+  })
+
+  it('no contact when mob is far from player', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 20, maxHp: 20,
+      state: 'chase', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const contact = Mob.checkPlayerContact(mob, new THREE.Vector3(10, 64, 10), 20)
+    expect(contact).toBeNull()
+  })
+
+  it('Mob.getDrops returns correct items for cow', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobCow, type: 'passive',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 0, maxHp: 10,
+      state: 'hurt', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const drops = Mob.getDrops(mob)
+    expect(drops.length).toBeGreaterThan(0)
+    expect(drops[0].itemId).toBe(14)
+  })
+
+  it('Mob.getDrops returns empty for zombie', () => {
+    const mob: MobEntity = {
+      id: 1, def: MobZombie, type: 'hostile',
+      position: new THREE.Vector3(0, 64, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0, hp: 0, maxHp: 20,
+      state: 'hurt', wanderTarget: null, wanderTimer: 0, hurtTimer: 0,
+      mesh: null, spawnX: 0, spawnZ: 0,
+    }
+    const drops = Mob.getDrops(mob)
+    expect(drops.length).toBe(0)
+  })
+})
+
+describe('M7: Mob Mesh', () => {
+  it('Mob.createMesh creates a group with children', () => {
+    const mesh = Mob.createMesh(MobCow, 10, 10)
+    expect(mesh).toBeInstanceOf(THREE.Group)
+    expect(mesh.children.length).toBeGreaterThan(0)
+  })
+
+  it('Mob.createMesh has HP bar', () => {
+    const mesh = Mob.createMesh(MobCow, 10, 10)
+    expect(mesh.userData.hpBar).toBeDefined()
+    expect(mesh.userData.hpBarBg).toBeDefined()
+  })
+
+  it('Mob.updateHPBar updates bar scale and color', () => {
+    const mesh = Mob.createMesh(MobCow, 10, 10)
+    Mob.updateHPBar(mesh, MobCow, 10, 10)
+    const hpBar = mesh.userData.hpBar as THREE.Mesh
+    expect(hpBar.scale.x).toBeCloseTo(1, 2)
+
+    Mob.updateHPBar(mesh, MobCow, 5, 10)
+    expect(hpBar.scale.x).toBeCloseTo(0.5, 2)
+
+    Mob.updateHPBar(mesh, MobCow, 0, 10)
+    expect(hpBar.scale.x).toBeCloseTo(0, 2)
+    expect(hpBar.visible).toBe(false)
+  })
+
+  it('mob mesh matches mob dimensions', () => {
+    expect(MobCow.height).toBeGreaterThan(MobPig.height)
+    expect(MobCow.width).toBeGreaterThan(MobPig.width)
+  })
+})
+
+describe('M7: MobManager', () => {
+  it('MobManager creates scene and default config', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as any as THREE.Scene
+    const manager = new MobManager(scene)
+    expect(manager).toBeDefined()
+  })
+
+  it('MobManager.clear removes all mobs', () => {
+    const scene = { add: vi.fn() } as any
+    const manager = new MobManager(scene)
+    expect(manager.getMobs().length).toBe(0)
+  })
+})
 
