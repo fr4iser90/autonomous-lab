@@ -2,9 +2,9 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** 85b5d8d (Phase 4 P4-7: Unique ambient sounds per mob type)
-**Tests:** 268/268 passing | Build: ✅ 551KB
-**PR:** #3 Merged ✅ | **Current PR:** #14 — P4-7 pushed, CI pending
+**SHA:** P4-8 (Phase 4 P4-8: Mob death particles)
+**Tests:** 268/268 passing | Build: ✅ 552KB
+**PR:** #3 Merged ✅ | **Current PR:** — P4-8 WIP
 **SYNC:** Merged origin/main (3be2139). Resolved boilerplate updates to README.md + example-prompts + FEATURES.md. Kept game src/ and Phase 3 demo intact.
 
 ## CAPS
@@ -160,3 +160,12 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Ambient density:** 8 concurrent ambient streams (up from 5), each with unique timbre
 - **HurtFlash fix:** Removed unused `this.scene` field and `opacity` destructuring (TS6133 errors blocking gate)
 - **Gate:** 268/268 tests pass, build 551KB
+
+### P4-8: Mob Death Particles ✅
+- **Problem:** Mobs vanish instantly on death — only a sound, no visual feedback. Killing feels flat.
+- **Changes:**
+  - `Particle.ts`: New `spawnMobDeath(x, y, z, color)` — 15 particles burst outward from mob center, speed 4 m/s, lifetime 1.0s, smaller 0.1 geometry, RGB color matched to mob type
+  - `MobManager.ts`: New `setParticleManager()` setter; `removeMob()` calls `spawnMobDeath()` with mob's `def.color` before mesh disposal
+  - `main.ts`: Wires `particleManager` into `mobManager.setParticleManager()`
+- **Visual:** 15 colored cubes burst from the mob's body center, affected by gravity, fade and shrink over 1.0s
+- **Gate:** 268/268 tests pass, build 552KB

@@ -79,6 +79,46 @@ export class ParticleManager {
     }
   }
 
+  /** Spawn mob-death particles at the given position */
+  spawnMobDeath(x: number, y: number, z: number, color: [number, number, number]): void {
+    if (!this.scene) return
+
+    const count = 15
+    const lifetime = 1.0
+    const speed = 4
+    const baseColor = new THREE.Color(color[0] / 255, color[1] / 255, color[2] / 255)
+    const geo = new THREE.BoxGeometry(0.1, 0.1, 0.1)
+
+    for (let i = 0; i < count; i++) {
+      // Random direction (burst from mob center)
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.random() * Math.PI
+      const vx = Math.sin(phi) * Math.cos(theta) * speed * (0.6 + Math.random() * 0.4)
+      const vy = Math.cos(phi) * speed * (0.4 + Math.random() * 0.6)
+      const vz = Math.sin(phi) * Math.sin(theta) * speed * (0.6 + Math.random() * 0.4)
+
+      const mat = new THREE.MeshBasicMaterial({
+        color: baseColor.clone(),
+        transparent: true,
+        opacity: 1,
+      })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(x + 0.5, y + 0.75, z + 0.5)
+      this.scene.add(mesh)
+
+      this.particles.push({
+        position: mesh.position.clone(),
+        velocity: new THREE.Vector3(vx, vy, vz),
+        color: baseColor.clone(),
+        lifetime,
+        maxLifetime: lifetime,
+        scale: 0.7 + Math.random() * 0.5,
+        mesh,
+        dead: false,
+      })
+    }
+  }
+
   /** Update all particles — returns whether any were removed */
   update(dt: number): boolean {
     if (this.particles.length === 0) return false

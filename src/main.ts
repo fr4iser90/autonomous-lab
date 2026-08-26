@@ -201,6 +201,8 @@ class VoxelCraftGame {
       this.soundService.init()
       this.mobManager.setSoundService(this.soundService)
     }
+    // P4-8: Wire particle manager for mob death effects
+    this.mobManager.setParticleManager(this.particleManager)
     // Phase 4 P4-1: Connect player HP to mob damage + HUD hearts
     this.setupPlayerHP()
     this.mobManager.spawn(this.world, seed)
