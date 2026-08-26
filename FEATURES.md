@@ -40,3 +40,18 @@
 - **Result:** blocks 17→20 (CAP reached!)
 - **Gate:** 244/244 tests pass, build 535KB
 - **Phase 2 COMPLETE:** All 4 registries now at CAP=20
+
+## P4-0 — Mob AI Polish: Player HP, Chase, Spawn, Collision ✅ DONE
+- **Decision:** Connect player HP to HUD hearts, mob damage callback, death/respawn, better chase steering, safe spawning, mob-to-mob collision
+- **Rationale:** All 4 registries at CAP=20; Phase 4 focuses on polish over content fills
+- **Changes:**
+  - `MobManager.ts`: Replaced hardcoded `playerHp=20` with callback interface (`setPlayerDamageHandler`) for live HP tracking and death respawn
+  - `MobManager.ts`: `update()` now delegates damage to player and calls death handler at 0 HP
+  - `Mob.ts`: Improved `moveToward()` to try both X and Z independently (previously only tried Z after X was blocked)
+  - `Mob.ts`: Passive mobs now look toward player while fleeing (rotation update in updateAI)
+  - `Mob.ts`: Added `tryJumpOnStairs` — mobs climb 1-block steps when approaching player
+  - `main.ts`: `setupPlayerHP()` wires HUD updateHearts() to game loop + mob damage callbacks
+  - `main.ts`: Player death respawns at spawn (x=0, ground Y) with full HP
+  - `main.ts`: HUD hearts now animate each frame from actual player HP
+- **Gate:** 268/268 tests pass, build 535KB
+- **Visual:** Hearts display changes with damage; hostile mobs chase more aggressively; mobs jump over small obstacles

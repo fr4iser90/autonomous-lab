@@ -6,6 +6,7 @@ export type SoundName =
   | 'mobDeath'
   | 'mobAmbient'
   | 'pickup'
+  | 'hit'
 
 export interface SoundConfig {
   /** Master volume 0..1 */
@@ -22,6 +23,7 @@ export const DEFAULT_SOUND_CONFIG: SoundConfig = {
     mobDeath: 0.6,
     mobAmbient: 0.3,
     pickup: 0.3,
+    hit: 0.35,
   },
 }
 
@@ -112,6 +114,9 @@ export class SoundService {
         break
       case 'pickup':
         this.playPickup(volume)
+        break
+      case 'hit':
+        this.playHit(volume)
         break
     }
   }
@@ -268,5 +273,29 @@ export class SoundService {
     osc1.stop(now + duration)
     osc2.start(now + 0.05)
     osc2.stop(now + duration)
+  }
+
+  /** Hit: short punchy thud for mob damage */
+  private playHit(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+
+    const now = this.ctx.currentTime
+    const duration = 0.08
+
+    // Low thud — short sine pulse with fast decay
+    const osc = this.ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(150, now)
+    osc.frequency.exponentialRampToValueAtTime(50, now + duration)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(volume * 0.4, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc.start(now)
+    osc.stop(now + duration)
   }
 }

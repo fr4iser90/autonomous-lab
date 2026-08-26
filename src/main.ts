@@ -148,9 +148,14 @@ class VoxelCraftGame {
 
   private loadWorld(slot: number): void {
     const worldData = this.saveService.loadWorld(slot)
-    if (!worldData) return
 
-    this.world = new World(worldData.seed, worldData.overrides)
+    if (worldData) {
+      // Continue existing world
+      this.world = new World(worldData.seed, worldData.overrides)
+    } else {
+      // New world: generate procedurally with default seed
+      this.world = new World(42, new Map())
+    }
 
     // M11: Initialize water system
     this.waterSystem = new WaterSystem(this.world)
@@ -175,20 +180,22 @@ class VoxelCraftGame {
       this.soundService, // M10: sound effects
     )
 
+    // Create renderer first (needed for mob manager)
+    this.renderer = new Renderer(this.canvas, this.world.seed)
+    this.blockHighlight = createHighlightBox(0xffffff)
+    this.renderer.scene.add(this.blockHighlight)
+
     // M7/M10: Spawn mobs
     const seed = this.world.seed
-    this.mobManager = new MobManager(this.renderer!.scene)
+    this.mobManager = new MobManager(this.renderer.scene)
     if (this.dropManager) this.mobManager.setDropManager(this.dropManager)
     if (this.soundService) {
       this.soundService.init()
       this.mobManager.setSoundService(this.soundService)
     }
+    // Phase 4 P4-1: Connect player HP to mob damage + HUD hearts
+    this.setupPlayerHP()
     this.mobManager.spawn(this.world, seed)
-
-    // Create block highlight wireframe
-    this.blockHighlight = createHighlightBox(0xffffff)
-    this.renderer = new Renderer(this.canvas, this.world?.seed ?? 42)
-    this.renderer.scene.add(this.blockHighlight)
 
     // M8: Initialize day/night cycle
     this.dayNightCycle = new DayNightCycle()
@@ -291,6 +298,41 @@ class VoxelCraftGame {
         this.renderer.setSize(Math.floor(rect.width), Math.floor(rect.height))
       }
     })
+  }
+
+  /** Phase 4 P4-1: Connect player HP to HUD hearts and mob damage */
+  private setupPlayerHP(): void {
+    if (!this.hud || !this.player) return
+
+    // Feed player HP to mob manager for contact damage
+    const player = this.player!
+    this.mobManager?.setPlayerDamageHandler((damage: number) => {
+      player.state.hp = Math.max(0, player.state.hp - damage)
+      // Play hit sound
+      this.soundService?.play('hit')
+      return player.state.hp
+    }, () => {
+      // Player death: respawn at spawn point
+      if (!this.player) return
+      this.player.state.hp = 20 // full health on respawn
+      this.player.state.velocity.set(0, 0, 0)
+      // Reset position to spawn
+      const spawnX = 0, spawnZ = 0
+      let groundY = 64
+      const world = this.world
+      if (world) {
+        for (let cy = 95; cy >= 0; cy--) {
+          if (world.getBlock(spawnX, cy, spawnZ) > 0) {
+            groundY = cy + 1
+            break
+          }
+        }
+      }
+      this.player.state.position.set(spawnX, groundY, spawnZ)
+      this.hud?.setDebug('💀 Died! Respawned.')
+    })
+
+    // HUD will be updated each frame in gameLoop
   }
 
   private startGame(): void {
@@ -754,6 +796,11 @@ class VoxelCraftGame {
       this.hud.updateMiningProgress(mine.progress, mine.maxProgress)
     } else if (this.hud) {
       this.hud.updateMiningProgress(0, 0)
+    }
+
+    // Phase 4 P4-1: Update player HP hearts each frame
+    if (this.hud && this.player) {
+      this.hud.updateHearts(this.player.state.hp)
     }
 
     // M9: Update drops and handle collection
