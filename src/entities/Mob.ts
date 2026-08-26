@@ -21,6 +21,7 @@ export interface MobEntity {
   wanderTarget: THREE.Vector3 | null
   wanderTimer: number
   hurtTimer: number
+  shootCooldown: number // for skeleton ranged attacks
   mesh: THREE.Group | null
   spawnX: number
   spawnZ: number
@@ -55,6 +56,7 @@ export class Mob {
       wanderTarget: null,
       wanderTimer: 0,
       hurtTimer: 0,
+      shootCooldown: 0,
       mesh: null,
       spawnX: x,
       spawnZ: z,
@@ -173,7 +175,7 @@ export class Mob {
     return false
   }
 
-  /** Move entity toward target with collision avoidance */
+  /** Move entity toward target with collision avoidance and obstacle steering */
   static moveToward(entity: MobEntity, targetX: number, targetZ: number, dt: number, world: World, speed: number): void {
     const dx = targetX - entity.position.x
     const dz = targetZ - entity.position.z
@@ -189,17 +191,40 @@ export class Mob {
     // Try X movement
     const testX = entity.position.clone()
     testX.x += nx
-    const saved = entity.position.x
+    const savedX = entity.position.x
     entity.position.x = testX.x
+    let blockedX = false
     if (this.hasCollision(world, entity)) {
-      entity.position.x = saved
+      entity.position.x = savedX
+      blockedX = true
     }
 
     // Try Z movement
     const savedZ = entity.position.z
     entity.position.z += nz
+    let blockedZ = false
     if (this.hasCollision(world, entity)) {
       entity.position.z = savedZ
+      blockedZ = true
+    }
+
+    // Phase 4 P4-1: When blocked in both axes, try sliding along the wall
+    // by checking adjacent positions perpendicular to the blockage
+    if (blockedX && blockedZ) {
+      // Try moving along X first, then Z (and vice versa) to find a path
+      const slideOptions = [
+        { sx: savedX + nx * 0.5, sz: savedZ },  // partial X slide
+        { sx: savedX, sz: savedZ + nz * 0.5 },   // partial Z slide
+        { sx: savedX, sz: savedZ + nz },          // full Z slide (try after partial)
+        { sx: savedX + nx, sz: savedZ },          // full X slide (try after partial)
+      ]
+      for (const opt of slideOptions) {
+        entity.position.x = opt.sx
+        entity.position.z = opt.sz
+        if (!this.hasCollision(world, entity)) {
+          break
+        }
+      }
     }
   }
 
@@ -215,16 +240,43 @@ export class Mob {
     }
   }
 
+  /** Phase 4 P4-1: Try to climb 1-block steps when approaching a target */
+  static tryJumpOnStairs(entity: MobEntity, dt: number, world: World, dirX: number, dirZ: number): void {
+    const feetY = entity.position.y
+    const headY = feetY + entity.def.height
+    // Check 1 block ahead
+    const aheadX = entity.position.x + dirX * entity.def.width * 0.6
+    const aheadZ = entity.position.z + dirZ * entity.def.width * 0.6
+    // Check if there's a block at feet level ahead
+    const blockAhead = this.isSolid(world, aheadX, feetY, aheadZ)
+    // Check if the space above that block is empty (can climb it)
+    const aboveBlockAhead = this.isSolid(world, aheadX, headY, aheadZ)
+    // Check if below us is solid (ground)
+    const belowUs = this.isSolid(world, entity.position.x, feetY - 0.1, entity.position.z)
+
+    if (blockAhead && !aboveBlockAhead && belowUs) {
+      // There's a 1-block wall ahead — jump to climb it
+      entity.velocity.y = 5 * dt
+    }
+  }
+
   /** AI update for a single tick */
   static updateAI(entity: MobEntity, dt: number, playerPos: THREE.Vector3, world: World): void {
     const speed = entity.def.speed
 
-    // Hurt timer countdown
+    // Countdown timers
     if (entity.hurtTimer > 0) {
       entity.hurtTimer -= dt
       if (entity.hurtTimer <= 0) {
         entity.state = entity.type === 'hostile' ? 'chase' : 'wander'
       }
+    }
+    if (entity.shootCooldown > 0) {
+      entity.shootCooldown -= dt
+    }
+
+    // Hurt timer state
+    if (entity.hurtTimer > 0) {
       this.applyPhysics(entity, dt, world)
       return
     }
@@ -236,9 +288,19 @@ export class Mob {
       if (distToPlayer < 16) {
         entity.state = 'chase'
         this.moveToward(entity, playerPos.x, playerPos.z, dt, world, speed * 1.2)
+        // Phase 4 P4-1: Face player even when not actively moving
+        entity.rotation = Math.atan2(playerPos.x - entity.position.x, playerPos.z - entity.position.z)
+        // Try to climb steps toward player
+        const ddx = playerPos.x - entity.position.x
+        const ddz = playerPos.z - entity.position.z
+        const dd = Math.sqrt(ddx * ddx + ddz * ddz)
+        if (dd > 0) {
+          this.tryJumpOnStairs(entity, dt, world, ddx / dd, ddz / dd)
+        }
         this.tryJump(entity, dt, world)
       } else {
-        // Wander when far
+        // Wander when far — still face toward player
+        entity.rotation = Math.atan2(playerPos.x - entity.position.x, playerPos.z - entity.position.z)
         if (entity.state !== 'wander' || entity.wanderTimer <= 0) {
           entity.wanderTarget = new THREE.Vector3(
             entity.spawnX + (Math.random() - 0.5) * 20,
@@ -261,6 +323,8 @@ export class Mob {
         const fleeX = entity.position.x - (playerPos.x - entity.position.x)
         const fleeZ = entity.position.z - (playerPos.z - entity.position.z)
         this.moveToward(entity, fleeX, fleeZ, dt, world, speed * 1.5)
+        // Face away from player while fleeing
+        entity.rotation = Math.atan2(entity.position.x - playerPos.x, entity.position.z - playerPos.z)
         this.tryJump(entity, dt, world)
       } else {
         // Wander
@@ -286,6 +350,21 @@ export class Mob {
     }
 
     this.applyPhysics(entity, dt, world)
+  }
+
+  /** Apply knockback away from a source position */
+  static applyKnockback(entity: MobEntity, fromX: number, fromZ: number, force: number): void {
+    const dx = entity.position.x - fromX
+    const dz = entity.position.z - fromZ
+    const dist = Math.sqrt(dx * dx + dz * dz)
+    if (dist < 0.001) return
+
+    const nx = dx / dist
+    const nz = dz / dist
+
+    entity.velocity.x += nx * force
+    entity.velocity.z += nz * force
+    entity.velocity.y += force * 0.3 // slight upward pop
   }
 
   /** Apply gravity and ground detection */

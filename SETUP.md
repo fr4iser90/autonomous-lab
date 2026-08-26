@@ -17,13 +17,16 @@ The public game on Pages is whatever last automerged to `main` — not this file
 | Job | Prompt | Model role |
 |---|---|---|
 | Overnight build | `example-prompts/games/<game>.md` | **`fast`** — `read_image` on PNGs (no vision subagent) |
-| Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** — same |
+| Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** — same; ignore create_goal policy errors |
 | Idle **nudge** (harness) | short continue cue from DSH idle prompting | **`fast`** (same session) |
 | Hard code root-cause only | (spawned from overnight) meshing/lighting/AI | optional **`smart`** subagent — **not** for PNGs |
-| Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** session — **click Pages first**, then BUGS.md (no source-first) |
-| Validation resume | `…-VL-validation-followup.md` | **`smart`** — same click-first order |
+| Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** — click Pages first → BUGS.md |
+| VL validation resume | `…-VL-validation-followup.md` | **`smart`** |
+| Git / CI validation | `example-prompts/games/<game>-git-validation.md` | **`fast`** — PR/`gate`/queue → BUGS.md (no game code) |
+| Git validation resume | `…-git-validation-followup.md` | **`fast`** |
 
-Builder drains `BUGS.md` ## Open at every cycle; validator **only documents** bugs.
+Builder drains `BUGS.md` ## Open at every cycle; validators **document** (git may
+cancel stuck Actions queues only).
 
 Set overnight **CAP** in the game prompt before a long run (`CAP = 20` short lab;
 raise for multi-day).

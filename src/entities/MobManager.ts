@@ -7,6 +7,8 @@ import type { MobEntity } from './Mob'
 import { MobCow, MobPig, MobChicken, MobZombie, MobSkeleton } from '../data/mobs'
 import { DropManager } from './DropManager'
 import { SoundService } from '../services/SoundService'
+import { Projectile } from './Projectile'
+import type { ProjectileEntity } from './Projectile'
 
 export interface MobConfig {
   cowCount: number
@@ -26,12 +28,14 @@ export const DEFAULT_MOB_CONFIG: MobConfig = {
 
 export class MobManager {
   private mobs: MobEntity[] = []
+  private projectiles: ProjectileEntity[] = []
   private scene: THREE.Scene
   private config: MobConfig
-  private playerHp: number = 20
   private dropManager?: DropManager
   private soundService?: SoundService
   private mobsKilledCount: number = 0
+  private onPlayerDamaged?: (damage: number) => number // returns new HP
+  private onPlayerDeath?: () => void // called when HP reaches 0
 
   constructor(scene: THREE.Scene, config: MobConfig = DEFAULT_MOB_CONFIG) {
     this.scene = scene
@@ -55,6 +59,12 @@ export class MobManager {
     this.soundService = ss
   }
 
+  /** Attach player damage handler (returns new HP after mob contact damage) */
+  setPlayerDamageHandler(fn: (damage: number) => number, onDeath: () => void): void {
+    this.onPlayerDamaged = fn
+    this.onPlayerDeath = onDeath
+  }
+
   /** Spawn mobs at random positions on the surface */
   spawn(world: World, seed: number): void {
     this.clear()
@@ -76,14 +86,29 @@ export class MobManager {
 
     for (const type of types) {
       for (let i = 0; i < type.count; i++) {
-        // Random offset from origin
-        const offsetX = Math.floor((nextRand() - 0.5) * 64)
-        const offsetZ = Math.floor((nextRand() - 0.5) * 64)
-        const x = offsetX * 16 + 8
-        const z = offsetZ * 16 + 8
+        // Random offset from origin — spread wider for hostile mobs
+        const spread = type.defId >= 4 ? 32 : 48 // hostile mobs spawn closer
+        const offsetX = Math.floor((nextRand() - 0.5) * spread)
+        const offsetZ = Math.floor((nextRand() - 0.5) * spread)
+        let x = offsetX * 16 + 8
+        let z = offsetZ * 16 + 8
 
+        // Phase 4 P4-1: Safe spawn — find ground level and verify not inside block
         const mob = Mob.create(type.defId, x, 64, z, world)
         if (!mob) continue
+
+        // Check if spawn position collides with any existing mob
+        let spawnOk = true
+        for (const existing of this.mobs) {
+          const ddx = existing.position.x - mob.position.x
+          const ddz = existing.position.z - mob.position.z
+          const d = Math.sqrt(ddx * ddx + ddz * ddz)
+          if (d < 2.0) { // minimum 2-block separation
+            spawnOk = false
+            break
+          }
+        }
+        if (!spawnOk) continue
 
         // Create mesh
         mob.mesh = Mob.createMesh(mob.def, mob.hp, mob.maxHp)
@@ -116,11 +141,51 @@ export class MobManager {
       }
     }
     this.mobs = []
+
+    // Clean up projectiles
+    for (const proj of this.projectiles) {
+      Projectile.dispose(proj)
+    }
+    this.projectiles = []
   }
 
   /** Update all mobs */
   update(dt: number, playerPos: THREE.Vector3, world: World): void {
-    this.playerHp = 20 // TODO: pass player HP
+    // Phase 4 P4-1: Apply mob-to-mob collision (prevent stacking)
+    for (let i = 0; i < this.mobs.length; i++) {
+      for (let j = i + 1; j < this.mobs.length; j++) {
+        const a = this.mobs[i]
+        const b = this.mobs[j]
+        const dx = b.position.x - a.position.x
+        const dz = b.position.z - a.position.z
+        const dist = Math.sqrt(dx * dx + dz * dz)
+        const minDist = (a.def.width + b.def.width) * 0.6
+        if (dist < minDist && dist > 0.001) {
+          const push = (minDist - dist) * 0.5
+          const nx = dx / dist * push
+          const nz = dz / dist * push
+          a.position.x -= nx
+          a.position.z -= nz
+          b.position.x += nx
+          b.position.z += nz
+        }
+      }
+    }
+
+    // Phase 4 P4-2: Skeleton ranged attacks — fire projectiles
+    for (const mob of this.mobs) {
+      if (mob.def.id === MobSkeleton.id && mob.def.damage > 0) {
+        const distToPlayer = mob.position.distanceTo(playerPos)
+        // Skeletons shoot when player is in ranged range (10-16 blocks)
+        // but not too close (they melee in < 6 range)
+        if (distToPlayer >= 10 && distToPlayer <= 16 && mob.shootCooldown <= 0) {
+          const projectile = this.fireProjectile(mob, playerPos)
+          if (projectile) {
+            mob.shootCooldown = 1.8 // 1.8 seconds between shots
+          }
+        }
+      }
+    }
 
     // Update AI
     for (const mob of this.mobs) {
@@ -147,13 +212,18 @@ export class MobManager {
       }
     }
 
+    // Update projectiles
+    this.updateProjectiles(dt, world, playerPos)
+
     // Check player-mob contact (hostile mobs)
     for (const mob of this.mobs) {
-      const contact = Mob.checkPlayerContact(mob, playerPos, this.playerHp)
-      if (contact) {
-        this.playerHp = contact.newHp
-        // Flash the player HUD or show damage effect
-        // For now, just log (in a real game, this would trigger UI feedback)
+      const contact = Mob.checkPlayerContact(mob, playerPos, 20)
+      if (contact && this.onPlayerDamaged) {
+        const newHp = this.onPlayerDamaged(contact.damage)
+        // Check for death
+        if (newHp <= 0 && this.onPlayerDeath) {
+          this.onPlayerDeath()
+        }
       }
     }
   }
@@ -163,9 +233,118 @@ export class MobManager {
     return [...this.mobs]
   }
 
+  /** Get all projectiles */
+  getProjectiles(): ProjectileEntity[] {
+    return [...this.projectiles]
+  }
+
   /** Get mob by ID */
   getMob(id: number): MobEntity | undefined {
     return this.mobs.find(m => m.id === id)
+  }
+
+  /** Fire a projectile from a skeleton toward the player */
+  fireProjectile(mob: MobEntity, playerPos: THREE.Vector3): ProjectileEntity | null {
+    const dx = playerPos.x - mob.position.x
+    const dy = (playerPos.y + 1) - mob.position.y // aim at player's upper body
+    const dz = playerPos.z - mob.position.z
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+    if (dist < 1) return null
+
+    const projectile = Projectile.create(
+      'skeleton',
+      mob.position.x, mob.position.y + 1.5, mob.position.z,
+      playerPos.x, playerPos.y + 1, playerPos.z,
+      mob.def.damage, // damage from mob definition
+    )
+
+    // Create mesh
+    projectile.mesh = Projectile.createMesh()
+    projectile.mesh.position.copy(projectile.position)
+    this.scene.add(projectile.mesh)
+    projectile.world = this.mobs.length > 0 ? undefined : undefined // set during update
+
+    this.projectiles.push(projectile)
+    this.soundService?.play('pickup') // arrow whoosh
+
+    return projectile
+  }
+
+  /** Update all projectiles (physics, collision, cleanup) */
+  updateProjectiles(dt: number, world: World, playerPos: THREE.Vector3): void {
+    const playerBounds = { minY: playerPos.y, maxY: playerPos.y + 1.8 }
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const proj = this.projectiles[i]
+      proj.playerPos = playerPos
+      proj.playerBounds = playerBounds
+
+      const alive = Projectile.update(proj, dt, world)
+      if (!alive) {
+        Projectile.dispose(proj)
+        this.projectiles.splice(i, 1)
+        continue
+      }
+
+      // Phase 4 P4-2: Check projectile-player collision
+      if (Projectile.checkPlayerHit(proj, playerPos, playerBounds)) {
+        Projectile.dispose(proj)
+        this.projectiles.splice(i, 1)
+        // Damage player
+        if (this.onPlayerDamaged) {
+          const newHp = this.onPlayerDamaged(proj.damage)
+          if (newHp <= 0 && this.onPlayerDeath) {
+            this.onPlayerDeath()
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Phase 4 P4-3: Melee attack — hit the nearest hostile mob in the player's crosshair.
+   * Returns the mob id that was hit, or -1 if none.
+   */
+  meleeHit(
+    playerPos: THREE.Vector3,
+    dirX: number, dirY: number, dirZ: number,
+    meleeRange: number = 3,
+    coneAngle: number = Math.PI / 6, // 30° crosshair tolerance
+  ): number {
+    // Normalize direction
+    const len = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ)
+    if (len === 0) return -1
+    const nx = dirX / len
+    const ny = dirY / len
+    const nz = dirZ / len
+
+    let bestId = -1
+    let bestDist = meleeRange
+    const cosAngle = Math.cos(coneAngle)
+
+    for (const mob of this.mobs) {
+      // Only hostile mobs
+      if (mob.def.type !== 'hostile') continue
+
+      // Distance check (use horizontal distance + 1 for height)
+      const ddx = mob.position.x - playerPos.x
+      const ddy = mob.position.y + mob.def.height * 0.4 - playerPos.y
+      const ddz = mob.position.z - playerPos.z
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz)
+      if (dist > bestDist) continue
+
+      // Dot product to check if within cone angle
+      const dx = ddx / dist
+      const dy = ddy / dist
+      const dz = ddz / dist
+      const dot = dx * nx + dy * ny + dz * nz
+
+      if (dot < cosAngle) continue // outside cone
+
+      bestDist = dist
+      bestId = mob.id
+    }
+
+    return bestId
   }
 
   /** Damage a mob */

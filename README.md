@@ -16,7 +16,7 @@ and on the live site is **AI-generated** — used to probe **local LLM** capabil
 | **Live (last green automerge → Pages)** | https://fr4iser90.github.io/autonomous-lab/ |
 | **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
 | **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork; idle nudge; Docker) |
-| **This host’s setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
+| **This host's setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
 | **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
 
 Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
@@ -27,6 +27,7 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 |---|---|---|
 | Overnight / follow-up / idle nudge | `*-craft.md` / `*-followup.md` (+ harness nudge) | **fast** + `read_image` (~50–60 tok/s) |
 | VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** + `read_image` (~15–20 tok/s) |
+| Git / CI validation | `*-git-validation.md` (+ follow-up) | **fast** — PR / `gate` / Actions queue |
 
 Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
 
@@ -58,10 +59,9 @@ Broken `gate` → no merge → Pages stays on the last green `main`.
 ## Quick start (human)
 
 ```sh
-pnpm install   # or npm install
+pnpm install
 pnpm run gate
 pnpm run dev
-./scripts/new-run.sh <run-id>
 ```
 
 Paste an objective from `example-prompts/` (or your own) into the harness with
@@ -84,7 +84,7 @@ agent-default-model:
 # Register a second model with name: smart (Qwen3.8 … VL) for validation sessions.
 ```
 
-## One-time GitHub setup
+## DSH Autonomy
 
 1. Repo **Public**; Pages **Source = GitHub Actions**
 2. Rulesets: `protect-main` (PR + required **`gate`**), `protect-baseline` (you only)
