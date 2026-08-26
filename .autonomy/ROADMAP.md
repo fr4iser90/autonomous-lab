@@ -14,7 +14,7 @@
 | M8 | Day/night cycle + autosave | COMPLETE ✅ |
 | M9 | Inventory drops / item pickup | COMPLETE ✅ |
 | M10 | Sound effects (block break/place, mob sounds) | COMPLETE ✅ |
-| M11 | Water physics + lava | PENDING |
+| M11 | Water physics + lava | COMPLETE ✅ |
 | M12 | Achievement system + save migration | PENDING |
 
 ## Phase 2: Content Cycles
