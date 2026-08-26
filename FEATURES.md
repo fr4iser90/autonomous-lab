@@ -32,3 +32,11 @@
 - **Result:** npcs 10→20 (CAP reached!)
 - **Gate:** 244/244 tests pass, build 535KB
 - **Remaining gaps:** blocks=17/20 (85% — only remaining gap)
+
+## C6 — Add 3 blocks (Bricks, Glass, Wool) to reach CAP=20
+- **Decision:** Add Bricks (id=17), Glass (id=18, transparent), Wool (id=19)
+- **Rationale:** blocks=17/20 (85%) — only remaining gap to all-CAP Phase 2 completion
+- **Also:** Fixed getBlock() to use .find() for consistency with getNPC()
+- **Result:** blocks 17→20 (CAP reached!)
+- **Gate:** 244/244 tests pass, build 535KB
+- **Phase 2 COMPLETE:** All 4 registries now at CAP=20

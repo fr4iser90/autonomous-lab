@@ -7,14 +7,14 @@ Infinite voxel sandbox (Minecraft-style) — procedural terrain, break/place, in
 
 | Registry | Count | Entries |
 |---|---|---|
-| blocks | 17 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Lava, Air |
+| blocks | 20 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Lava, Bricks, Glass, Wool, Air |
 | items | 20 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Water Bucket, Lava Bucket, Stone Sword, Iron Shovel, Air |
 | recipes | 20 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Sword, Cooked Beef, Iron Spade, Fence, Wall, Furnace, Barrel, Lantern, Bed, Cake, Iron Door, Trapdoor, Coal Block |
 | npcs | 20 | Cow, Pig, Sheep, Chicken, Fox, Bee, Rabbit, Zombie, Creeper, Wolf, Donkey, Ocelot, Panda, Parrot, Turtle, Cat, Mooshroom, Skeleton, Spider, Witch |
 
 ```
-CAPS: blocks=17/CAP items=20/CAP recipes=20/CAP npcs=20/CAP
-NEXT_CYCLE_PRIORITY: blocks (17/20 = 85% — only remaining gap)
+CAPS: blocks=20/CAP items=20/CAP recipes=20/CAP npcs=20/CAP
+PHASE 2 COMPLETE — All 4 registries at CAP=20
 ```
 
 ## Block Details
@@ -37,6 +37,10 @@ NEXT_CYCLE_PRIORITY: blocks (17/20 = 85% — only remaining gap)
 | 13 | Iron Ore | [180,150,130] | 5 | false |
 | 14 | Crafting Table | [180,120,60] | 2 | false |
 | 15 | Torch | [255,200,50] | 1 | true |
+| 16 | Lava | [255,69,0] | 0 | true |
+| 17 | Bricks | [170,85,65] | 3 | false |
+| 18 | Glass | [200,220,255] | 1 | true |
+| 19 | Wool | [240,240,240] | 1 | false |
 
 ## Item Details
 

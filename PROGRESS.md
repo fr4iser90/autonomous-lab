@@ -1,15 +1,15 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** Phase 2 — Content Cycles (C6 next)
-**SHA:** 0e00fc3 (C4 pushed, C5 WIP)
+**Phase:** Phase 2 — Content Cycles (Phase 2 COMPLETE)
+**SHA:** b06207d (C5 pushed)
 **Tests:** 244/244 passing | Build: ✅ 535KB
-**PR:** Open (C1+C2+C3+C4)
-**SYNC:** Resumed — verified branch synced, tracking docs updated
+**PR:** Open (C1+C2+C3+C4+C5)
+**SYNC:** C6 in progress — blocks 17→20/CAP
 
 ## CAPS
 ```
-blocks=17/20 items=20/CAP recipes=20/CAP npcs=10/20
+blocks=17/20 items=20/CAP recipes=20/CAP npcs=20/20
 ```
 
 ## Milestones M1–M12: ALL COMPLETE ✅
@@ -18,6 +18,6 @@ blocks=17/20 items=20/CAP recipes=20/CAP npcs=10/20
 PHASE GATE M12→Phase 2: Not yet — need Pages green before advancing
 
 ## NEXT
-C5: npcs 10→20 (add 10 new NPCs to reach CAP)
+C6: blocks 17→20 (add 3 blocks: Bricks, Glass, Wool)
 
 (End of file)

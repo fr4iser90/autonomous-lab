@@ -432,9 +432,9 @@ describe('M1: World', () => {
 })
 
 describe('M2: Texture Atlas', () => {
-  it('atlas has correct grid dimensions: 3 rows × 17 cols', () => {
-    // Atlas is now a 3×N grid: 3 face types, 17 blocks (added Lava)
-    expect(BLOCK_COUNT).toBe(17)
+  it('atlas has correct grid dimensions: 3 rows × BLOCK_COUNT cols', () => {
+    // Atlas is now a 3×N grid: 3 face types, BLOCK_COUNT blocks
+    expect(BLOCK_COUNT).toBe(20)
   })
 
   it('atlas generates without throwing', () => {

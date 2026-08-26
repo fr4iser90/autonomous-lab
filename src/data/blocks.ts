@@ -32,15 +32,20 @@ export const BlockCraftingTable: BlockDef = { id: 14, name: 'Crafting Table', co
 export const BlockTorch: BlockDef = { id: 15, name: 'Torch', color: [255, 200, 50], hardness: 1, transparent: true, solid: false }
 export const BlockLava: BlockDef = { id: 16, name: 'Lava', color: [255, 69, 0], hardness: 0, transparent: true, solid: false, flowable: true, flammable: true }
 
+export const BlockBricks: BlockDef = { id: 17, name: 'Bricks', color: [170, 85, 65], hardness: 3, transparent: false, solid: true }
+export const BlockGlass: BlockDef = { id: 18, name: 'Glass', color: [200, 220, 255], hardness: 1, transparent: true, solid: true }
+export const BlockWool: BlockDef = { id: 19, name: 'Wool', color: [240, 240, 240], hardness: 1, transparent: false, solid: true }
+
 export const ALL_BLOCKS: ReadonlyArray<BlockDef> = [
   BlockAir, BlockGrass, BlockDirt, BlockStone, BlockSand,
   BlockWater, BlockLog, BlockPlanks, BlockLeaves, BlockCobblestone,
   BlockSnow, BlockBedrock, BlockCoalOre, BlockIronOre,
   BlockCraftingTable, BlockTorch, BlockLava,
+  BlockBricks, BlockGlass, BlockWool,
 ]
 
 export function getBlock(id: number): BlockDef | undefined {
-  return ALL_BLOCKS[id]
+  return ALL_BLOCKS.find(b => b.id === id)
 }
 
 export const BLOCK_COUNT = ALL_BLOCKS.length
