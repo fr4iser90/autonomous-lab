@@ -596,4 +596,425 @@ describe('M3: BlockInteraction mining', () => {
   })
 })
 
+// ─── M4: Inventory + Hotbar + Crafting ────────────────────────────────────────
+
+import {
+  createInventory,
+  insertItem,
+  removeItem,
+  findEmptySlot,
+  findItemSlots,
+  getTotalItemCount,
+  isSlotEmpty,
+  isInventoryFull,
+  countUsedSlots,
+  swapSlots,
+  transferToSlot,
+  getHotbarSnapshot,
+  HOTBAR_SIZE,
+  selectHotbarSlot,
+} from '../src/data/inventory'
+import {
+  createInventoryCraftingGrid,
+  createCraftingTableGrid,
+  findCraftingRecipe,
+  isGridEmpty,
+  placeInGrid,
+  removeFromGrid,
+  clearGrid,
+  craft,
+  addCraftedResult,
+  canCraftRecipe,
+  quickCraft,
+} from '../src/physics/Crafting'
+
+describe('M4: Inventory creation and basics', () => {
+  it('creates empty 36-slot inventory', () => {
+    const inv = createInventory()
+    expect(inv).toHaveLength(36)
+    expect(inv.every(s => s.itemId === 0 && s.count === 0)).toBe(true)
+  })
+
+  it('counts used slots correctly', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    inv[1] = { itemId: 2, count: 20 }
+    expect(countUsedSlots(inv)).toBe(2)
+  })
+
+  it('detects empty slots', () => {
+    const inv = createInventory()
+    expect(isSlotEmpty(inv, 0)).toBe(true)
+    inv[0] = { itemId: 1, count: 10 }
+    expect(isSlotEmpty(inv, 0)).toBe(false)
+  })
+
+  it('finds first empty slot', () => {
+    const inv = createInventory()
+    expect(findEmptySlot(inv)).toBe(0)
+    inv[0] = { itemId: 1, count: 10 }
+    expect(findEmptySlot(inv)).toBe(1)
+    inv[1] = { itemId: 2, count: 20 }
+    expect(findEmptySlot(inv)).toBe(2)
+  })
+
+  it('finds items in inventory', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    inv[2] = { itemId: 1, count: 5 }
+    inv[5] = { itemId: 2, count: 3 }
+    const sticks = findItemSlots(inv, 1)
+    expect(sticks).toEqual([0, 2])
+    const other = findItemSlots(inv, 2)
+    expect(other).toEqual([5])
+    const none = findItemSlots(inv, 99)
+    expect(none).toEqual([])
+  })
+
+  it('gets total item count across all slots', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    inv[2] = { itemId: 1, count: 5 }
+    inv[5] = { itemId: 2, count: 3 }
+    expect(getTotalItemCount(inv, 1)).toBe(15)
+    expect(getTotalItemCount(inv, 2)).toBe(3)
+    expect(getTotalItemCount(inv, 99)).toBe(0)
+  })
+})
+
+describe('M4: Inventory insert and remove', () => {
+  it('inserts item into empty inventory', () => {
+    const inv = createInventory()
+    const remaining = insertItem(inv, 1, 10)
+    expect(remaining).toBe(0)
+    expect(inv[0]).toEqual({ itemId: 1, count: 10 })
+  })
+
+  it('inserts and stacks items', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 50 }
+    const remaining = insertItem(inv, 1, 20)
+    expect(remaining).toBe(0) // 50+20=70, but maxStack=64, so 64 in slot 0, 6 in slot 1
+    expect(inv[0].count).toBe(64)
+    expect(inv[1]).toEqual({ itemId: 1, count: 6 })
+  })
+
+  it('inserts when all slots are full', () => {
+    const inv = createInventory()
+    for (let i = 0; i < 36; i++) {
+      inv[i] = { itemId: 1, count: 64 }
+    }
+    const remaining = insertItem(inv, 1, 10)
+    expect(remaining).toBe(10) // no space
+  })
+
+  it('inserts different items in separate slots', () => {
+    const inv = createInventory()
+    insertItem(inv, 1, 10)
+    insertItem(inv, 2, 20)
+    expect(inv[0]).toEqual({ itemId: 1, count: 10 })
+    expect(inv[1]).toEqual({ itemId: 2, count: 20 })
+  })
+
+  it('removes items correctly', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 20 }
+    expect(removeItem(inv, 1, 10)).toBe(true)
+    expect(inv[0].count).toBe(10)
+    expect(removeItem(inv, 1, 10)).toBe(true)
+    expect(inv[0].count).toBe(0)
+    expect(inv[0].itemId).toBe(0)
+  })
+
+  it('removing more than available fails', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 5 }
+    expect(removeItem(inv, 1, 10)).toBe(false)
+  })
+})
+
+describe('M4: Inventory swap and transfer', () => {
+  it('swaps two slots', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    inv[1] = { itemId: 2, count: 20 }
+    swapSlots(inv, 0, 1)
+    expect(inv[0]).toEqual({ itemId: 2, count: 20 })
+    expect(inv[1]).toEqual({ itemId: 1, count: 10 })
+  })
+
+  it('transfers same item to stack', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 50 }
+    inv[1] = { itemId: 1, count: 20 }
+    transferToSlot(inv, 0, 1, 10)
+    expect(inv[0].count).toBe(40)
+    expect(inv[1].count).toBe(30)
+  })
+
+  it('transfers to empty slot', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    inv[2] = { itemId: 0, count: 0 }
+    transferToSlot(inv, 0, 2, 5)
+    expect(inv[0].count).toBe(5)
+    expect(inv[2]).toEqual({ itemId: 1, count: 5 })
+  })
+})
+
+describe('M4: Hotbar snapshot', () => {
+  it('returns first 9 slots', () => {
+    const inv = createInventory()
+    for (let i = 0; i < 9; i++) {
+      inv[i] = { itemId: i + 1, count: 10 }
+    }
+    const hotbar = getHotbarSnapshot(inv)
+    expect(hotbar).toHaveLength(9)
+    for (let i = 0; i < 9; i++) {
+      expect(hotbar[i].itemId).toBe(i + 1)
+      expect(hotbar[i].count).toBe(10)
+    }
+  })
+
+  it('hotbar is a shallow copy', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    const hotbar = getHotbarSnapshot(inv)
+    hotbar[0].count = 99
+    expect(inv[0].count).toBe(10) // original unchanged
+  })
+})
+
+describe('M4: Hotbar slot selection', () => {
+  it('selects slot 1 from key 1', () => {
+    const inv = createInventory()
+    expect(selectHotbarSlot(inv, 1)).toBe(0)
+  })
+
+  it('selects slot 9 from key 9', () => {
+    const inv = createInventory()
+    expect(selectHotbarSlot(inv, 9)).toBe(8)
+  })
+
+  it('clamps to valid range', () => {
+    const inv = createInventory()
+    expect(selectHotbarSlot(inv, 0)).toBe(0)
+    expect(selectHotbarSlot(inv, 10)).toBe(8)
+  })
+})
+
+describe('M4: Inventory full check', () => {
+  it('returns false for empty inventory', () => {
+    const inv = createInventory()
+    expect(isInventoryFull(inv)).toBe(false)
+  })
+
+  it('returns false when not all slots used', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 1, count: 10 }
+    expect(isInventoryFull(inv)).toBe(false)
+  })
+
+  it('returns true when all 36 slots are used', () => {
+    const inv = createInventory()
+    for (let i = 0; i < 36; i++) {
+      inv[i] = { itemId: 1, count: 1 }
+    }
+    expect(isInventoryFull(inv)).toBe(true)
+  })
+})
+
+describe('M4: Crafting grid operations', () => {
+  it('creates empty 2x2 inventory grid', () => {
+    const grid = createInventoryCraftingGrid()
+    expect(grid.width).toBe(2)
+    expect(grid.height).toBe(2)
+    expect(grid.items).toHaveLength(4)
+    expect(isGridEmpty(grid)).toBe(true)
+  })
+
+  it('creates empty 3x3 crafting table grid', () => {
+    const grid = createCraftingTableGrid()
+    expect(grid.width).toBe(3)
+    expect(grid.height).toBe(3)
+    expect(grid.items).toHaveLength(9)
+    expect(isGridEmpty(grid)).toBe(true)
+  })
+
+  it('places item in grid', () => {
+    const grid = createInventoryCraftingGrid()
+    expect(placeInGrid(grid, 0, 1)).toBe(true)
+    expect(isGridEmpty(grid)).toBe(false)
+    expect(grid.items[0]).toBe(1)
+  })
+
+  it('refuses to place different item in occupied slot', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 1)
+    expect(placeInGrid(grid, 0, 2)).toBe(false)
+  })
+
+  it('removes item from grid', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 1)
+    removeFromGrid(grid, 0)
+    expect(grid.items[0]).toBeNull()
+  })
+
+  it('clears entire grid', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 1)
+    placeInGrid(grid, 1, 1)
+    clearGrid(grid)
+    expect(isGridEmpty(grid)).toBe(true)
+  })
+
+  it('out of bounds slot is rejected', () => {
+    const grid = createInventoryCraftingGrid()
+    expect(placeInGrid(grid, -1, 1)).toBe(false)
+    expect(placeInGrid(grid, 4, 1)).toBe(false)
+  })
+})
+
+describe('M4: Recipe matching', () => {
+  it('planks recipe matches 1x1 log pattern', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 3) // log item
+    const recipe = findCraftingRecipe(grid)
+    expect(recipe).toBeDefined()
+    expect(recipe?.id).toBe(1)
+    expect(recipe?.resultItemId).toBe(4) // planks
+    expect(recipe?.resultCount).toBe(4)
+  })
+
+  it('sticks recipe matches 2x2 pattern', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 3)
+    placeInGrid(grid, 2, 3)
+    const recipe = findCraftingRecipe(grid)
+    expect(recipe).toBeDefined()
+    expect(recipe?.id).toBe(2)
+    expect(recipe?.resultItemId).toBe(5) // sticks
+  })
+
+  it('crafting table recipe matches 2x2 planks', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 4)
+    placeInGrid(grid, 1, 4)
+    placeInGrid(grid, 2, 4)
+    placeInGrid(grid, 3, 4)
+    const recipe = findCraftingRecipe(grid)
+    expect(recipe).toBeDefined()
+    expect(recipe?.id).toBe(3)
+    expect(recipe?.resultItemId).toBe(12) // crafting table
+  })
+
+  it('wooden pickaxe recipe matches 3x2 pattern', () => {
+    const grid = createCraftingTableGrid()
+    placeInGrid(grid, 0, 4)
+    placeInGrid(grid, 1, 4)
+    placeInGrid(grid, 2, 4)
+    placeInGrid(grid, 4, 5) // sticks
+    placeInGrid(grid, 7, 5)
+    const recipe = findCraftingRecipe(grid)
+    expect(recipe).toBeDefined()
+    expect(recipe?.id).toBe(5)
+    expect(recipe?.resultItemId).toBe(6) // wooden pickaxe
+  })
+
+  it('no recipe matches wrong pattern', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 1) // dirt
+    placeInGrid(grid, 1, 3) // log
+    const recipe = findCraftingRecipe(grid)
+    expect(recipe).toBeUndefined()
+  })
+})
+
+describe('M4: Crafting execution', () => {
+  it('crafts planks from log', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 3) // log
+    const result = craft(grid)
+    expect(result).toBeDefined()
+    expect(result?.itemId).toBe(4) // planks
+    expect(result?.count).toBe(4)
+    expect(isGridEmpty(grid)).toBe(true) // consumed
+  })
+
+  it('craft adds result to inventory', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 3) // log
+    const result = craft(grid)
+    expect(result).toBeDefined()
+    const inv = createInventory()
+    if (result) {
+      addCraftedResult(inv, result)
+      expect(inv[0].itemId).toBe(4) // planks
+      expect(inv[0].count).toBe(4)
+    }
+  })
+
+  it('quickCraft does both craft and add to inventory', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 3) // log
+    const inv = createInventory()
+    const result = quickCraft(grid, inv)
+    expect(result).toBeDefined()
+    expect(result?.itemId).toBe(4)
+    expect(inv[0].itemId).toBe(4)
+    expect(inv[0].count).toBe(4)
+  })
+
+  it('crafting returns undefined for no match', () => {
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 1) // dirt, no recipe
+    const result = craft(grid)
+    expect(result).toBeUndefined()
+  })
+
+  it('canCraftRecipe validates inventory requirements', () => {
+    const recipe = { id: 1, resultItemId: 4, resultCount: 4, width: 1, height: 1, pattern: [[3]] }
+    const inv = createInventory()
+    inv[0] = { itemId: 3, count: 1 } // has log
+    expect(canCraftRecipe(inv, recipe as any)).toBe(true)
+
+    inv[0] = { itemId: 1, count: 10 } // has dirt instead
+    expect(canCraftRecipe(inv, recipe as any)).toBe(false)
+  })
+})
+
+describe('M4: Multiple craft operations', () => {
+  it('can craft multiple times from same source', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 3, count: 8 } // 8 logs (separate from grid)
+    // Craft 4 planks per log (recipe takes 1 log)
+    const grid = createInventoryCraftingGrid()
+
+    for (let i = 0; i < 4; i++) {
+      clearGrid(grid)
+      placeInGrid(grid, 0, 3) // place log in grid
+      const result = quickCraft(grid, inv)
+      expect(result).toBeDefined()
+      expect(result?.itemId).toBe(4)
+    }
+
+    // Inventory logs unchanged (grid is separate from inventory)
+    expect(inv[0].count).toBe(8)
+    // Planks crafted and stacked in inventory
+    expect(inv[1].itemId).toBe(4) // planks crafted
+    expect(inv[1].count).toBe(16) // 4x4 = 16 planks
+  })
+
+  it('stacks crafted results with existing items', () => {
+    const inv = createInventory()
+    inv[0] = { itemId: 4, count: 8 } // 8 planks
+    const grid = createInventoryCraftingGrid()
+    placeInGrid(grid, 0, 3) // 1 log
+    const result = quickCraft(grid, inv)
+    expect(result).toBeDefined()
+    expect(inv[0].count).toBe(12) // 8 + 4 = 12 planks (stacked)
+  })
+})
+
 

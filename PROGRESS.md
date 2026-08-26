@@ -2,7 +2,7 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** M4 — Inventory + hotbar + crafting
-**Status:** IN PROGRESS — gate green (46/46 tests, build succeeds ~493KB)
+**Status:** COMPLETE — gate green (88/88 tests, build succeeds ~498KB)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -36,7 +36,15 @@
   - Wireframe block highlight overlay (color shifts red as block breaks)
   - Chunk rebuild on break/place
   - 8 M3 smoke tests (total 46)
-- M4: Inventory + hotbar + crafting → PENDING
+- M4: Inventory + hotbar + crafting → **COMPLETE ✅**
+  - 36-slot inventory with hotbar (slots 0–8)
+  - Item stacking with maxStack per item type
+  - insert/remove/swap/transfer operations
+  - 2×2 inventory crafting + 3×3 crafting table grid
+  - Recipe matching with sub-pattern search in larger grids
+  - Block break drops items into shared inventory
+  - E key toggles inventory overlay, 1-9 selects hotbar slot
+  - 42 M4 smoke tests (total 88)
 - M5: Biomes + world features (trees, caves) → PENDING
 - M6: Voxel lighting (sky + torch) → PENDING
 - M7: Mobs (passive + hostile AI) → PENDING
@@ -48,4 +56,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M4: Implement inventory + hotbar + crafting.
+M5: Biomes + world features (trees, caves).

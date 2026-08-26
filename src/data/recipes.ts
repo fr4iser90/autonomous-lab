@@ -32,7 +32,7 @@ export const RECIPE_TORCHES: Recipe = {
 }
 
 export const RECIPE_WOODEN_PICKAXE: Recipe = {
-  id: 5, resultItemId: 6, resultCount: 1, width: 3, height: 2,
+  id: 5, resultItemId: 6, resultCount: 1, width: 3, height: 3,
   pattern: [[4, 4, 4], [0, 5, 0], [0, 5, 0]] // 3 planks top + 2 sticks
 }
 
@@ -73,14 +73,39 @@ export function getRecipe(id: number): Recipe | undefined {
 
 export function findRecipe(pattern: number[][], pw: number, ph: number): Recipe | undefined {
   for (const recipe of ALL_RECIPES) {
-    if (recipe.width !== pw || recipe.height !== ph) continue
-    let match = true
-    for (let y = 0; y < ph && match; y++) {
-      for (let x = 0; x < pw && match; x++) {
-        if (recipe.pattern[y]?.[x] !== pattern[y]?.[x]) match = false
+    // Try to find recipe pattern at any offset within the grid
+    const maxDy = ph - recipe.height
+    const maxDx = pw - recipe.width
+    if (maxDy < 0 || maxDx < 0) continue // recipe bigger than grid
+    for (let dy = 0; dy <= maxDy; dy++) {
+      for (let dx = 0; dx <= maxDx; dx++) {
+        let match = true
+        // Check all recipe pattern cells match the corresponding grid cells
+        for (let y = 0; y < recipe.height && match; y++) {
+          for (let x = 0; x < recipe.width && match; x++) {
+            if (recipe.pattern[y][x] !== pattern[y + dy]?.[x + dx]) match = false
+          }
+        }
+        // Check no extra items in grid outside the recipe pattern
+        if (match) {
+          for (let y = 0; y < ph && match; y++) {
+            for (let x = 0; x < pw && match; x++) {
+              const gridCell = pattern[y][x]
+              const ry = y - dy
+              const rx = x - dx
+              // Grid cell must be covered by recipe pattern and match
+              if (ry >= 0 && ry < recipe.height && rx >= 0 && rx < recipe.width) {
+                if (recipe.pattern[ry][rx] !== gridCell) match = false
+              } else if (gridCell !== 0) {
+                // Extra item not part of recipe
+                match = false
+              }
+            }
+          }
+        }
+        if (match) return recipe
       }
     }
-    if (match) return recipe
   }
   return undefined
 }

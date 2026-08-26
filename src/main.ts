@@ -1,5 +1,5 @@
 // Main entry point for VoxelCraft
-// Handles title screen -> game loop transition, plus M3 raycast break/place
+// Handles title screen -> game loop transition, plus M3 raycast break/place, M4 inventory
 
 import * as THREE from 'three'
 import { SaveService } from './services/SaveService'
@@ -13,6 +13,13 @@ import { World } from './world/World'
 import { Player } from './player/Player'
 import { raycast, getRayFromCamera } from './physics/Raycaster'
 import { BlockInteraction } from './physics/BlockInteraction'
+import { InventoryScreen } from './ui/InventoryScreen'
+import {
+  createInventory,
+  insertItem,
+  getHotbarSnapshot,
+  HOTBAR_SIZE,
+} from './data/inventory'
 
 import { CHUNK_WIDTH } from './world/Chunk'
 
@@ -28,6 +35,8 @@ class VoxelCraftGame {
   private world?: World
   private player?: Player
   private blockInteraction?: BlockInteraction
+  private inventoryScreen?: InventoryScreen
+  private inventoryOpen = false
   private canvas: HTMLCanvasElement
   private keys = new Set<string>()
   private animationId: number = 0
@@ -40,10 +49,11 @@ class VoxelCraftGame {
   private blockHighlight?: THREE.LineSegments
   private mouseDownLeft = false
   private selectedSlot = 0 // hotbar slot 0-8
-  private inventory = Array.from({ length: 36 }, () => ({ itemId: 0, count: 0 }))
+  // M4: Shared inventory (36 slots)
+  private inventory: Array<{ itemId: number; count: number }> = createInventory()
 
-  // Inventory items for testing (M3: placeable blocks)
-  private readonly defaultInventory = [
+  // M4: Default starting inventory (items for testing)
+  private readonly defaultInventoryItems = [
     { itemId: 2, count: 64 },  // Stone
     { itemId: 1, count: 64 },  // Dirt
     { itemId: 4, count: 64 },  // Planks
@@ -103,11 +113,16 @@ class VoxelCraftGame {
 
     this.player = new Player(spawnX, spawnY, spawnZ)
 
-    // Initialize block interaction system
+    // M4: Populate inventory with default items
+    for (const item of this.defaultInventoryItems) {
+      insertItem(this.inventory, item.itemId, item.count)
+    }
+
+    // Initialize block interaction system with shared inventory
     this.blockInteraction = new BlockInteraction(
       this.world,
       this.selectedSlot,
-      [...this.defaultInventory, ...this.inventory.slice(this.defaultInventory.length)],
+      this.inventory, // shared reference
     )
 
     // Create block highlight wireframe
@@ -122,16 +137,31 @@ class VoxelCraftGame {
     document.addEventListener('keydown', (e) => {
       this.keys.add(e.code)
 
-      if (e.code === 'Escape' && this.state === 'playing') {
-        this.pauseGame()
+      // M4: E key toggles inventory screen
+      if (e.code === 'KeyE' && this.state === 'playing' && !e.repeat) {
+        e.preventDefault()
+        this.toggleInventory()
+        return
+      }
+
+      if (e.code === 'Escape') {
+        if (this.inventoryOpen) {
+          // Close inventory, don't pause game
+          this.toggleInventory()
+          return
+        }
+        if (this.state === 'playing') {
+          this.pauseGame()
+        }
       }
 
       // Number keys select hotbar slot (1-9 → 0-8)
-      if (this.state === 'playing') {
+      if (this.state === 'playing' && !this.inventoryOpen) {
         const num = parseInt(e.code.replace('Digit', ''))
         if (num >= 1 && num <= 9) {
           this.selectedSlot = num - 1
-          this.blockInteraction?.state // just access to confirm alive
+          // Update BlockInteraction's selected slot
+          this.blockInteraction?.updateSelectedSlot(this.selectedSlot)
           if (this.hud) {
             this.updateHotbarUI()
           }
@@ -142,7 +172,7 @@ class VoxelCraftGame {
       this.keys.delete(e.code)
 
       // Release left mouse on number key press cancels mining
-      if (e.code.startsWith('Digit') && this.state === 'playing') {
+      if (e.code.startsWith('Digit') && this.state === 'playing' && !this.inventoryOpen) {
         const num = parseInt(e.code.replace('Digit', ''))
         if (num >= 1 && num <= 9) {
           this.blockInteraction?.cancelMining()
@@ -226,6 +256,11 @@ class VoxelCraftGame {
   }
 
   private pauseGame(): void {
+    // M4: Close inventory if open
+    if (this.inventoryOpen) {
+      this.closeInventory()
+    }
+
     this.state = 'title'
     document.exitPointerLock()
 
@@ -278,9 +313,87 @@ class VoxelCraftGame {
     if (this.animationId) cancelAnimationFrame(this.animationId)
   }
 
+  /** M4: Toggle inventory screen visibility */
+  private toggleInventory(): void {
+    if (this.inventoryOpen) {
+      this.closeInventory()
+    } else {
+      this.openInventory()
+    }
+  }
+
+  /** M4: Open the inventory screen */
+  private openInventory(): void {
+    if (!this.hud) return
+    this.inventoryOpen = true
+    document.exitPointerLock()
+
+    // Update BlockInteraction with current selected slot
+    this.blockInteraction?.updateSelectedSlot(this.selectedSlot)
+
+    this.inventoryScreen = new InventoryScreen({
+      onClose: () => this.closeInventory(),
+      onSlotClick: (index, itemId, count) => this.handleInventorySlotClick(index, itemId, count),
+    })
+    this.inventoryScreen.update(this.inventory)
+
+    // Update HUD to show inventory-open hint
+    this.hud.setDebug('Inventory open (E to close)')
+  }
+
+  /** M4: Close the inventory screen */
+  private closeInventory(): void {
+    if (!this.inventoryScreen) return
+    this.inventoryScreen.remove()
+    this.inventoryScreen = undefined
+    this.inventoryOpen = false
+
+    // Re-request pointer lock for gameplay
+    if (this.canvas) this.canvas.requestPointerLock()
+
+    this.updateHotbarUI()
+  }
+
+  /** M4: Handle slot clicks in the inventory screen */
+  private handleInventorySlotClick(index: number, _itemId: number, _count: number): void {
+    // Simple click-to-select: move clicked slot to selected hotbar slot
+    if (index < HOTBAR_SIZE) {
+      this.selectedSlot = index
+      this.blockInteraction?.updateSelectedSlot(this.selectedSlot)
+    } else {
+      // Find the nearest hotbar slot with the same item or an empty slot
+      const sourceSlot = this.inventory[index]
+      if (sourceSlot.itemId > 0) {
+        // Try to stack into existing hotbar slots first
+        for (let i = 0; i < HOTBAR_SIZE; i++) {
+          const target = this.inventory[i]
+          if (target.itemId === sourceSlot.itemId) {
+            this.selectedSlot = i
+            this.blockInteraction?.updateSelectedSlot(this.selectedSlot)
+            return
+          }
+        }
+        // Find first empty hotbar slot
+        for (let i = 0; i < HOTBAR_SIZE; i++) {
+          if (this.inventory[i].itemId <= 0) {
+            // Move entire stack from main inventory to hotbar
+            this.inventory[i] = { ...sourceSlot }
+            this.inventory[index] = { itemId: 0, count: 0 }
+            this.selectedSlot = i
+            this.blockInteraction?.updateSelectedSlot(this.selectedSlot)
+            if (this.inventoryScreen) this.inventoryScreen.update(this.inventory)
+            return
+          }
+        }
+      }
+    }
+    // Refresh inventory display
+    if (this.inventoryScreen) this.inventoryScreen.update(this.inventory)
+  }
+
   private updateHotbarUI(): void {
     if (!this.hud) return
-    const items = this.inventory.slice(0, 9)
+    const items = getHotbarSnapshot(this.inventory)
     this.hud.updateHotbar(this.selectedSlot, items)
   }
 
@@ -479,11 +592,11 @@ class VoxelCraftGame {
     // Debug info
     const pos = player.state.position
     this.hud?.setDebug(
-      `VoxelCraft M3\n` +
+      `VoxelCraft M4\n` +
       `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
       `Chunks: ${this.loadedChunks.size}\n` +
       `FPS: ${(1 / dt).toFixed(0)}\n` +
-      `Slot: ${this.selectedSlot + 1}`
+      `Slot: ${this.selectedSlot + 1} | E=Inv`
     )
 
     // Render

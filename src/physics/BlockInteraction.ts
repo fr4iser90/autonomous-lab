@@ -31,6 +31,11 @@ export class BlockInteraction {
     private inventory: Array<{ itemId: number; count: number }> = new Array(36).fill(null).map(() => ({ itemId: 0, count: 0 })),
   ) {}
 
+  /** M4: Update the currently selected hotbar slot */
+  updateSelectedSlot(slot: number): void {
+    this.selectedSlot = Math.max(0, Math.min(slot, 8))
+  }
+
   /**
    * Called continuously while the left mouse button is held.
    * Accumulates mining progress toward the targeted block.
@@ -93,7 +98,60 @@ export class BlockInteraction {
    * Break the block at the given world position.
    */
   breakBlock(position: [number, number, number]): void {
+    const blockId = this.world.getBlock(position[0], position[1], position[2])
     this.world.setBlock(position[0], position[1], position[2], 0)
+
+    // M4: Drop broken block as an item in inventory
+    if (blockId > 0) {
+      const blockDef = getBlock(blockId)
+      if (blockDef) {
+        const itemId = this.blockToItem(blockId)
+        if (itemId > 0) {
+          const existing = this.inventory[this.selectedSlot]
+          if (existing.itemId === itemId && existing.count > 0) {
+            const def = getItem(itemId)
+            if (def && existing.count < def.maxStack) {
+              existing.count++
+            } else {
+              for (const slot of this.inventory) {
+                if (slot.itemId <= 0 || slot.count <= 0) {
+                  slot.itemId = itemId
+                  slot.count = 1
+                  break
+                }
+              }
+            }
+          } else {
+            for (const slot of this.inventory) {
+              if (slot.itemId <= 0 || slot.count <= 0) {
+                slot.itemId = itemId
+                slot.count = 1
+                break
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private blockToItem(blockId: number): number {
+    switch (blockId) {
+      case 1: return 1
+      case 2: return 1
+      case 3: return 2
+      case 4: return 0
+      case 6: return 3
+      case 7: return 4
+      case 8: return 0
+      case 9: return 2
+      case 10: return 0
+      case 12: return 9
+      case 13: return 10
+      case 14: return 12
+      case 15: return 11
+      default: return 0
+    }
   }
 
   /**
