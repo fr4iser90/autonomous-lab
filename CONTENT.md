@@ -8,8 +8,8 @@ Infinite voxel sandbox (Minecraft-style) — procedural terrain, break/place, in
 | Registry | Count | Entries |
 |---|---|---|
 | blocks | 17 | Grass, Dirt, Stone, Sand, Water, Log, Planks, Leaves, Cobblestone, Snow, Bedrock, Coal Ore, Iron Ore, Crafting Table, Torch, Lava, Air |
-| items | 18 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Water Bucket, Lava Bucket, Air |
-| recipes | 10 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Axe, Wooden Sword, Cooked Beef |
+| items | 20 | Dirt, Stone, Wood, Planks, Sticks, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Coal, Iron Ingot, Torch, Crafting Table, Apple, Beef, Cooked Beef, Water Bucket, Lava Bucket, Stone Sword, Iron Shovel, Air |
+| recipes | 10 | Planks, Sticks, Crafting Table, Torches, Wooden Pickaxe, Stone Pickaxe, Iron Pickaxe, Wooden Sword, Cooked Beef, Iron Spade |
 | npcs | 7 | Cow, Pig, Sheep, Chicken, Rabbit, Zombie, Creeper |
 
 ```

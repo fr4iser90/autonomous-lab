@@ -26,6 +26,8 @@ export const ItemBeef: ItemDef = { id: 14, name: 'Beef', stackable: true, maxSta
 export const ItemCookedBeef: ItemDef = { id: 15, name: 'Cooked Beef', stackable: true, maxStack: 64, iconColor: [180, 80, 40] }
 export const ItemWaterBucket: ItemDef = { id: 16, name: 'Water Bucket', stackable: true, maxStack: 1, iconColor: [30, 144, 255] }
 export const ItemLavaBucket: ItemDef = { id: 17, name: 'Lava Bucket', stackable: true, maxStack: 1, iconColor: [255, 69, 0] }
+export const ItemStoneSword: ItemDef = { id: 18, name: 'Stone Sword', stackable: false, maxStack: 1, iconColor: [128, 128, 128] }
+export const ItemIronShovel: ItemDef = { id: 19, name: 'Iron Shovel', stackable: false, maxStack: 1, iconColor: [200, 200, 200] }
 
 export const ALL_ITEMS: ReadonlyArray<ItemDef> = [
   ItemAir, ItemDirt, ItemStone, ItemWood, ItemPlanks,
@@ -33,6 +35,7 @@ export const ALL_ITEMS: ReadonlyArray<ItemDef> = [
   ItemCoal, ItemIronIngots, ItemTorch, ItemCraftingTable,
   ItemApple, ItemBeef, ItemCookedBeef,
   ItemWaterBucket, ItemLavaBucket,
+  ItemStoneSword, ItemIronShovel,
 ]
 
 export function getItem(id: number): ItemDef | undefined {

@@ -46,14 +46,9 @@ export const RECIPE_IRON_PICKAXE: Recipe = {
   pattern: [[10, 10, 10], [0, 5, 0], [0, 5, 0]] // 3 iron ingots + 2 sticks
 }
 
-export const RECIPE_WOODEN_AXE: Recipe = {
-  id: 8, resultItemId: 6, resultCount: 1, width: 3, height: 3,
-  pattern: [[4, 4, 0], [4, 5, 0], [0, 5, 0]] // 2 planks + 2 sticks → wooden pickaxe
-}
-
 export const RECIPE_WOODEN_SWORD: Recipe = {
-  id: 9, resultItemId: 7, resultCount: 1, width: 2, height: 3,
-  pattern: [[4, 0], [4, 0], [5, 0]] // 2 planks + 1 stick → stone pickaxe
+  id: 9, resultItemId: 18, resultCount: 1, width: 2, height: 3,
+  pattern: [[4, 0], [4, 0], [5, 0]] // 2 planks + 1 stick -> stone sword
 }
 
 export const RECIPE_COOKED_BEEF: Recipe = {
@@ -61,10 +56,16 @@ export const RECIPE_COOKED_BEEF: Recipe = {
   pattern: [[14]] // raw beef -> cooked beef (smelting placeholder)
 }
 
+export const RECIPE_IRON_SPADE: Recipe = {
+  id: 12, resultItemId: 19, resultCount: 1, width: 2, height: 3,
+  pattern: [[10, 0], [0, 5], [0, 5]] // 1 iron ingot + 2 sticks -> iron shovel
+}
+
 export const ALL_RECIPES: ReadonlyArray<Recipe> = [
   RECIPE_PLANKS, RECIPE_STICKS, RECIPE_CRAFTING_TABLE, RECIPE_TORCHES,
   RECIPE_WOODEN_PICKAXE, RECIPE_STONE_PICKAXE, RECIPE_IRON_PICKAXE,
-  RECIPE_WOODEN_AXE, RECIPE_WOODEN_SWORD, RECIPE_COOKED_BEEF,
+  RECIPE_WOODEN_SWORD, RECIPE_COOKED_BEEF,
+  RECIPE_IRON_SPADE,
 ]
 
 export function getRecipe(id: number): Recipe | undefined {
@@ -73,6 +74,7 @@ export function getRecipe(id: number): Recipe | undefined {
 
 export function findRecipe(pattern: number[][], pw: number, ph: number): Recipe | undefined {
   for (const recipe of ALL_RECIPES) {
+    if (!recipe) continue
     // Try to find recipe pattern at any offset within the grid
     const maxDy = ph - recipe.height
     const maxDx = pw - recipe.width
