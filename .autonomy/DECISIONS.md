@@ -1,13 +1,27 @@
-# Decisions
+# DECISIONS — VoxelCraft
 
-Boilerplate defaults (stable across runs):
+## Engine: Three.js r160
+- WebGL rendering for voxel world
+- Chosen for maturity, ecosystem, and browser support
 
-- **Hosting:** GitHub Pages from `main`; Vite `base` = `/autonomous-lab/`.
-- **Branches:** `baseline` frozen boilerplate; `agent/<run-id>` for work; never push `main`/`baseline` from the agent.
-- **Gates:** `npm run gate` (test + build) is the mechanical Definition of Done.
-- **Live publish:** Push to `agent/*` opens a PR; green CI `gate` automerges (squash) into `main` → Pages.
-- **Prompts:** Genre/engine come from the harness prompt for the run — not from `baseline` defaults.
+## World: Infinite chunks (16×16×96)
+- Deterministic generation from (seed, chunkX, chunkZ)
+- Override map for player edits
+- Chunk queue for loading/unloading
 
-Run-specific decisions (append below at autonomy start / when first chosen):
+## Save: localStorage, 3 slots
+- `voxel-craft-slots-v1` for metadata
+- `voxel-craft-world-v1-slot-{N}` for world data
+- No cloud, no auth
 
-- *(none yet)*
+## Textures: Procedural 16×16 atlas
+- Generated at runtime, no image files
+- Per-block face colors for rendering
+
+## Testing: Vitest for logic, Playwright for UI
+- Pure logic tests: registries, chunk gen, save service
+- UI tests: title screen, HUD, canvas rendering
+
+## Branch: agent/voxel-craft-20260825
+- Cut from origin/baseline
+- PR into main for Pages deploy

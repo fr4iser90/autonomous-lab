@@ -1,24 +1,29 @@
-# Product spec (fill per run)
-
-Replace this file at autonomy start from the **active DSH / harness prompt objective**.
-
-Do not treat the boilerplate toy UI as the product fantasy.
+# SPEC — VoxelCraft
 
 ## Goal
 
-<!-- one paragraph from the run prompt -->
+Infinite voxel sandbox game (Minecraft-style) in the browser using Vite + TypeScript + Three.js r160. Procedural terrain, break/place, inventory, crafting, mobs, day/night, voxel lighting.
 
 ## Hard requirements (always)
 
-- Client work stays compatible with Vite + `npm run gate`
+- Client work stays compatible with Vite + `pnpm run gate`
 - Keep Vite `base` = `/autonomous-lab/`
 - Ship via `agent/<run-id>` PRs into `main` (Pages from `main` only)
 - Never push `main` or `baseline`
 
 ## Run-specific requirements
 
-<!-- engine, genre, save rules, ACCEPT bars from the prompt -->
+1. **Infinite horizontal world**: Chunks loaded on-demand, no world edge
+2. **16×16 texture atlas**: Procedural at runtime (no image files)
+3. **Break/place blocks**: Raycast with mining progress
+4. **36-slot inventory** with hotbar (E toggle, 1-9 select)
+5. **Crafting**: 2×2 (inventory) + 3×3 (crafting table)
+6. **3-slot save** via localStorage (slots 0–2)
+7. **Mobs**: ≥4 passive + ≥2 hostile
+8. **Day/night cycle**: Sky gradient, sun/moon
+9. **Voxel lighting**: Sky + torch block light
+10. **CAP**: blocks=20, items=20, recipes=20, npcs=20
 
 ## Non-goals
 
-<!-- from the prompt; plus: do not copy harness PROMPTS/* into this repo as defaults -->
+- Multiplayer, cloud saves, auth, external assets

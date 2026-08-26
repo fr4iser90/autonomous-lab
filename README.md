@@ -1,59 +1,46 @@
-# Autonomous Lab
+# VoxelCraft — Infinite Voxel Sandbox
 
-**Genre-agnostic boilerplate** for public DSH autonomy experiments. CI gates + **automerge** + GitHub Pages so a long agent run stays **live**. Concrete game prompts stay in the harness (`PROMPTS/`).
+**Genre:** Voxel sandbox (Minecraft-style) built with Vite + TypeScript + Three.js r160.
 
 **Play (live after green automerge):** https://fr4iser90.github.io/autonomous-lab/
 
-Local/DSH preview: `npm run dev` → http://127.0.0.1:5173
+Local/DSH preview: `pnpm run dev` → http://127.0.0.1:5173
 
-## Live loop (mode A)
+## Features
 
-```
-agent/* commit → Open agent PR → CI gate → Automerge (squash) → main → Pages
-```
+- Infinite procedural terrain with biomes
+- Break/place blocks with first-person controls
+- 3-slot save system with local persistence
+- Inventory + crafting (2×2 and 3×3 grids)
+- Mobs (passive + hostile)
+- Day/night cycle
+- 16 block types with procedural rendering
 
-| Surface | Meaning |
-|---|---|
-| `baseline` | Frozen boilerplate |
-| `agent/<run-id>` | Experiment branch (follow commits here) |
-| `main` | Automerge target + Pages |
-| Actions `CI` / `Open agent PR` / `Automerge agent PRs` | Automation |
-
-Broken `gate` → no merge → Pages stays on last green `main`.
-
-## Quick start
+## Quick Start
 
 ```sh
-npm install
-npm run gate
-npm run dev
-./scripts/new-run.sh <run-id>
+pnpm install
+pnpm run gate
+pnpm run dev
 ```
 
-Then run your harness `PROMPTS/…` objective in DSH against this workspace.
+## Live Loop
 
-## DSH autonomy (shape)
-
-```text
-/autonomy start <harness PROMPTS objective>; keep npm run gate green; push agent/* only; never push main/baseline; automerge + Pages follow green CI
+```
+agent/* commit → Open agent PR → CI gate → Automerge → main → Pages
 ```
 
-## One-time GitHub setup
+## DSH Autonomy
 
-1. Repo **Public**; Pages **Source = GitHub Actions** (not Jekyll/Static HTML templates)
-2. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
-3. Settings → Actions → General → Workflow permissions:
-   - **Read and write permissions**
-   - ✅ **Allow GitHub Actions to create and approve pull requests**
-4. Rulesets: `protect-main` (PR + required check **`gate`**, no bypass), `protect-baseline` (restrict updates; bypass = you only)
-5. First bootstrap: merge PR that adds the Automerge workflows onto `main` once (workflows only run from the default branch). After that, agent pushes automerge themselves.
-6. Pages **Source = GitHub Actions** (ignore Jekyll/Static HTML template cards)
+```
+VoxelCraft — infinite voxel sandbox. M1 through M12 milestones, Phase 2 content cycles to CAP/CAP, Phase 3 DEMO, Phase 4 infinite improvement.
+```
 
 ## Scripts
 
 | Script | Meaning |
 |---|---|
-| `npm test` | Vitest |
-| `npm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
-| `npm run gate` | test + build |
-| `npm run dev` | Vite on 5173 |
+| `pnpm test` | Vitest |
+| `pnpm run build` | typecheck + Vite build (`base=/autonomous-lab/`) |
+| `pnpm run gate` | test + build |
+| `pnpm run dev` | Vite on 5173 |
