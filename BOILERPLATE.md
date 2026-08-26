@@ -24,7 +24,7 @@ Files and dirs are tagged:
 
 Replace when the overnight objective / game prompt starts:
 
-- `PROGRESS.md`, `CONTENT.md`, `README.md` (game sections)
+- `PROGRESS.md`, `CONTENT.md`, `BUGS.md`, `README.md` (game sections)
 - `index.html`, `src/**`, `tests/**`
 - `.autonomy/**` — **optional/legacy**; prefer `PROGRESS.md`. Safe to leave untouched or delete; do not use as primary tracker.
 
