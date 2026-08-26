@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M4 — Inventory + hotbar + crafting
-**Status:** COMPLETE — gate green (88/88 tests, build succeeds ~498KB)
+**Phase:** M5 — Biomes + world features
+**Status:** COMPLETE — gate green (100/100 tests, build succeeds ~501KB)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -45,7 +45,15 @@
   - Block break drops items into shared inventory
   - E key toggles inventory overlay, 1-9 selects hotbar slot
   - 42 M4 smoke tests (total 88)
-- M5: Biomes + world features (trees, caves) → PENDING
+- M5: Biomes + world features → **COMPLETE ✅**
+  - 5 biome system: Plains, Desert, Snow, Forest, Mountains
+  - Biome affects terrain height, surface block, and features
+  - Multi-octave FBM with pre-computed 3D noise caches for performance
+  - Cave generation: lower caves (y=5-30) and upper caves (y=25-45)
+  - Ore generation: iron (y<20) and coal (y<40) with noise-based placement
+  - Tree generation: 3-5 block trunk + rounded leaf canopy
+  - Forest biomes have 15% tree density, plains 5%
+  - 12 M5 smoke tests (total 100)
 - M6: Voxel lighting (sky + torch) → PENDING
 - M7: Mobs (passive + hostile AI) → PENDING
 - M8: Day/night cycle + autosave → PENDING
@@ -56,4 +64,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M5: Biomes + world features (trees, caves).
+M6: Voxel lighting (sky + torch).

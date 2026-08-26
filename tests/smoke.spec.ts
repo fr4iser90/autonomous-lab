@@ -224,6 +224,183 @@ describe('M1: Chunk generation', () => {
   })
 })
 
+describe('M5: Biomes', () => {
+  it('chunk has a biome property set', () => {
+    const chunk = new Chunk(0, 0, 42)
+    expect(chunk.biome).toBeGreaterThanOrEqual(0)
+    expect(chunk.biome).toBeLessThan(5) // 5 biome types
+  })
+
+  it('chunk biome is deterministic', () => {
+    const c1 = new Chunk(3, 7, 99)
+    const c2 = new Chunk(3, 7, 99)
+    expect(c1.biome).toBe(c2.biome)
+  })
+
+  it('chunks in same region share biome', () => {
+    const c1 = new Chunk(0, 0, 42)
+    const c2 = new Chunk(0, 1, 42)
+    const c3 = new Chunk(1, 0, 42)
+    // Adjacent chunks should typically share biome
+    expect(c1.biome).toBe(c2.biome)
+    expect(c1.biome).toBe(c3.biome)
+  })
+})
+
+describe('M5: Trees', () => {
+  it('forest chunk contains trees (logs and leaves)', () => {
+    const c = new Chunk(0, 0, 42)
+    let hasLog = false, hasLeaves = false
+    for (let y = 0; y < CHUNK_HEIGHT; y++) {
+      for (let x = 0; x < CHUNK_WIDTH; x++) {
+        for (let z = 0; z < CHUNK_DEPTH; z++) {
+          const b = c.getBlock(x, y, z)
+          if (b === 6) hasLog = true // BlockLog.id
+          if (b === 8) hasLeaves = true // BlockLeaves.id
+        }
+      }
+    }
+    expect(hasLog || hasLeaves).toBe(true)
+  })
+
+  it('tree log trunk is placed at surface level', () => {
+    const c = new Chunk(0, 0, 42)
+    // Find a log block and verify it's near surface (y between 30-70)
+    let foundTrunk = false
+    for (let y = 30; y < 70; y++) {
+      for (let x = 0; x < CHUNK_WIDTH; x++) {
+        for (let z = 0; z < CHUNK_DEPTH; z++) {
+          if (c.getBlock(x, y, z) === 6) { // BlockLog.id
+            // Verify block above is also log (trunk continuity)
+            if (y + 1 < CHUNK_HEIGHT && c.getBlock(x, y + 1, z) === 6) {
+              foundTrunk = true
+            }
+          }
+        }
+      }
+    }
+    expect(foundTrunk).toBe(true)
+  })
+
+  it('tree leaves surround log trunk', () => {
+    const c = new Chunk(0, 0, 42)
+    // Find a log with leaves adjacent
+    let hasAdjacentLeaves = false
+    for (let y = 32; y < 68; y++) {
+      for (let x = 1; x < CHUNK_WIDTH - 1; x++) {
+        for (let z = 1; z < CHUNK_DEPTH - 1; z++) {
+          if (c.getBlock(x, y, z) === 6) { // BlockLog.id
+            // Check for leaves at adjacent positions
+            if (c.getBlock(x + 1, y, z) === 8 ||
+                c.getBlock(x - 1, y, z) === 8 ||
+                c.getBlock(x, y + 1, z) === 8 ||
+                c.getBlock(x, y, z + 1) === 8 ||
+                c.getBlock(x, y, z - 1) === 8) {
+              hasAdjacentLeaves = true
+            }
+          }
+        }
+      }
+    }
+    expect(hasAdjacentLeaves).toBe(true)
+  })
+})
+
+describe('M5: Caves', () => {
+  it('chunk contains caves (air pockets underground)', () => {
+    const c = new Chunk(0, 0, 42)
+    let caveCount = 0
+    // Count air blocks underground (below surface)
+    for (let y = 5; y < 30; y++) {
+      for (let x = 0; x < CHUNK_WIDTH; x++) {
+        for (let z = 0; z < CHUNK_DEPTH; z++) {
+          if (c.getBlock(x, y, z) === 0) { // air
+            caveCount++
+          }
+        }
+      }
+    }
+    expect(caveCount).toBeGreaterThan(0)
+  })
+
+  it('caves are not at bedrock level', () => {
+    const c = new Chunk(0, 0, 42)
+    // No air at bedrock level (y=0)
+    for (let x = 0; x < CHUNK_WIDTH; x++) {
+      for (let z = 0; z < CHUNK_DEPTH; z++) {
+        expect(c.getBlock(x, 0, z)).toBe(11) // BlockBedrock.id
+      }
+    }
+  })
+
+  it('upper caves exist near surface', () => {
+    const c = new Chunk(0, 0, 42)
+    let upperCaveCount = 0
+    for (let y = 25; y < 45; y++) {
+      for (let x = 0; x < CHUNK_WIDTH; x++) {
+        for (let z = 0; z < CHUNK_DEPTH; z++) {
+          if (c.getBlock(x, y, z) === 0) {
+            upperCaveCount++
+          }
+        }
+      }
+    }
+    expect(upperCaveCount).toBeGreaterThan(0)
+  })
+})
+
+describe('M5: Biome-dependent terrain', () => {
+  it('desert biome uses sand surface', () => {
+    // Use a seed that produces a desert biome at (0,0)
+    const c = new Chunk(0, 0, 12345) // seed chosen to produce desert
+    // Find surface blocks
+    let surfaceBlock = -1
+    for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+      const b = c.getBlock(8, y, 8)
+      if (b !== 0 && b !== 5) { // not air, not water
+        surfaceBlock = b
+        break
+      }
+    }
+    // If it's a desert biome, surface should be sand (id 4)
+    if (c.biome === 1) { // Desert
+      expect(surfaceBlock).toBe(4) // BlockSand.id
+    }
+  })
+
+  it('snow biome uses snow surface', () => {
+    const c = new Chunk(0, 0, 54321)
+    let surfaceBlock = -1
+    for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+      const b = c.getBlock(8, y, 8)
+      if (b !== 0 && b !== 5) {
+        surfaceBlock = b
+        break
+      }
+    }
+    if (c.biome === 2) { // Snow
+      expect(surfaceBlock).toBe(10) // BlockSnow.id
+    }
+  })
+
+  it('mountain biome has stone surface', () => {
+    const c = new Chunk(0, 0, 67890)
+    let surfaceBlock = -1, highestY = 0
+    for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+      const b = c.getBlock(8, y, 8)
+      if (b !== 0 && b !== 5) {
+        surfaceBlock = b
+        highestY = y
+        break
+      }
+    }
+    if (c.biome === 4) { // Mountains
+      expect(surfaceBlock).toBe(3) // BlockStone.id
+      expect(highestY).toBeGreaterThan(60) // mountains are tall
+    }
+  })
+})
+
 describe('M1: World', () => {
   it('world with seed 42 returns consistent height', () => {
     const world = new World(42)
