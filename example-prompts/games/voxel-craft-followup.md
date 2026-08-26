@@ -60,7 +60,8 @@ PLAYABILITY TRIAGE (before more content cycles)
   constructed → title looks clickable but New World no-ops. Fix init order;
   add a regression assertion to UI smoke / vitest; only then continue Phase 2/4.
 - Seed input must affect the created world when filled.
-- Screenshot alone / file size is not PASS — spawn smart/VL when available.
+- Screenshot alone / file size is not PASS — **self-vl** on the image path
+  (no vision subagent; ignore `Read: binary file`).
 - Content cycles: each new block/item/recipe/npc needs **real in-engine**
   CONTENT VISUAL (`demo/content/C<N>-<kind>-<id>.png` from `#game-canvas` while
   playing). HTML/NPC-stat tables / RGB swatch boards = FAIL — redo with rendered
@@ -87,7 +88,7 @@ THEN CONTINUE
 3. Resume at the **first unfinished** milestone / content cycle / soak / DEMO /
    Phase 4 cycle proven by docs + disk. Never restart M1 if later work exists.
 4. Obey `voxel-craft.md` LIVE LOOP (PRE-PR VISUAL + UI smoke + SAFE SYNC +
-   smart/VL). File size alone ≠ visual PASS.
+   self-vl). File size alone ≠ visual PASS; do not spawn smart for screenshots.
 5. Keep tracking docs current. Always leave a next tool call.
 6. Gate green. Never push `main` / `baseline`.
 
@@ -99,5 +100,5 @@ PHASE GATE (before EVERY phase change — Pages must show the finished phase)
 ================================================================
 
 Do **not** start the next phase until this gate PASSes (full text in
-`voxel-craft.md`): playable screenshot + smart/VL when available + LIVE LOOP so
-Pages shows the finished phase before the next phase begins.
+`voxel-craft.md`): playable screenshot + **self-vl** (no vision subagent) +
+LIVE LOOP so Pages shows the finished phase before the next phase begins.
