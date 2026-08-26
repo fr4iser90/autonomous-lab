@@ -16,10 +16,11 @@ The public game on Pages is whatever last automerged to `main` — not this file
 
 | Job | Prompt | Model role |
 |---|---|---|
-| Overnight build | `example-prompts/games/<game>.md` | **`fast`** (default) |
-| Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** |
+| Overnight build | `example-prompts/games/<game>.md` | **`fast`** — self-vl on screenshots (no vision subagent) |
+| Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** — same |
 | Idle **nudge** (harness) | short continue cue from DSH idle prompting | **`fast`** (same session) |
-| Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** (session fixed on smart; no subagent spawn) |
+| Hard code root-cause only | (spawned from overnight) meshing/lighting/AI | optional **`smart`** subagent — **not** for PNGs |
+| Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** session (no subagent spawn) |
 | Validation resume | `…-VL-validation-followup.md` | **`smart`** |
 
 Builder drains `BUGS.md` ## Open at every cycle; validator **only documents** bugs.
