@@ -55,3 +55,16 @@
   - `main.ts`: HUD hearts now animate each frame from actual player HP
 - **Gate:** 268/268 tests pass, build 535KB
 - **Visual:** Hearts display changes with damage; hostile mobs chase more aggressively; mobs jump over small obstacles
+
+## P4-2 — Skeleton Ranged Attack: Arrows ✅ DONE
+- **Decision:** Add projectile system for skeleton ranged attacks; skeletons fire arrows at players in 10-16 block range
+- **Rationale:** Skeletons currently behave identically to zombies (melee only). Ranged attacks differentiate hostile mob types and increase gameplay depth
+- **Changes:**
+  - `Projectile.ts`: New entity system — arrow physics (gravity arc), lifetime (5s), ground/block collision, player AABB hit detection
+  - `Projectile.ts`: 3D arrow mesh with shaft, metallic head, white fletching; oriented along velocity vector
+  - `MobManager.ts`: Projectile tracking, `fireProjectile()` spawns arrows toward player, `updateProjectiles()` handles physics + collision + cleanup
+  - `MobManager.ts`: Skeleton ranged attack — 10-16 block range, 1.8s shoot cooldown per skeleton
+  - `Mob.ts`: Added `shootCooldown` to MobEntity interface; countdown in updateAI
+  - `Mob.ts`: `shootCooldown` reduced each frame; skeletons fire when player enters ranged range
+- **Gate:** 268/268 tests pass, build 542KB
+- **Visual:** Arrows visible as 3D objects in-world; player takes damage on direct hit; arrows arc and fall with gravity

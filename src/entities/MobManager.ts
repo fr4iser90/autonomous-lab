@@ -7,6 +7,8 @@ import type { MobEntity } from './Mob'
 import { MobCow, MobPig, MobChicken, MobZombie, MobSkeleton } from '../data/mobs'
 import { DropManager } from './DropManager'
 import { SoundService } from '../services/SoundService'
+import { Projectile } from './Projectile'
+import type { ProjectileEntity } from './Projectile'
 
 export interface MobConfig {
   cowCount: number
@@ -26,6 +28,7 @@ export const DEFAULT_MOB_CONFIG: MobConfig = {
 
 export class MobManager {
   private mobs: MobEntity[] = []
+  private projectiles: ProjectileEntity[] = []
   private scene: THREE.Scene
   private config: MobConfig
   private dropManager?: DropManager
@@ -138,6 +141,12 @@ export class MobManager {
       }
     }
     this.mobs = []
+
+    // Clean up projectiles
+    for (const proj of this.projectiles) {
+      Projectile.dispose(proj)
+    }
+    this.projectiles = []
   }
 
   /** Update all mobs */
@@ -159,6 +168,21 @@ export class MobManager {
           a.position.z -= nz
           b.position.x += nx
           b.position.z += nz
+        }
+      }
+    }
+
+    // Phase 4 P4-2: Skeleton ranged attacks — fire projectiles
+    for (const mob of this.mobs) {
+      if (mob.def.id === MobSkeleton.id && mob.def.damage > 0) {
+        const distToPlayer = mob.position.distanceTo(playerPos)
+        // Skeletons shoot when player is in ranged range (10-16 blocks)
+        // but not too close (they melee in < 6 range)
+        if (distToPlayer >= 10 && distToPlayer <= 16 && mob.shootCooldown <= 0) {
+          const projectile = this.fireProjectile(mob, playerPos)
+          if (projectile) {
+            mob.shootCooldown = 1.8 // 1.8 seconds between shots
+          }
         }
       }
     }
@@ -188,6 +212,9 @@ export class MobManager {
       }
     }
 
+    // Update projectiles
+    this.updateProjectiles(dt, world, playerPos)
+
     // Check player-mob contact (hostile mobs)
     for (const mob of this.mobs) {
       const contact = Mob.checkPlayerContact(mob, playerPos, 20)
@@ -206,9 +233,71 @@ export class MobManager {
     return [...this.mobs]
   }
 
+  /** Get all projectiles */
+  getProjectiles(): ProjectileEntity[] {
+    return [...this.projectiles]
+  }
+
   /** Get mob by ID */
   getMob(id: number): MobEntity | undefined {
     return this.mobs.find(m => m.id === id)
+  }
+
+  /** Fire a projectile from a skeleton toward the player */
+  fireProjectile(mob: MobEntity, playerPos: THREE.Vector3): ProjectileEntity | null {
+    const dx = playerPos.x - mob.position.x
+    const dy = (playerPos.y + 1) - mob.position.y // aim at player's upper body
+    const dz = playerPos.z - mob.position.z
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+    if (dist < 1) return null
+
+    const projectile = Projectile.create(
+      'skeleton',
+      mob.position.x, mob.position.y + 1.5, mob.position.z,
+      playerPos.x, playerPos.y + 1, playerPos.z,
+      mob.def.damage, // damage from mob definition
+    )
+
+    // Create mesh
+    projectile.mesh = Projectile.createMesh()
+    projectile.mesh.position.copy(projectile.position)
+    this.scene.add(projectile.mesh)
+    projectile.world = this.mobs.length > 0 ? undefined : undefined // set during update
+
+    this.projectiles.push(projectile)
+    this.soundService?.play('pickup') // arrow whoosh
+
+    return projectile
+  }
+
+  /** Update all projectiles (physics, collision, cleanup) */
+  updateProjectiles(dt: number, world: World, playerPos: THREE.Vector3): void {
+    const playerBounds = { minY: playerPos.y, maxY: playerPos.y + 1.8 }
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const proj = this.projectiles[i]
+      proj.playerPos = playerPos
+      proj.playerBounds = playerBounds
+
+      const alive = Projectile.update(proj, dt, world)
+      if (!alive) {
+        Projectile.dispose(proj)
+        this.projectiles.splice(i, 1)
+        continue
+      }
+
+      // Phase 4 P4-2: Check projectile-player collision
+      if (Projectile.checkPlayerHit(proj, playerPos, playerBounds)) {
+        Projectile.dispose(proj)
+        this.projectiles.splice(i, 1)
+        // Damage player
+        if (this.onPlayerDamaged) {
+          const newHp = this.onPlayerDamaged(proj.damage)
+          if (newHp <= 0 && this.onPlayerDeath) {
+            this.onPlayerDeath()
+          }
+        }
+      }
+    }
   }
 
   /** Damage a mob */

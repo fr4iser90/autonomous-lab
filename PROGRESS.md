@@ -2,7 +2,7 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** 88046f6 (Phase 4 P4-1: Player HP + mob AI polish)
+**SHA:** 6f197ef (Phase 4 P4-2: Skeleton ranged attack — arrows)
 **Tests:** 268/268 passing | Build: ✅ 537KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — Phase 4 P4-1 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
@@ -100,3 +100,13 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Safe spawning:** 2-block minimum separation between mobs; wider spread for passive mobs
 - **Hit sound:** Added `'hit'` to SoundService (low thud, 150→50Hz sine pulse)
 - **Gate:** 268/268 tests pass, build 537KB
+
+### P4-2: Skeleton Ranged Attack — Arrows ✅
+- **Projectile system:** New `src/entities/Projectile.ts` — arrow entities with 3D mesh, physics (gravity arc), lifetime, and cleanup
+- **Skeleton AI:** Skeletons now shoot arrows at players in 10-16 block range (distinct from zombie melee chase)
+- **Projectile physics:** Gravity causes natural arrow arc; arrows despawn after hitting ground, blocks, or exceeding 5s lifetime
+- **Player damage:** Arrows deal damage equal to skeleton's damage stat (4) on direct hit to player bounding box
+- **Visual:** 3D arrow mesh with shaft, metallic head, and white fletching; oriented along velocity vector
+- **Sound:** Arrow whoosh on fire (pickup sound reused as placeholder)
+- **Shoot cooldown:** 1.8s between shots per skeleton
+- **Gate:** 268/268 tests pass, build 542KB

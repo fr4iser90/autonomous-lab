@@ -21,6 +21,7 @@ export interface MobEntity {
   wanderTarget: THREE.Vector3 | null
   wanderTimer: number
   hurtTimer: number
+  shootCooldown: number // for skeleton ranged attacks
   mesh: THREE.Group | null
   spawnX: number
   spawnZ: number
@@ -55,6 +56,7 @@ export class Mob {
       wanderTarget: null,
       wanderTimer: 0,
       hurtTimer: 0,
+      shootCooldown: 0,
       mesh: null,
       spawnX: x,
       spawnZ: z,
@@ -262,12 +264,19 @@ export class Mob {
   static updateAI(entity: MobEntity, dt: number, playerPos: THREE.Vector3, world: World): void {
     const speed = entity.def.speed
 
-    // Hurt timer countdown
+    // Countdown timers
     if (entity.hurtTimer > 0) {
       entity.hurtTimer -= dt
       if (entity.hurtTimer <= 0) {
         entity.state = entity.type === 'hostile' ? 'chase' : 'wander'
       }
+    }
+    if (entity.shootCooldown > 0) {
+      entity.shootCooldown -= dt
+    }
+
+    // Hurt timer state
+    if (entity.hurtTimer > 0) {
       this.applyPhysics(entity, dt, world)
       return
     }
