@@ -3,7 +3,7 @@
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
 **SHA:** 58342c4 (Phase 4 P4-6: Block breaking particles)
-**Tests:** 268/268 passing | Build: ✅ 546KB
+**Tests:** 268/268 passing | Build: ✅ 551KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-6 pushed, CI pending
 **SYNC:** Merged origin/main (3be2139). Resolved boilerplate updates to README.md + example-prompts + FEATURES.md. Kept game src/ and Phase 3 demo intact.
 
@@ -143,3 +143,20 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Memory safety:** Dead particles removed from scene; geometry + material disposed to prevent leaks
 - **Integration:** Spawned in `main.ts` game loop after block break; updated every frame
 - **Gate:** 268/268 tests pass, build 546KB
+
+### P4-7: Unique Ambient Sounds Per Mob Type
+- **Problem:** All mobs shared the same reused sounds (cow/pig/chicken all used `blockPlace`-like sound). No audio variety.
+- **New type:** `MobAmbientType = 'cow' | 'pig' | 'chicken' | 'sheep' | 'zombie' | 'skeleton' | 'wolf' | 'bee'`
+- **8 unique procedural sounds** — each mob type gets a distinct timbre:
+  - **Cow moo:** Low sawtooth with vibrato LFO, descending 180→120Hz, 0.6s
+  - **Pig snort:** Noise burst through 400Hz bandpass filter, short 0.15s
+  - **Chicken peep:** Sine chirp 1200→900Hz, quick attack, 0.12s
+  - **Sheep baa:** Sawtooth with vibrato, 250→280→220Hz sweep, 0.5s
+  - **Zombie groan:** Dual detuned sawtooth (70Hz+73Hz) slow decay, 0.8s
+  - **Skeleton rattle:** Modulated noise burst with 12 pulse envelope, 800Hz bandpass, 0.4s
+  - **Wolf howl:** Sine with slow pitch sweep 300→600→550→400Hz + vibrato, 1.2s
+  - **Bee buzz:** Square wave (200Hz) + sub sawtooth (100Hz) through LP filter, 0.3s
+- **Ambient scheduler:** `scheduleAmbient()` now takes `MobAmbientType` instead of `SoundName`; each mob reschedules independently at 3–12s intervals
+- **Ambient density:** 8 concurrent ambient streams (up from 5), each with unique timbre
+- **HurtFlash fix:** Removed unused `this.scene` field and `opacity` destructuring (TS6133 errors blocking gate)
+- **Gate:** 268/268 tests pass, build 551KB

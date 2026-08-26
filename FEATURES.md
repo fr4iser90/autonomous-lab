@@ -113,3 +113,13 @@
   - `main.ts`: `ParticleManager` instantiated, scene attached, particles spawned on block break via `getBlock()` lookup for color match, updated every frame in game loop
 - **Gate:** 268/268 tests pass, build 546KB
 - **Visual:** 12 colored cubes burst outward from each broken block, falling with gravity and fading — matches the broken block's color
+
+## P4-7 — Unique Ambient Sounds Per Mob Type
+- **Decision:** Give each mob type a procedurally unique ambient sound via Web Audio API synthesis
+- **Rationale:** All 8 ambient streams (cow, pig, chicken, zombie, skeleton, sheep, wolf, bee) previously shared only 3 generic sounds; unique sounds add world immersion
+- **Changes:**
+  - `SoundService.ts`: New `MobAmbientType` union type; `scheduleAmbient()` now takes `MobAmbientType` instead of `SoundName`; `playMobAmbient()` dispatches to 8 unique synthesis methods
+  - **8 procedural sounds:** Cow moo (sawtooth+vibrato), pig snort (noise burst), chicken peep (sine chirp), sheep baa (sawtooth sweep), zombie groan (dual detuned saw), skeleton rattle (modulated noise), wolf howl (sine sweep+vibrato), bee buzz (square+sub LP)
+  - **HurtFlash.ts fix:** Removed unused `this.scene` field and `opacity` destructuring to resolve TS6133 errors
+- **Gate:** 268/268 tests pass, build 551KB
+- **Audio:** 8 concurrent ambient streams with unique timbres, 3–12s random intervals
