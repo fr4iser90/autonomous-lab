@@ -16,6 +16,8 @@ Local preview: `pnpm install && pnpm run dev` (or npm) → http://127.0.0.1:5173
 agent/* commit → Open agent PR → CI gate → Automerge (squash) → main → Pages
 ```
 
+Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges alone do not fire `push`).
+
 | Surface | Meaning |
 |---|---|
 | `baseline` | Frozen boilerplate |
