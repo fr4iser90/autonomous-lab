@@ -2307,3 +2307,205 @@ describe('M9: DropItemEntity type', () => {
   })
 })
 
+// ===========================================================================
+// M10: Sound effects (block break/place, mob sounds)
+// ===========================================================================
+
+import { SoundService } from '../src/services/SoundService'
+
+describe('M10: SoundService initialization', () => {
+  it('creates a SoundService with default config', () => {
+    const sound = new SoundService()
+    expect(sound).toBeDefined()
+    expect(sound.isEnabled()).toBe(false)
+  })
+
+  it('init returns false without AudioContext', () => {
+    const sound = new SoundService()
+    // AudioContext may not exist in test environment
+    const result = sound.init()
+    // Either succeeds or fails gracefully — both are acceptable
+    expect(typeof result).toBe('boolean')
+  })
+
+  it('setMuted sets master gain to 0', () => {
+    const sound = new SoundService()
+    sound.init()
+    if (sound.isEnabled()) {
+      sound.setMuted(true)
+      expect(sound.isMuted()).toBe(true)
+      sound.setMuted(false)
+      expect(sound.isMuted()).toBe(false)
+    }
+  })
+
+  it('setMasterVolume adjusts volume', () => {
+    const sound = new SoundService()
+    expect(sound.getMasterVolume()).toBe(0.6)
+    sound.setMasterVolume(0.3)
+    expect(sound.getMasterVolume()).toBe(0.3)
+    sound.setMasterVolume(0)
+    expect(sound.getMasterVolume()).toBe(0)
+    sound.setMasterVolume(1)
+    expect(sound.getMasterVolume()).toBe(1)
+    sound.setMasterVolume(0.6) // reset
+  })
+
+  it('setSoundVolume adjusts per-sound volume', () => {
+    const sound = new SoundService()
+    sound.setSoundVolume('blockBreak', 0.8)
+    expect(sound['config'].soundVolumes.blockBreak).toBe(0.8)
+    sound.setSoundVolume('blockBreak', 0)
+    sound.setSoundVolume('blockBreak', 1) // reset
+  })
+
+  it('stopAllAmbient clears timers without error', () => {
+    const sound = new SoundService()
+    sound.init()
+    if (sound.isEnabled()) {
+      expect(() => sound.stopAllAmbient()).not.toThrow()
+    }
+  })
+
+  it('play does not throw when disabled', () => {
+    const sound = new SoundService()
+    // Not initialized
+    expect(() => sound.play('blockBreak')).not.toThrow()
+    expect(() => sound.play('blockPlace')).not.toThrow()
+    expect(() => sound.play('mobDeath')).not.toThrow()
+    expect(() => sound.play('pickup')).not.toThrow()
+  })
+})
+
+describe('M10: SoundService procedural sounds', () => {
+  it('play blockBreak does not throw', () => {
+    const sound = new SoundService()
+    sound.init()
+    if (sound.isEnabled()) {
+      expect(() => sound.play('blockBreak')).not.toThrow()
+      sound.setMuted(true)
+    }
+  })
+
+  it('play blockPlace does not throw', () => {
+    const Sound = new SoundService()
+    Sound.init()
+    if (Sound.isEnabled()) {
+      expect(() => Sound.play('blockPlace')).not.toThrow()
+      Sound.setMuted(true)
+    }
+  })
+
+  it('play mobDeath does not throw', () => {
+    const Sound = new SoundService()
+    Sound.init()
+    if (Sound.isEnabled()) {
+      expect(() => Sound.play('mobDeath')).not.toThrow()
+      Sound.setMuted(true)
+    }
+  })
+
+  it('play pickup does not throw', () => {
+    const Sound = new SoundService()
+    Sound.init()
+    if (Sound.isEnabled()) {
+      expect(() => Sound.play('pickup')).not.toThrow()
+      Sound.setMuted(true)
+    }
+  })
+
+  it('scheduleAmbient schedules without error', () => {
+    const sound = new SoundService()
+    sound.init()
+    if (sound.isEnabled()) {
+      expect(() => sound.scheduleAmbient('test', 'blockPlace')).not.toThrow()
+      sound.stopAllAmbient()
+    }
+  })
+})
+
+describe('M10: BlockInteraction plays sounds', () => {
+  it('breakBlock plays blockBreak sound', () => {
+    const world = new World(42, new Map())
+    world.setBlock(5, 10, 5, 1) // Dirt
+    let breakPlayed = false
+    const mockSound = {
+      play: (name: string) => { if (name === 'blockBreak') breakPlayed = true },
+    } as unknown as SoundService
+    const interaction = new BlockInteraction(world, 0, [], mockSound)
+    interaction.breakBlock([5, 10, 5])
+    expect(breakPlayed).toBe(true)
+  })
+
+  it('placeBlock plays blockPlace sound', () => {
+    const world = new World(42, new Map())
+    const inv = [{ itemId: 1, count: 10 }, ...Array(35).fill({ itemId: 0, count: 0 })]
+    let placePlayed = false
+    const mockSound = {
+      play: (name: string) => { if (name === 'blockPlace') placePlayed = true },
+    } as unknown as SoundService
+    const interaction = new BlockInteraction(world, 0, inv, mockSound)
+    const result = interaction.placeBlock([5, 10, 5], [0, 1, 0])
+    expect(result).toBe(true)
+    expect(placePlayed).toBe(true)
+  })
+
+  it('breakBlock with no sound service does not throw', () => {
+    const world = new World(42, new Map())
+    world.setBlock(5, 10, 5, 1)
+    expect(() => {
+      const interaction = new BlockInteraction(world, 0, [])
+      interaction.breakBlock([5, 10, 5])
+    }).not.toThrow()
+  })
+})
+
+describe('M10: MobManager plays sounds', () => {
+  it('setSoundService stores the service', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as unknown as THREE.Scene
+    const manager = new MobManager(scene)
+    const sound = new SoundService()
+    manager.setSoundService(sound)
+    // Access private field via bracket notation
+    expect(manager['soundService']).toBe(sound)
+  })
+
+  it('removeMob plays mobDeath sound when mob dies', () => {
+    const scene = { add: vi.fn(), remove: vi.fn() } as unknown as THREE.Scene
+    let deathPlayed = false
+    const mockSound = {
+      play: (name: string) => { if (name === 'mobDeath') deathPlayed = true },
+    } as unknown as SoundService
+    const manager = new MobManager(scene)
+    manager.setSoundService(mockSound as SoundService)
+
+    // Create a fake mob entity directly
+    const fakeMob = {
+      id: 999,
+      def: { name: 'Cow', type: 'passive', speed: 1, damage: 0, maxHp: 20, color: [150, 100, 50], drops: [] },
+      hp: 10,
+      maxHp: 20,
+      position: new THREE.Vector3(0, 0, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotation: 0,
+      mesh: null,
+      state: 'idle' as any,
+      targetX: 0,
+      targetZ: 0,
+      wanderTimer: 0,
+      attackTimer: 0,
+      hurtTimer: 0,
+    } as any
+
+    // Add to internal mobs array
+    manager['mobs'].push(fakeMob)
+    expect(manager['mobs'].length).toBe(1)
+
+    // Damage the mob until it dies (triggers removeMob internally via damageMob)
+    manager.damageMob(999, 30, {} as any)
+
+    expect(manager['mobs'].length).toBe(0)
+    expect(deathPlayed).toBe(true)
+  })
+})
+

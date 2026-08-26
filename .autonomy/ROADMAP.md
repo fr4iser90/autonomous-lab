@@ -13,7 +13,7 @@
 | M7 | Mobs (passive + hostile AI) | COMPLETE ✅ |
 | M8 | Day/night cycle + autosave | COMPLETE ✅ |
 | M9 | Inventory drops / item pickup | COMPLETE ✅ |
-| M10 | Sound effects (block break/place, mob sounds) | PENDING |
+| M10 | Sound effects (block break/place, mob sounds) | COMPLETE ✅ |
 | M11 | Water physics + lava | PENDING |
 | M12 | Achievement system + save migration | PENDING |
 

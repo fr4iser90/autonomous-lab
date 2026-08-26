@@ -3,6 +3,7 @@
 import { World } from '../world/World'
 import { getBlock } from '../data/blocks'
 import { getItem } from '../data/items'
+import { SoundService } from '../services/SoundService'
 
 export interface MinedBlock {
   position: [number, number, number]
@@ -26,12 +27,16 @@ export class BlockInteraction {
   }
   /** The most recent drop from breakBlock, consumed on read */
   public lastDrop: { itemId: number; count: number; position: [number, number, number] } | null = null
+  private soundService?: SoundService
 
   constructor(
     private world: World,
     private selectedSlot: number = 0, // hotbar slot 0-8
     private inventory: Array<{ itemId: number; count: number }> = new Array(36).fill(null).map(() => ({ itemId: 0, count: 0 })),
-  ) {}
+    soundService?: SoundService,
+  ) {
+    this.soundService = soundService
+  }
 
   /** M4: Update the currently selected hotbar slot */
   updateSelectedSlot(slot: number): void {
@@ -105,6 +110,9 @@ export class BlockInteraction {
     const blockId = this.world.getBlock(position[0], position[1], position[2])
     this.world.setBlock(position[0], position[1], position[2], 0)
 
+    // M10: Play break sound
+    this.soundService?.play('blockBreak')
+
     // M4/M9: Get the item that drops from breaking this block
     if (blockId > 0) {
       const blockDef = getBlock(blockId)
@@ -174,6 +182,9 @@ export class BlockInteraction {
 
     // Place the block
     this.world.setBlock(placeX, placeY, placeZ, blockId)
+
+    // M10: Play place sound
+    this.soundService?.play('blockPlace')
 
     // Decrease inventory count
     item.count--

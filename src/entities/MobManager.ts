@@ -6,6 +6,7 @@ import { Mob } from './Mob'
 import type { MobEntity } from './Mob'
 import { MobCow, MobPig, MobChicken, MobZombie, MobSkeleton } from '../data/mobs'
 import { DropManager } from './DropManager'
+import { SoundService } from '../services/SoundService'
 
 export interface MobConfig {
   cowCount: number
@@ -29,6 +30,7 @@ export class MobManager {
   private config: MobConfig
   private playerHp: number = 20
   private dropManager?: DropManager
+  private soundService?: SoundService
 
   constructor(scene: THREE.Scene, config: MobConfig = DEFAULT_MOB_CONFIG) {
     this.scene = scene
@@ -38,6 +40,11 @@ export class MobManager {
   /** Attach drop manager for mob death drops */
   setDropManager(dm: DropManager): void {
     this.dropManager = dm
+  }
+
+  /** Attach sound service for mob sounds */
+  setSoundService(ss: SoundService): void {
+    this.soundService = ss
   }
 
   /** Spawn mobs at random positions on the surface */
@@ -171,6 +178,9 @@ export class MobManager {
 
   /** Remove a dead mob (dispose mesh, optionally add drops) */
   private removeMob(mob: MobEntity): void {
+    // M10: Play death sound
+    this.soundService?.play('mobDeath')
+
     // Spawn drops before removing
     if (this.dropManager) {
       const drops = Mob.getDrops(mob)

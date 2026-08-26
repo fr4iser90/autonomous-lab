@@ -1,5 +1,7 @@
 // HUD: In-game heads-up display overlay
 
+import { SoundService } from '../services/SoundService'
+
 export class HUD {
   private container: HTMLElement
   private crosshairEl: HTMLElement
@@ -8,6 +10,9 @@ export class HUD {
   private debugEl: HTMLElement
   private miningProgressEl: HTMLElement
   private timeOfDayEl: HTMLElement
+  private soundEl: HTMLElement
+  private soundMuted: boolean = false
+  private soundService?: SoundService
 
   constructor() {
     this.container = document.createElement('div')
@@ -120,6 +125,25 @@ export class HUD {
     this.timeOfDayEl.textContent = ''
     this.container.appendChild(this.timeOfDayEl)
 
+    // Sound toggle indicator (M10)
+    this.soundEl = document.createElement('div')
+    this.soundEl.id = 'sound-toggle'
+    this.soundEl.style.cssText = `
+      position: absolute; bottom: 10px; right: 10px;
+      font-size: 16px; color: white;
+      text-shadow: 1px 1px 2px black;
+      cursor: pointer;
+      pointer-events: auto;
+      padding: 4px 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+    `
+    this.soundEl.textContent = '🔊'
+    this.soundEl.addEventListener('click', () => {
+      this.toggleSound()
+    })
+    this.container.appendChild(this.soundEl)
+
     document.body.appendChild(this.container)
   }
 
@@ -230,5 +254,31 @@ export class HUD {
     if (this.container.parentNode) {
       this.container.parentNode.removeChild(this.container)
     }
+  }
+
+  // M10: Sound toggle
+  private toggleSound(): void {
+    this.soundMuted = !this.soundMuted
+    this.soundEl.textContent = this.soundMuted ? '🔇' : '🔊'
+    this.soundService?.setMuted(this.soundMuted)
+  }
+
+  /** M10: Set sound mute state externally (e.g. from init button) */
+  setSoundMuted(muted: boolean): void {
+    this.soundMuted = muted
+    this.soundEl.textContent = this.soundMuted ? '🔇' : '🔊'
+    this.soundService?.setMuted(this.soundMuted)
+  }
+
+  /** M10: Attach sound service for sync */
+  setSoundService(ss: SoundService): void {
+    this.soundService = ss
+    this.soundMuted = ss.isMuted()
+    this.soundEl.textContent = this.soundMuted ? '🔇' : '🔊'
+  }
+
+  /** M10: Check if sound is currently muted */
+  isSoundMuted(): boolean {
+    return this.soundMuted
   }
 }

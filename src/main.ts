@@ -4,6 +4,7 @@
 import * as THREE from 'three'
 import { SaveService } from './services/SaveService'
 import { DayNightCycle } from './services/DayNightCycle'
+import { SoundService } from './services/SoundService'
 import { TitleScreen } from './ui/TitleScreen'
 import { InstructionsOverlay } from './ui/InstructionsOverlay'
 import { HUD } from './ui/HUD'
@@ -25,6 +26,7 @@ import {
 import { CHUNK_WIDTH } from './world/Chunk'
 import { ChunkLighting, updateChunkLighting as calcLighting } from './physics/Lighting'
 import { DropManager } from './entities/DropManager'
+import { MobManager } from './entities/MobManager'
 
 // Game states
 type GameState = 'title' | 'playing'
@@ -63,6 +65,9 @@ class VoxelCraftGame {
   private readonly autosaveInterval: number = 60 // seconds
   // M9: Drop items on ground
   private dropManager?: DropManager
+  // M10: Sound effects
+  private soundService?: SoundService
+  private mobManager?: MobManager
 
   // M4: Default starting inventory (items for testing)
   private readonly defaultInventoryItems = [
@@ -97,6 +102,10 @@ class VoxelCraftGame {
     const seed = Math.floor(Math.random() * 2147483647)
     this.saveService.createNewWorld(slot, seed)
     this.saveService.setActiveSlot(slot)
+    // M10: Initialize audio on user gesture
+    this.soundService = new SoundService()
+    this.soundService.init()
+    if (this.hud) this.hud.setSoundMuted(this.soundService.isMuted())
     this.loadWorld(slot)
   }
 
@@ -135,7 +144,18 @@ class VoxelCraftGame {
       this.world,
       this.selectedSlot,
       this.inventory, // shared reference
+      this.soundService, // M10: sound effects
     )
+
+    // M7/M10: Spawn mobs
+    const seed = this.world.seed
+    this.mobManager = new MobManager(this.renderer!.scene)
+    if (this.dropManager) this.mobManager.setDropManager(this.dropManager)
+    if (this.soundService) {
+      this.soundService.init()
+      this.mobManager.setSoundService(this.soundService)
+    }
+    this.mobManager.spawn(this.world, seed)
 
     // Create block highlight wireframe
     this.blockHighlight = createHighlightBox(0xffffff)
@@ -255,8 +275,13 @@ class VoxelCraftGame {
     // Initialize HUD
     this.hud = new HUD()
 
-    // M9: Initialize drop manager
-    this.dropManager = new DropManager(this.renderer!.scene)
+    // M10: Sync HUD with sound service
+    if (this.soundService) {
+      this.hud.setSoundService(this.soundService)
+    }
+
+    // M10: Start ambient sounds (mobManager already created in loadWorld)
+    this.soundService?.startAmbient()
 
     // Show instructions on first play
     const hasPlayed = sessionStorage.getItem('voxelcraft-has-played')
@@ -303,6 +328,11 @@ class VoxelCraftGame {
     // M9: Clear drops
     this.dropManager?.clear()
     this.dropManager = undefined
+
+    // M10: Stop ambient sounds and clear mobs
+    this.soundService?.stopAllAmbient()
+    this.mobManager?.clear()
+    this.mobManager = undefined
 
     // Clear chunk meshes from scene
     for (const [, mesh] of this.chunkMeshes) {
@@ -652,6 +682,11 @@ class VoxelCraftGame {
       }
     }
 
+    // M7/M10: Update mobs
+    if (this.mobManager) {
+      this.mobManager.update(dt, player.state.position, world)
+    }
+
     // M3/M9: Update mining progress
     if (this.mouseDownLeft && this.blockInteraction) {
       const broken = this.blockInteraction.updateMining(dt)
@@ -691,6 +726,8 @@ class VoxelCraftGame {
         const inserted = this.insertItem(collected.name, collected.count)
         if (inserted > 0) {
           this.hud?.showDropNotification(collected.name, inserted)
+          // M10: Play pickup sound
+          this.soundService?.play('pickup')
         }
       }
     }
@@ -723,11 +760,13 @@ class VoxelCraftGame {
     // Debug info
     const pos = player.state.position
     if (!this.dayNightCycle || this.autosaveTimer < this.autosaveInterval) {
+      const mobCount = this.mobManager ? this.mobManager.getMobs().length : 0
       this.hud?.setDebug(
-        `VoxelCraft M9\n` +
+        `VoxelCraft M10\n` +
         `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
         `Chunks: ${this.loadedChunks.size}\n` +
         `Drops: ${this.dropManager ? this.dropManager.getDrops().length : 0}\n` +
+        `Mobs: ${mobCount}\n` +
         `FPS: ${(1 / dt).toFixed(0)}\n` +
         `Slot: ${this.selectedSlot + 1} | E=Inv`
       )
