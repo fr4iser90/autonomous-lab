@@ -27,6 +27,7 @@ import { CHUNK_WIDTH } from './world/Chunk'
 import { ChunkLighting, updateChunkLighting as calcLighting } from './physics/Lighting'
 import { DropManager } from './entities/DropManager'
 import { MobManager } from './entities/MobManager'
+import { WaterSystem } from './services/WaterSystem'
 
 // Game states
 type GameState = 'title' | 'playing'
@@ -58,10 +59,14 @@ class VoxelCraftGame {
   private inventory: Array<{ itemId: number; count: number }> = createInventory()
   // M6: Per-chunk lighting data
   private chunkLightings = new Map<string, ChunkLighting>()
+  // M11: Water and lava simulation
+  private waterSystem?: WaterSystem
   // M8: Day/night cycle
   private dayNightCycle?: DayNightCycle
   // M8: Autosave
   private autosaveTimer: number = 0
+  // M11: Water/lava simulation throttle
+  private waterSimTimer: number = 0
   private readonly autosaveInterval: number = 60 // seconds
   // M9: Drop items on ground
   private dropManager?: DropManager
@@ -126,6 +131,9 @@ class VoxelCraftGame {
     if (!worldData) return
 
     this.world = new World(worldData.seed, worldData.overrides)
+
+    // M11: Initialize water system
+    this.waterSystem = new WaterSystem(this.world)
 
     // Find spawn point
     const spawnX = 0
@@ -473,6 +481,13 @@ class VoxelCraftGame {
     }
   }
 
+  // M11: Rebuild all loaded chunk meshes (used after water/lava simulation)
+  private rebuildAllChunks(): void {
+    for (const key of this.loadedChunks) {
+      this.rebuildChunkMesh(key)
+    }
+  }
+
   /**
    * M3: Perform block break via raycast
    */
@@ -603,12 +618,14 @@ class VoxelCraftGame {
     const player = this.player!
 
     // Update player
+    const isLiquid = (x: number, y: number, z: number) => this.waterSystem?.isLiquid(x, y, z) ?? false
+    const isLava = (x: number, y: number, z: number) => this.waterSystem?.isLava(x, y, z) ?? false
     player.update(dt, this.keys, (x, y, z) => {
       const ix = Math.floor(x)
       const iy = Math.floor(y)
       const iz = Math.floor(z)
       return world.getBlock(ix, iy, iz) > 0
-    })
+    }, isLiquid, isLava)
 
     // Manage chunk loading
     const pcx = Math.floor(player.state.position.x / CHUNK_WIDTH)
@@ -729,6 +746,19 @@ class VoxelCraftGame {
           // M10: Play pickup sound
           this.soundService?.play('pickup')
         }
+      }
+    }
+
+    // M11: Water/lava simulation (throttled to avoid frame cost)
+    if (this.waterSystem) {
+      this.waterSimTimer += dt
+      if (this.waterSimTimer >= 2.0) {
+        this.waterSimTimer = 0
+        this.waterSystem.simulateWaterFlow()
+        this.waterSystem.simulateLavaFlow()
+        this.waterSystem.convertLavaWaterToStone()
+        // Rebuild affected chunks
+        this.rebuildAllChunks()
       }
     }
 

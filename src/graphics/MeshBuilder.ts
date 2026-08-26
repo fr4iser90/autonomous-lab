@@ -117,11 +117,14 @@ export class MeshBuilder {
     geometry.setIndex(indices)
 
     // Use MeshStandardMaterial with vertex colors and map
+    // M11: Use transparency for water/lava blocks
     const material = new THREE.MeshStandardMaterial({
       map: atlas.texture,
       vertexColors: true,
       roughness: 0.85,
       metalness: 0.0,
+      transparent: true,
+      opacity: 0.6,
     })
     return new THREE.Mesh(geometry, material)
   }

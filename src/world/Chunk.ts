@@ -1,7 +1,7 @@
 // Chunk: 16x16x96 voxel chunk with noise-based terrain generation + biomes + world features
 
 import { fbm } from './Noise'
-import { BlockGrass, BlockDirt, BlockStone, BlockSand, BlockBedrock, BlockWater, BlockSnow, BlockCoalOre, BlockIronOre, BlockLog, BlockLeaves } from '../data/blocks'
+import { BlockGrass, BlockDirt, BlockStone, BlockSand, BlockBedrock, BlockWater, BlockSnow, BlockCoalOre, BlockIronOre, BlockLog, BlockLeaves, BlockLava } from '../data/blocks'
 
 export const CHUNK_WIDTH = 16
 export const CHUNK_HEIGHT = 96
@@ -238,6 +238,13 @@ export class Chunk {
             const oreNoise = sampleNoise3D(nx, nz, ny, CAVE_RES, oreCache)
             if (y < 20 && oreNoise > 0.6) this.blocks[idx] = BlockIronOre.id
             else if (y < 40 && oreNoise > 0.55) this.blocks[idx] = BlockCoalOre.id
+          }
+          // M11: Lava pools in deep caves (y < 15)
+          if (y < 15 && block === BlockStone.id) {
+            const lavaNoise = sampleNoise3D(nx, nz, ny, CAVE_RES, caveCache1)
+            if (lavaNoise > 0.55) {
+              this.blocks[idx] = BlockLava.id
+            }
           }
         }
       }

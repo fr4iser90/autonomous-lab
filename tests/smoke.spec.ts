@@ -432,9 +432,9 @@ describe('M1: World', () => {
 })
 
 describe('M2: Texture Atlas', () => {
-  it('atlas has correct grid dimensions: 3 rows × 16 cols', () => {
-    // Atlas is now a 3×N grid: 3 face types, 16 blocks
-    expect(BLOCK_COUNT).toBe(16)
+  it('atlas has correct grid dimensions: 3 rows × 17 cols', () => {
+    // Atlas is now a 3×N grid: 3 face types, 17 blocks (added Lava)
+    expect(BLOCK_COUNT).toBe(17)
   })
 
   it('atlas generates without throwing', () => {
@@ -503,7 +503,7 @@ describe('M2: Texture Atlas', () => {
     // UV cell for log top face at blockId=6
     const uMin = 6 / BLOCK_COUNT
     const uMax = 7 / BLOCK_COUNT
-    expect(uMax - uMin).toBe(1 / BLOCK_COUNT)
+    expect(uMax - uMin).toBeCloseTo(1 / BLOCK_COUNT, 10)
   })
 })
 

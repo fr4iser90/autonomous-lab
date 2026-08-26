@@ -24,12 +24,15 @@ export const ItemCraftingTable: ItemDef = { id: 12, name: 'Crafting Table', stac
 export const ItemApple: ItemDef = { id: 13, name: 'Apple', stackable: true, maxStack: 64, iconColor: [200, 50, 50] }
 export const ItemBeef: ItemDef = { id: 14, name: 'Beef', stackable: true, maxStack: 64, iconColor: [150, 50, 50] }
 export const ItemCookedBeef: ItemDef = { id: 15, name: 'Cooked Beef', stackable: true, maxStack: 64, iconColor: [180, 80, 40] }
+export const ItemWaterBucket: ItemDef = { id: 16, name: 'Water Bucket', stackable: true, maxStack: 1, iconColor: [30, 144, 255] }
+export const ItemLavaBucket: ItemDef = { id: 17, name: 'Lava Bucket', stackable: true, maxStack: 1, iconColor: [255, 69, 0] }
 
 export const ALL_ITEMS: ReadonlyArray<ItemDef> = [
   ItemAir, ItemDirt, ItemStone, ItemWood, ItemPlanks,
   ItemStick, ItemWoodenPickaxe, ItemStonePickaxe, ItemIronPickaxe,
   ItemCoal, ItemIronIngots, ItemTorch, ItemCraftingTable,
   ItemApple, ItemBeef, ItemCookedBeef,
+  ItemWaterBucket, ItemLavaBucket,
 ]
 
 export function getItem(id: number): ItemDef | undefined {
