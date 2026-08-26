@@ -3,6 +3,7 @@
 
 import * as THREE from 'three'
 import { SaveService } from './services/SaveService'
+import { DayNightCycle } from './services/DayNightCycle'
 import { TitleScreen } from './ui/TitleScreen'
 import { InstructionsOverlay } from './ui/InstructionsOverlay'
 import { HUD } from './ui/HUD'
@@ -54,6 +55,11 @@ class VoxelCraftGame {
   private inventory: Array<{ itemId: number; count: number }> = createInventory()
   // M6: Per-chunk lighting data
   private chunkLightings = new Map<string, ChunkLighting>()
+  // M8: Day/night cycle
+  private dayNightCycle?: DayNightCycle
+  // M8: Autosave
+  private autosaveTimer: number = 0
+  private readonly autosaveInterval: number = 60 // seconds
 
   // M4: Default starting inventory (items for testing)
   private readonly defaultInventoryItems = [
@@ -132,6 +138,9 @@ class VoxelCraftGame {
     this.blockHighlight = createHighlightBox(0xffffff)
     this.renderer = new Renderer(this.canvas, this.world?.seed ?? 42)
     this.renderer.scene.add(this.blockHighlight)
+
+    // M8: Initialize day/night cycle
+    this.dayNightCycle = new DayNightCycle()
 
     this.startGame()
   }
@@ -625,15 +634,42 @@ class VoxelCraftGame {
       this.hud.updateMiningProgress(0, 0)
     }
 
+    // M8: Update day/night cycle
+    if (this.renderer && this.dayNightCycle) {
+      const state = this.dayNightCycle.getState()
+      this.renderer.updateLighting(state.skyColor, state.ambientLight)
+      // M8: Update HUD with time of day
+      this.hud?.updateTimeOfDay(state.timeOfDay)
+    }
+
+    // M8: Autosave
+    this.autosaveTimer += dt
+    if (this.autosaveTimer >= this.autosaveInterval && this.world && this.player) {
+      this.autosaveTimer = 0
+      const slot = this.saveService.getActiveSlot()
+      const overrides = this.world.getOverrides()
+      this.saveService.saveWorld(slot, {
+        version: 1,
+        seed: this.world.seed,
+        overrides,
+        inventory: this.inventory,
+        stats: { blocksMined: 0, deepestY: 0, distanceWalked: 0 },
+      })
+      // Show autosave notification
+      this.hud?.setDebug(`Auto-saved at ${this.dayNightCycle?.getPhase()}`)
+    }
+
     // Debug info
     const pos = player.state.position
-    this.hud?.setDebug(
-      `VoxelCraft M4\n` +
-      `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
-      `Chunks: ${this.loadedChunks.size}\n` +
-      `FPS: ${(1 / dt).toFixed(0)}\n` +
-      `Slot: ${this.selectedSlot + 1} | E=Inv`
-    )
+    if (!this.dayNightCycle || this.autosaveTimer < this.autosaveInterval) {
+      this.hud?.setDebug(
+        `VoxelCraft M8\n` +
+        `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
+        `Chunks: ${this.loadedChunks.size}\n` +
+        `FPS: ${(1 / dt).toFixed(0)}\n` +
+        `Slot: ${this.selectedSlot + 1} | E=Inv`
+      )
+    }
 
     // Render
     this.renderer.render()

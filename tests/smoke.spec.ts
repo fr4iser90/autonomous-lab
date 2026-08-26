@@ -11,6 +11,8 @@ import { mulberry32, smoothNoise, fbm } from '../src/world/Noise'
 import { Chunk, CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH } from '../src/world/Chunk'
 import { World } from '../src/world/World'
 import { ChunkLighting, calculateSkyLight, updateChunkLighting, isLightSource, getLightSourceLevel } from '../src/physics/Lighting'
+import { DayNightCycle } from '../src/services/DayNightCycle'
+import { HUD } from '../src/ui/HUD'
 
 describe('M1: Block Registry', () => {
   it('has at least 12 base block types', () => {
@@ -1819,6 +1821,179 @@ describe('M7: MobManager', () => {
     const scene = { add: vi.fn() } as any
     const manager = new MobManager(scene)
     expect(manager.getMobs().length).toBe(0)
+  })
+})
+
+// M8: Day/Night Cycle + Autosave tests
+describe('M8: DayNightCycle - State', () => {
+  it('DayNightCycle initializes at dawn', () => {
+    const dnc = new DayNightCycle()
+    const state = dnc.getState()
+    expect(state.timeOfDay).toBe(0)
+    expect(state.skyColor).toBeDefined()
+    expect(state.skyColor.length).toBe(3)
+    expect(typeof state.ambientLight).toBe('number')
+    expect(state.ambientLight).toBeGreaterThan(0)
+    expect(typeof state.sunAngle).toBe('number')
+  })
+
+  it('DayNightCycle returns valid sky color components', () => {
+    const dnc = new DayNightCycle()
+    const state = dnc.getState()
+    const [r, g, b] = state.skyColor
+    expect(r).toBeGreaterThanOrEqual(0)
+    expect(r).toBeLessThanOrEqual(255)
+    expect(g).toBeGreaterThanOrEqual(0)
+    expect(g).toBeLessThanOrEqual(255)
+    expect(b).toBeGreaterThanOrEqual(0)
+    expect(b).toBeLessThanOrEqual(255)
+  })
+
+  it('DayNightCycle updates time progression', () => {
+    const dnc = new DayNightCycle()
+    dnc.update(1000)
+    expect(dnc.getTimeOfDay()).toBe(1000)
+    dnc.update(5000)
+    expect(dnc.getTimeOfDay()).toBe(6000)
+  })
+
+  it('DayNightCycle wraps at cycle duration', () => {
+    const dnc = new DayNightCycle()
+    dnc.update(24000)
+    expect(dnc.getTimeOfDay()).toBe(0)
+  })
+
+  it('DayNightCycle setTimeOfDay works correctly', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(12000)
+    expect(dnc.getTimeOfDay()).toBe(12000)
+    dnc.setTimeOfDay(30000)
+    expect(dnc.getTimeOfDay()).toBe(6000)
+  })
+})
+
+describe('M8: DayNightCycle - Day/Night Detection', () => {
+  it('time 0 is dawn', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(0)
+    expect(dnc.isDawn()).toBe(true)
+    expect(dnc.isDay()).toBe(false)
+    expect(dnc.isNight()).toBe(false)
+  })
+
+  it('time 6000 is day', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(6000)
+    expect(dnc.isDay()).toBe(true)
+    expect(dnc.isNight()).toBe(false)
+  })
+
+  it('time 12000 is afternoon', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(12000)
+    expect(dnc.isDay()).toBe(true)
+    expect(dnc.isNight()).toBe(false)
+  })
+
+  it('time 18000 is night', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(18000)
+    expect(dnc.isNight()).toBe(true)
+    expect(dnc.isDay()).toBe(false)
+  })
+
+  it('time 22000 is night', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(22000)
+    expect(dnc.isNight()).toBe(true)
+    expect(dnc.isDay()).toBe(false)
+  })
+})
+
+describe('M8: DayNightCycle - Phases', () => {
+  it('phase dawn at 0', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(0)
+    expect(dnc.getPhase()).toBe('dawn')
+  })
+
+  it('phase morning at 4000', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(4000)
+    expect(dnc.getPhase()).toBe('morning')
+  })
+
+  it('phase afternoon at 10000', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(10000)
+    expect(dnc.getPhase()).toBe('afternoon')
+  })
+
+  it('phase sunset at 13500', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(13500)
+    expect(dnc.getPhase()).toBe('sunset')
+  })
+
+  it('phase night at 18000', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(18000)
+    expect(dnc.getPhase()).toBe('night')
+  })
+
+  it('phase midnight at 23500', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(23500)
+    expect(dnc.getPhase()).toBe('midnight')
+  })
+})
+
+describe('M8: DayNightCycle - Ambient Light', () => {
+  it('night has low ambient light', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(18000)
+    const state = dnc.getState()
+    expect(state.ambientLight).toBeLessThan(0.5)
+  })
+
+  it('day has high ambient light', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(8000)
+    const state = dnc.getState()
+    expect(state.ambientLight).toBeGreaterThan(0.8)
+  })
+
+  it('dawn has moderate ambient light', () => {
+    const dnc = new DayNightCycle()
+    dnc.setTimeOfDay(1000)
+    const state = dnc.getState()
+    expect(state.ambientLight).toBeGreaterThan(0.1)
+    expect(state.ambientLight).toBeLessThan(0.5)
+  })
+})
+
+describe('M8: HUD Time Display', () => {
+  it('HUD updateTimeOfDay sets element content', () => {
+    const hud = new HUD()
+    hud.updateTimeOfDay(6000)
+    expect(hud['timeOfDayEl'].textContent).toBeDefined()
+    expect(hud['timeOfDayEl'].textContent!.length).toBeGreaterThan(0)
+    expect(hud['timeOfDayEl'].textContent!).toContain(':')
+    hud.remove()
+  })
+
+  it('HUD updateTimeOfDay shows night phase', () => {
+    const hud = new HUD()
+    hud.updateTimeOfDay(18000)
+    expect(hud['timeOfDayEl'].textContent!).toContain('night')
+    hud.remove()
+  })
+
+  it('HUD updateTimeOfDay shows day phase', () => {
+    const hud = new HUD()
+    hud.updateTimeOfDay(6000)
+    expect(hud['timeOfDayEl'].textContent!).toContain('day')
+    hud.remove()
   })
 })
 

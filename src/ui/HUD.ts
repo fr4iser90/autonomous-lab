@@ -7,6 +7,7 @@ export class HUD {
   private heartsEl: HTMLElement
   private debugEl: HTMLElement
   private miningProgressEl: HTMLElement
+  private timeOfDayEl: HTMLElement
 
   constructor() {
     this.container = document.createElement('div')
@@ -106,6 +107,19 @@ export class HUD {
     this.miningProgressEl.appendChild(progressBar)
     this.container.appendChild(this.miningProgressEl)
 
+    // Time of day display (M8)
+    this.timeOfDayEl = document.createElement('div')
+    this.timeOfDayEl.id = 'time-of-day'
+    this.timeOfDayEl.style.cssText = `
+      position: absolute; top: 10px; right: 10px;
+      font-size: 12px; color: white;
+      text-shadow: 1px 1px 2px black;
+      text-align: right;
+      line-height: 1.6;
+    `
+    this.timeOfDayEl.textContent = ''
+    this.container.appendChild(this.timeOfDayEl)
+
     document.body.appendChild(this.container)
   }
 
@@ -163,6 +177,23 @@ export class HUD {
     const fill = this.miningProgressEl.querySelector('#mining-progress-fill') as HTMLElement
     const pct = Math.min(100, (progress / maxProgress) * 100)
     fill.style.width = `${pct}%`
+  }
+
+  /** M8: Update time of day display */
+  updateTimeOfDay(timeOfDay: number): void {
+    // Convert 0-24000 to hour:minute format
+    const totalMinutes = Math.floor((timeOfDay / 24000) * 1440)
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+
+    // Phase name
+    let phase = 'day'
+    if (timeOfDay > 13000 && timeOfDay < 23000) phase = 'night'
+    else if (timeOfDay >= 23000 || timeOfDay <= 2000) phase = 'dawn'
+    else if (timeOfDay >= 13000 && timeOfDay <= 14000) phase = 'sunset'
+
+    this.timeOfDayEl.textContent = `${timeStr}  ${phase}`
   }
 
   remove(): void {

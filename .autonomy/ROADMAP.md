@@ -11,7 +11,7 @@
 | M5 | Biomes + world features (trees, caves, ores) | COMPLETE ✅ |
 | M6 | Voxel lighting (sky + torch) | COMPLETE ✅ |
 | M7 | Mobs (passive + hostile AI) | COMPLETE ✅ |
-| M8 | Day/night cycle + autosave | PENDING |
+| M8 | Day/night cycle + autosave | COMPLETE ✅ |
 
 ## Phase 2: Content Cycles
 - Cycles to reach CAP/CAP for all registries

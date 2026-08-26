@@ -1,8 +1,8 @@
 # PROGRESS.md — VoxelCraft
 
 **Branch:** `agent/voxel-craft-20260825`
-**Phase:** M7 — Mobs (passive + hostile AI)
-**Status:** COMPLETE — gate green (146/146 tests, build succeeds ~506KB)
+**Phase:** M8 — Day/night cycle + autosave
+**Status:** COMPLETE — gate green (168/168 tests, build succeeds ~509KB)
 
 ## MILESTONES
 - M1: Vite + Three.js scaffold, title screen (3 slots), HUD, basic world → **COMPLETE ✅**
@@ -75,7 +75,17 @@
   - Damage system: mobs deal contact damage, player HP tracked
   - Death drops: cow drops beef (1-3), chicken drops apple, hostile mobs drop nothing
   - 33 M7 smoke tests (total 146)
-- M8: Day/night cycle + autosave → PENDING
+- M8: Day/night cycle + autosave → **COMPLETE ✅**
+  - `DayNightCycle` class with time progression (0-24000 ticks per cycle)
+  - Sky color interpolation: dawn (orange/pink) → day (blue) → sunset (red/orange) → night (dark purple) → dawn
+  - Ambient light variation: 0.1 (midnight) to 1.0 (noon)
+  - Phase detection: dawn, morning, afternoon, sunset, night, midnight
+  - `isDay()`, `isNight()`, `isDawn()`, `isSunset()` helpers
+  - Renderer integration: sky color applied to clear color and fog, ambient light intensity scaled
+  - HUD time display: HH:MM format with phase name in top-right corner
+  - Autosave every 60 seconds with world data (overrides, inventory, stats)
+  - Autosave notification in debug text
+  - 18 M8 smoke tests (total 168)
 
 ## CAPS
 ```
@@ -83,4 +93,4 @@ blocks=16/CAP items=16/CAP recipes=10/CAP npcs=6/CAP
 ```
 
 ## NEXT
-M8: Day/night cycle + autosave.
+M9: Inventory drops / item pickup.

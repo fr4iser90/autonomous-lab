@@ -10,6 +10,8 @@ export class Renderer {
   public camera: THREE.PerspectiveCamera
   private canvas: HTMLCanvasElement
   private readonly atlas: TextureAtlas
+  private ambientLight: THREE.AmbientLight
+  private sunLight: THREE.DirectionalLight
 
   constructor(canvas: HTMLCanvasElement, seed: number = 42) {
     this.canvas = canvas
@@ -31,13 +33,13 @@ export class Renderer {
     this.camera.lookAt(0, 0, 0)
 
     // Ambient light
-    const ambient = new THREE.AmbientLight(0x404040, 0.6)
-    this.scene.add(ambient)
+    this.ambientLight = new THREE.AmbientLight(0x404040, 0.6)
+    this.scene.add(this.ambientLight)
 
     // Directional light (sun)
-    const sun = new THREE.DirectionalLight(0xffffff, 0.8)
-    sun.position.set(50, 100, 50)
-    this.scene.add(sun)
+    this.sunLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    this.sunLight.position.set(50, 100, 50)
+    this.scene.add(this.sunLight)
 
     // Create procedural texture atlas
     this.atlas = new TextureAtlas(seed)
@@ -60,6 +62,14 @@ export class Renderer {
 
   render(): void {
     this.renderer.render(this.scene, this.camera)
+  }
+
+  /** Update sky color, fog, and lighting based on time of day */
+  updateLighting(skyColor: [number, number, number], ambientBrightness: number): void {
+    const hex = (skyColor[0] << 16) | (skyColor[1] << 8) | skyColor[2]
+    this.renderer.setClearColor(hex)
+    this.scene.fog = new THREE.Fog(hex, 60, 100)
+    this.ambientLight.intensity = 0.3 + ambientBrightness * 0.7
   }
 
   resize(canvas: HTMLCanvasElement): void {
