@@ -28,11 +28,13 @@ READ THE DATA FIRST (tracking surface — invent nothing)
 1. `git status` / current branch / recent commits. Confirm this is the lab clone
    on `agent/voxel-craft-…` (or the run id recorded in PROGRESS).
 2. Read **PROGRESS.md NOW** — phase, next step, last ACCEPT, SHA, pre-PR visual.
-3. Read every other tracking doc that exists and is relevant:
-   CONTENT.md, FEATURES.md, SOAK.md, BUGS.md, DEMO.md, ASSETS.md,
+3. Read **BUGS.md ## Open** — drain blocker/playability before new content
+   (entries may come from `voxel-craft-VL-validation.md` agent).
+4. Read every other tracking doc that exists and is relevant:
+   CONTENT.md, FEATURES.md, SOAK.md, DEMO.md, ASSETS.md,
    shared/design.md or shared/protocol.md, README.md.
-4. Skim the filesystem evidence (src/, demo/, tests/) against what PROGRESS claims.
-5. Check GitHub PR for this branch if tools allow: conflicts? red `gate`?
+5. Skim the filesystem evidence (src/, demo/, tests/) against what PROGRESS claims.
+6. Check GitHub PR for this branch if tools allow: conflicts? red `gate`?
    “PR already exists” is OK — push updates it; **conflicts/red gate are not OK**.
 
 - Lie detector: if PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but
@@ -51,15 +53,22 @@ SAFE SYNC FIRST (no work loss — see `voxel-craft.md` SAFE SYNC)
 5. Log `SYNC: …` in PROGRESS.md.
 
 PLAYABILITY TRIAGE (before more content cycles)
-- Boot `pnpm run dev`; run TESTING HARNESS **D** (UI smoke): click Create New
+- Drain BUGS.md ## Open (blocker/playability) first — then boot `pnpm run dev`.
+- Run TESTING HARNESS **D** (UI smoke): click Create New
   World / Continue; **fail on any pageerror**.
 - Known class of bug: using `renderer.scene` (or similar) before `Renderer` is
   constructed → title looks clickable but New World no-ops. Fix init order;
   add a regression assertion to UI smoke / vitest; only then continue Phase 2/4.
 - Seed input must affect the created world when filled.
-- Screenshot alone / file size is not PASS — spawn smart/VL when available.
-- Content cycles: each new block/item/recipe/npc needs **CONTENT VISUAL**
-  (`demo/content/C<N>-<kind>-<id>.png`) — title-screen PRE-PR is not enough.
+- Screenshot alone / file size is not PASS — call **`read_image`** on the PNG
+  path, then judge (no vision subagent; do not use plain `Read` on PNG).
+- Content cycles: each new block/item/recipe/npc needs **real in-engine**
+  CONTENT VISUAL (`demo/content/C<N>-<kind>-<id>.png` from `#game-canvas` while
+  playing). HTML/NPC-stat tables / RGB swatch boards = FAIL — redo with rendered
+  meshes. Title-screen PRE-PR is not enough.
+- Optional live E2E (end-user): https://fr4iser90.github.io/autonomous-lab/
+  after automerge — prefer the separate validator prompt
+  (`voxel-craft-VL-validation.md`); builder keeps local `:5173` as primary.
 
 INFINITY MODE (Phase 4 — re-arm on every follow-up)
 - If Phase 3 is truly done (demo artifact + DEMO.md visual PASS + frames when
@@ -67,17 +76,19 @@ INFINITY MODE (Phase 4 — re-arm on every follow-up)
   until a human kills the process.
 - Never treat PHASE3-DONE as job finished. Do not mark create_goal complete.
 - If already on Phase 4 / cycle-N: resume that cycle (or N+1 if ACCEPT proven).
+- Every P4-0: BUGS.md ## Open before new polish/feature.
 
 THEN CONTINUE
 1. create_goal with the same overnight objective as `voxel-craft.md` and
    max_goal_rounds ≥ 400. Never mark complete on your own (human kills) —
    Phase 4 runs forever unless STOP_AFTER_DEMO applies.
-2. If PR conflicted / gate red / UI smoke red: FIX-ONLY (+ SAFE SYNC) until
-   green and mergeable — do not pile new CAP content on a dead title screen.
+2. If open blocker/playability bugs OR PR conflicted / gate red / UI smoke red:
+   FIX-ONLY (+ SAFE SYNC) until green and mergeable — do not pile new CAP
+   content on a dead title screen.
 3. Resume at the **first unfinished** milestone / content cycle / soak / DEMO /
    Phase 4 cycle proven by docs + disk. Never restart M1 if later work exists.
 4. Obey `voxel-craft.md` LIVE LOOP (PRE-PR VISUAL + UI smoke + SAFE SYNC +
-   smart/VL). File size alone ≠ visual PASS.
+   `read_image`). File size alone ≠ visual PASS; do not spawn smart for screenshots.
 5. Keep tracking docs current. Always leave a next tool call.
 6. Gate green. Never push `main` / `baseline`.
 
@@ -89,5 +100,5 @@ PHASE GATE (before EVERY phase change — Pages must show the finished phase)
 ================================================================
 
 Do **not** start the next phase until this gate PASSes (full text in
-`voxel-craft.md`): playable screenshot + smart/VL when available + LIVE LOOP so
-Pages shows the finished phase before the next phase begins.
+`voxel-craft.md`): playable screenshot + **`read_image`** (no vision subagent) +
+LIVE LOOP so Pages shows the finished phase before the next phase begins.

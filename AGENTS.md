@@ -29,8 +29,10 @@ Rules:
 | `.github/workflows/**`, `AGENTS.md`, `BOILERPLATE.md` | `src/**` (delete toys; ship the game) |
 | `scripts/new-run.sh`, `LICENSE` | `tests/**`, `demo/**`, `index.html` (game shell) |
 | Vite Pages `base` = `/autonomous-lab/` (do not change) | `PROGRESS.md`, `CONTENT.md`, `FEATURES.md`, `SOAK.md`, `BUGS.md`, `DEMO.md` |
-| CI/automerge/Pages wiring | Game `README.md` sections that describe the shipped game |
-| | `package.json` deps the game needs (keep `gate` / `dev` scripts working) |
+| CI/automerge/Pages wiring | `README.md` **`# Current run` only** (game playable section) |
+| `README.md` Lab header (above `# Current run`) | `package.json` deps the game needs (keep `gate` / `dev` scripts working) |
+| `SETUP.md` (host harness / hardware / settings) | |
+| Prefer leave `example-prompts/**` alone | |
 
 **Tracking surface for the run (primary):** `PROGRESS.md` (+ `CONTENT.md` / `FEATURES.md` / … as the overnight prompt requires).  
 **Do not** treat boilerplate toy UI (`src/economy.ts`, harvest button) as the product.
@@ -61,6 +63,6 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
 ## Out of scope unless the run objective says otherwise
 
 - Baking a specific game genre into `baseline`
-- Rewriting CI/Pages/automerge / `AGENTS.md` / `BOILERPLATE.md` from the agent
+- Rewriting CI/Pages/automerge / `AGENTS.md` / `BOILERPLATE.md` / README Lab header from the agent
 - Changing `baseline` history
 - Cloud saves, auth, multiplayer, or a second Pages site

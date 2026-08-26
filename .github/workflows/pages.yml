@@ -1,13 +1,20 @@
 name: Pages
 
+# Deploys GitHub Pages from main.
+# Merges performed with GITHUB_TOKEN do not re-trigger `on.push` workflows, so
+# we also chain via workflow_run after "Automerge agent PRs" succeeds.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: [Automerge agent PRs]
+    types: [completed]
 
 permissions:
   contents: read
   pages: write
+  actions: read
   id-token: write
 
 concurrency:
@@ -15,10 +22,61 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.out.outputs.should_deploy }}
+    steps:
+      - name: Decide
+        id: out
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const event = context.eventName
+            if (event === 'push' || event === 'workflow_dispatch') {
+              core.setOutput('should_deploy', 'true')
+              return
+            }
+            if (event !== 'workflow_run') {
+              core.setOutput('should_deploy', 'false')
+              return
+            }
+            const wr = context.payload.workflow_run
+            if (wr.conclusion !== 'success') {
+              core.info(`Automerge conclusion=${wr.conclusion} — skip Pages`)
+              core.setOutput('should_deploy', 'false')
+              return
+            }
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: wr.id,
+              },
+            )
+            const mergeJob = jobs.find((j) => j.name === 'merge')
+            if (!mergeJob || mergeJob.conclusion === 'skipped') {
+              core.info('Automerge merge job skipped — skip Pages')
+              core.setOutput('should_deploy', 'false')
+              return
+            }
+            if (mergeJob.conclusion !== 'success') {
+              core.info(`merge job=${mergeJob.conclusion} — skip Pages`)
+              core.setOutput('should_deploy', 'false')
+              return
+            }
+            core.info('Automerge merge job succeeded — deploy Pages from main')
+            core.setOutput('should_deploy', 'true')
+
   build:
+    needs: decide
+    if: needs.decide.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -31,6 +89,7 @@ jobs:
 
   deploy:
     needs: build
+    if: needs.build.result == 'success'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
