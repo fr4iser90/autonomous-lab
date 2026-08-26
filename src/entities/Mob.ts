@@ -352,6 +352,21 @@ export class Mob {
     this.applyPhysics(entity, dt, world)
   }
 
+  /** Apply knockback away from a source position */
+  static applyKnockback(entity: MobEntity, fromX: number, fromZ: number, force: number): void {
+    const dx = entity.position.x - fromX
+    const dz = entity.position.z - fromZ
+    const dist = Math.sqrt(dx * dx + dz * dz)
+    if (dist < 0.001) return
+
+    const nx = dx / dist
+    const nz = dz / dist
+
+    entity.velocity.x += nx * force
+    entity.velocity.z += nz * force
+    entity.velocity.y += force * 0.3 // slight upward pop
+  }
+
   /** Apply gravity and ground detection */
   static applyPhysics(entity: MobEntity, dt: number, world: World): void {
     // Gravity

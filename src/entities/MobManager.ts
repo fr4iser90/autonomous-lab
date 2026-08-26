@@ -300,6 +300,53 @@ export class MobManager {
     }
   }
 
+  /**
+   * Phase 4 P4-3: Melee attack — hit the nearest hostile mob in the player's crosshair.
+   * Returns the mob id that was hit, or -1 if none.
+   */
+  meleeHit(
+    playerPos: THREE.Vector3,
+    dirX: number, dirY: number, dirZ: number,
+    meleeRange: number = 3,
+    coneAngle: number = Math.PI / 6, // 30° crosshair tolerance
+  ): number {
+    // Normalize direction
+    const len = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ)
+    if (len === 0) return -1
+    const nx = dirX / len
+    const ny = dirY / len
+    const nz = dirZ / len
+
+    let bestId = -1
+    let bestDist = meleeRange
+    const cosAngle = Math.cos(coneAngle)
+
+    for (const mob of this.mobs) {
+      // Only hostile mobs
+      if (mob.def.type !== 'hostile') continue
+
+      // Distance check (use horizontal distance + 1 for height)
+      const ddx = mob.position.x - playerPos.x
+      const ddy = mob.position.y + mob.def.height * 0.4 - playerPos.y
+      const ddz = mob.position.z - playerPos.z
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz)
+      if (dist > bestDist) continue
+
+      // Dot product to check if within cone angle
+      const dx = ddx / dist
+      const dy = ddy / dist
+      const dz = ddz / dist
+      const dot = dx * nx + dy * ny + dz * nz
+
+      if (dot < cosAngle) continue // outside cone
+
+      bestDist = dist
+      bestId = mob.id
+    }
+
+    return bestId
+  }
+
   /** Damage a mob */
   damageMob(id: number, amount: number, _world: World): boolean {
     const mob = this.mobs.find(m => m.id === id)

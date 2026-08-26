@@ -2,9 +2,9 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** 68f1fc9 (Phase 4 P4-2: Skeleton ranged attack — arrows)
-**Tests:** 268/268 passing | Build: ✅ 537KB
-**PR:** #3 Merged ✅ | **Current PR:** #11 — Phase 4 P4-1 pushed, CI pending
+**SHA:** P4-3 pending (Player melee attack — in progress)
+**Tests:** 268/268 passing | Build: ✅ 543KB
+**PR:** #3 Merged ✅ | **Current PR:** #11 — P4-3 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
 
 ## CAPS
@@ -110,3 +110,12 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Sound:** Arrow whoosh on fire (pickup sound reused as placeholder)
 - **Shoot cooldown:** 1.8s between shots per skeleton
 - **Gate:** 268/268 tests pass, build 542KB
+
+### P4-3: Player Melee Attack on Mobs ✅
+- **Weapon damage:** `getAttackDamage()` in `items.ts` — stone sword=4, iron pickaxe=2, stone pickaxe=2, fists=1 (default)
+- **Melee hit detection:** `MobManager.meleeHit()` — checks hostile mobs within 3-block melee range and within 30° crosshair cone
+- **Knockback:** `Mob.applyKnockback()` — pushes hit mobs away from player with horizontal + slight upward force
+- **Hurt flash:** `hurtTimer` reset on hit — mob mesh blinks red each frame until timer expires
+- **Hit sound:** `'hit'` sound plays on every successful melee hit
+- **Left-click flow:** Melee check runs first → if a mob is hit, skips block mining → else falls through to mining
+- **Gate:** 268/268 tests pass, build 543KB

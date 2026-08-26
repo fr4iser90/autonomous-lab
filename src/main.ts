@@ -22,11 +22,13 @@ import {
   getHotbarSnapshot,
   HOTBAR_SIZE,
 } from './data/inventory'
+import { getAttackDamage } from './data/items'
 
 import { CHUNK_WIDTH } from './world/Chunk'
 import { ChunkLighting, updateChunkLighting as calcLighting } from './physics/Lighting'
 import { DropManager } from './entities/DropManager'
 import { MobManager } from './entities/MobManager'
+import { Mob } from './entities/Mob'
 import { WaterSystem } from './services/WaterSystem'
 import { AchievementService } from './services/AchievementService'
 
@@ -272,9 +274,12 @@ class VoxelCraftGame {
       if (document.pointerLockElement !== this.canvas) return
 
       if (e.button === 0) {
-        // Left click: start mining
-        this.mouseDownLeft = true
-        this.performBreak()
+        // Left click: try melee first, then mine block
+        const mobHit = this.performMelee()
+        if (!mobHit) {
+          this.mouseDownLeft = true
+          this.performBreak()
+        }
       } else if (e.button === 2) {
         // Right click: place block
         this.performPlace()
@@ -598,6 +603,63 @@ class VoxelCraftGame {
         this.markChunkDirty(px, py, pz)
       }
     }
+  }
+
+  /**
+   * Phase 4 P4-3: Melee attack on mobs.
+   * Returns true if a mob was hit.
+   */
+  private performMelee(): boolean {
+    if (!this.world || !this.player || !this.mobManager) return false
+
+    const ray = getRayFromCamera(
+      [this.player.state.position.x, this.player.state.position.y, this.player.state.position.z],
+      this.player.state.rotation.y,
+      this.player.state.rotation.x,
+    )
+
+    // Melee range: 3 blocks
+    const meleeRange = 3
+
+    // Get held item damage from hotbar
+    const heldItem = this.inventory[this.selectedSlot]
+    const attackDamage = getAttackDamage(heldItem.itemId)
+
+    // Check for hostile mobs in crosshair
+    const hitMobId = this.mobManager.meleeHit(
+      this.player.state.position,
+      ray.direction[0],
+      ray.direction[1],
+      ray.direction[2],
+      meleeRange,
+    )
+
+    if (hitMobId > 0) {
+      // Hit the mob
+      this.mobManager.damageMob(hitMobId, attackDamage, this.world)
+
+      // Apply knockback from player position toward mob
+      const hitMob = this.mobManager.getMob(hitMobId)
+      if (hitMob) {
+        const knockbackForce = 1.5
+        Mob.applyKnockback(hitMob, this.player.state.position.x, this.player.state.position.z, knockbackForce)
+
+        // Reset hurt timer for flash effect
+        hitMob.hurtTimer = 0.3
+
+        // Update HP bar for the hit mob
+        if (hitMob.mesh) {
+          Mob.updateHPBar(hitMob.mesh, hitMob.def, hitMob.hp, hitMob.maxHp)
+        }
+      }
+
+      // Play hit sound
+      this.soundService?.play('hit')
+
+      return true
+    }
+
+    return false
   }
 
   /**

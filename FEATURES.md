@@ -68,3 +68,16 @@
   - `Mob.ts`: `shootCooldown` reduced each frame; skeletons fire when player enters ranged range
 - **Gate:** 268/268 tests pass, build 542KB
 - **Visual:** Arrows visible as 3D objects in-world; player takes damage on direct hit; arrows arc and fall with gravity
+
+## P4-3 — Player Melee Attack: Combat Loop ✅
+- **Decision:** Add player melee attack against hostile mobs — complete the combat loop alongside skeleton ranged attacks
+- **Rationale:** Players need a way to fight back; currently mobs can damage the player but the player has no offensive capability
+- **Changes:**
+  - `items.ts`: Added `attackDamage` field to ItemDef; stone sword=4, iron pickaxe=2, stone pickaxe=2, fists=1 (default)
+  - `items.ts`: New `getAttackDamage()` accessor — returns item's attackDamage or 1 for fists
+  - `Mob.ts`: New `applyKnockback()` — pushes entity away from source position with horizontal force + slight upward pop
+  - `MobManager.ts`: New `meleeHit()` — raycast cone check against hostile mobs within 3-block range and 30° cone
+  - `main.ts`: New `performMelee()` — checks crosshair for mobs, deals damage from held item, applies knockback + hurt flash
+  - `main.ts`: Left-click handler now tries melee first, falls through to block mining on miss
+- **Gate:** 268/268 tests pass, build 543KB
+- **Visual:** Mobs knock back and flash red when hit; hit sound plays; left-click on mobs damages them, left-click on blocks mines them
