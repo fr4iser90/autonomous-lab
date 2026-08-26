@@ -14,7 +14,7 @@ Local/DSH preview: `pnpm run dev` → http://127.0.0.1:5173
 - Inventory + crafting (2×2 and 3×3 grids)
 - Mobs (passive + hostile)
 - Day/night cycle
-- 16 block types with procedural rendering
+- 20 block types with procedural rendering
 
 ## Quick Start
 

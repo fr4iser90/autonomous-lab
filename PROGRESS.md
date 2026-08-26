@@ -2,10 +2,10 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 2 COMPLETE ✅ (all registries at CAP=20)
-**SHA:** 65e69a6 (C6 pushed — all 4 registries at CAP)
+**SHA:** 19fa6aa (C6 pushed, merged main)
 **Tests:** 244/244 passing | Build: ✅ 535KB
-**PR:** Open (C1+C2+C3+C4+C5+C6)
-**SYNC:** C6 pushed — all registries at CAP
+**PR:** Open (C1–C6)
+**SYNC:** Merged origin/main (df6c541 ownership doc). Resolved autonomy + content conflicts. Kept game src/ intact.
 
 ## CAPS
 ```

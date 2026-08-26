@@ -669,7 +669,7 @@ class VoxelCraftGame {
       if (mesh) {
         this.renderer.scene.remove(mesh)
         mesh.geometry.dispose()
-        this.chunkMeshes.delete(key)
+        this.chunkMeshes.delete(mesh)
       }
     }
 
