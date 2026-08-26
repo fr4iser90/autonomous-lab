@@ -20,8 +20,8 @@ The public game on Pages is whatever last automerged to `main` — not this file
 | Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** — same |
 | Idle **nudge** (harness) | short continue cue from DSH idle prompting | **`fast`** (same session) |
 | Hard code root-cause only | (spawned from overnight) meshing/lighting/AI | optional **`smart`** subagent — **not** for PNGs |
-| Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** session (no subagent spawn) |
-| Validation resume | `…-VL-validation-followup.md` | **`smart`** |
+| Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** session — **click Pages first**, then BUGS.md (no source-first) |
+| Validation resume | `…-VL-validation-followup.md` | **`smart`** — same click-first order |
 
 Builder drains `BUGS.md` ## Open at every cycle; validator **only documents** bugs.
 

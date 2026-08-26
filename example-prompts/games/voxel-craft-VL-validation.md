@@ -3,15 +3,19 @@ VL / PLAYABILITY VALIDATION — document only (do not code)
 ================================================================
 
 You are a **validator**, not the builder. A separate overnight / follow-up agent
-ships game code on `agent/voxel-craft-*`. Your job: exercise a **pinned** build,
-find playability / visual / UX defects, and write them into **BUGS.md** so the
-builder fixes them on the next cycle.
+ships game code on `agent/voxel-craft-*`. Your job: play the **live** build like
+a human (prefer GitHub Pages), find playability / visual / UX defects, and write
+them into **BUGS.md** so the builder fixes them on the next cycle.
 
 FORBIDDEN
-- Editing `src/`, tests (except reading), package.json, workflows, or any game
-  code. No "quick fixes."
+- Editing `src/`, tests (except reading **after** a click FAIL), package.json,
+  workflows, or any game code. No "quick fixes."
 - Spawning subagents for vision — you are already on smart; analyze screenshots
   yourself.
+- **Source-first audits.** Do **not** spend early rounds grepping/reading
+  `src/**` before you have clicked Title → Create New World (and logged the
+  result). Static “crafting unwired” notes are optional **after** E2E, never
+  a substitute for clicking.
 - Pushing `main` / `baseline`. Prefer **no push** at all; if you must persist
   findings, commit **only** `BUGS.md` (+ optional `demo/validation/` screenshots)
   on a throwaway branch `validate/voxel-craft-<YYYYMMDD-HHMM>` or leave
@@ -19,54 +23,60 @@ FORBIDDEN
 - Marking create_goal complete. Human kills the process.
 
 ================================================================
-SETUP (do this FIRST)
+SETUP (fast — then CLICK, do not stall)
 ================================================================
 
-1. `git status` / `git fetch origin`. Expect the builder may be mid-push — the
-   tree can change under you. **Do not** share a dirty WIP checkout with the
-   builder.
-2. **Pin a target SHA** (pick one, record it in BUGS.md header):
-   - **Preferred live E2E:** `origin/main` tip — what users see on
-     https://fr4iser90.github.io/autonomous-lab/ after automerge.
-   - **Or local pin:** `git checkout --detach origin/main` (or a known good
-     `agent/voxel-craft-*` tip) in this workdir / a second worktree.
-3. **Target URL**
-   - If Pages is up and matches the pin (title/game ≈ VoxelCraft, not Lab Boot
-     toy): use https://fr4iser90.github.io/autonomous-lab/
-   - Else: `pnpm install && pnpm run build && pnpm run preview` (or `dev`) on
-     the **pinned** checkout → http://127.0.0.1:5173/autonomous-lab/
-4. Read PROGRESS.md / CONTENT.md / existing BUGS.md for context only — do not
-   invent a second product. Full game law lives in `voxel-craft.md` (builder).
+1. `git status` / `git fetch origin`. Builder may be mid-push — **do not** share
+   their dirty `agent/*` WIP. Use a clean worktree / detach on the pin if needed.
+2. **Pin SHA** (record in BUGS.md header): prefer `origin/main` tip.
+3. **Target URL (human path):**
+   - If Pages title ≈ game (e.g. VoxelCraft, not Lab Boot toy) and roughly
+     matches main: **MUST use**
+     https://fr4iser90.github.io/autonomous-lab/
+   - Optional: compare one JS/CSS asset name from Pages `index.html` vs local
+     `pnpm run build` dist — if match, stay on Pages. Do **not** block clicking
+     for a long build if Pages already looks like the game.
+   - Only if Pages is down / wrong title: preview the pinned checkout locally
+     (`pnpm run preview` / `dev` → `/autonomous-lab/`).
+4. Skim existing **BUGS.md** ## Open only (dedupe). Skip deep PROGRESS/CONTENT
+   reading until after the first click path.
 
 ================================================================
-WHAT TO EXERCISE
+ORDER OF WORK (mandatory — like a human)
 ================================================================
 
-Use Playwright (mcp__playwright__* or npx). Prefer real clicks over DOM-only asserts.
+**A — Click first (within the first few tool rounds after pin):**
+1. Playwright against the **Target URL** (Pages preferred).
+2. Listen for `pageerror` / console errors.
+3. Minimum path **now**:
+   - Load title → screenshot `demo/validation/<stamp>/00-title.png`
+   - Click **Create New World** (empty seed) → wait for `#game-canvas` / in-world
+     OR stay on title → screenshot `01-after-new-world.png`
+   - If New World no-ops / pageerror / black canvas / still on title → **FAIL**
+     (severity). Known class: init order / TypeError on button click.
+4. If FAIL: analyze the PNG yourself (self-vl) → **append BUGS.md ## Open in the
+   same turn** (severity = `blocker`). Do not keep exploring source first.
+5. If PASS into world: Continue path, short look/move, break/place, inventory if
+   present; shot each FAIL.
 
-Minimum paths (expand if time):
-- Title → **Create New World** (empty seed + one filled seed) → in-world canvas
-- Title → **Continue** when a save exists
-- Look / move briefly; break one block; place one block if possible
-- Open inventory / crafting if UI exists
-- Capture screenshots under `demo/validation/<YYYYMMDD-HHMM>/` for each FAIL
-  (in-engine `#game-canvas` when relevant — not HTML tables)
+**B — Only after A has produced at least one PASS or one BUGS entry:**
+- Optional second seed fill; Continue with a save; deeper UX.
+- Optional **Suspected:** skim `src/` for the failing control (e.g. seed wiring)
+  — one short note in the bug entry, still no code edits.
 
-Analyze every FAIL screenshot yourself (this session is already on smart —
-do **not** spawn a subagent). File size alone ≠ evidence.
+**C — Never:** half-hour selector archaeology / Crafting.ts import graphs
+before step A-3.
 
-FAIL examples: pageerror / TypeError on New World; black canvas; buttons no-op;
-seed ignored; missing mesh; table-only "content" screenshots left as PASS claims;
-broken HUD; softlock.
+FAIL examples: pageerror on New World; buttons visible but no-op; black canvas;
+seed ignored (after you actually typed a seed and clicked); softlock; broken HUD.
+
+Analyze every FAIL screenshot yourself. File size / bash pixels alone ≠ PASS.
 
 ================================================================
 BUGS.md (only durable output)
 ================================================================
 
-Create or append `BUGS.md` at repo root (run-owned). Keep an **## Open** queue
-the builder must drain before new content cycles.
-
-Entry template (one block per bug):
+Create or append `BUGS.md` at repo root. ## Open is the builder drain queue.
 
 ```md
 ### B-<n>: <short title>
@@ -74,31 +84,28 @@ Entry template (one block per bug):
 - Severity: blocker | playability | visual | polish
 - Found: <ISO time>
 - Target: pages|local  SHA=<short>  URL=<…>
-- Repro: 1) … 2) … 3) …
+- Repro: 1) open URL 2) click … 3) observe …
 - Evidence: demo/validation/…/….png (+ what you see wrong)
-- Suspected: <file/area if obvious — optional>
+- Suspected: <optional file/area after E2E>
 - Fix hint: <one optional sentence — do not implement>
 ```
 
 Rules:
-- Deduplicate: if an open bug already covers it, add evidence — do not clone.
-- When re-checking a fixed claim: set Status to `fixed` only if you **re-ran**
-  repro on the pin and it passed; else leave open / reopen.
-- Update header: `Last validation: <time> SHA=<…> target=<pages|local>`.
-- Never delete the builder’s fix log section; append under ## Open / ## Fixed.
+- Deduplicate; reopen if fixed claim fails re-click on the pin.
+- Header: `Last validation: <time> SHA=<…> target=<pages|local>`.
+- If New World / primary buttons fail: you **must** have a blocker in ## Open
+  before starting a broad source review.
 
 ================================================================
 LOOP
 ================================================================
 
-1. Pin SHA → choose Pages vs local preview.
-2. Run paths → screenshot FAILs → analyze shots yourself (no subagent spawn).
-3. Append/update BUGS.md ## Open.
-4. Refresh a one-line note in PROGRESS.md only if the human wants a signal
-   (`VALIDATION: …`) — optional; BUGS.md is source of truth.
-5. If running unattended: sleep / re-fetch / re-pin main tip and repeat until
-   human kills. Prefer validating **after** builder LIVE LOOP merges so Pages
-   is fresh — do not thrash mid-cycle.
+1. Pin → prefer Pages URL.
+2. **Click path A** → shot FAILs → BUGS.md.
+3. Deepen only after A.
+4. Optional `VALIDATION:` one-liner in PROGRESS — BUGS.md is truth.
+5. Unattended: re-fetch / re-pin main / re-click Pages until human kills.
+   Prefer post-automerge freshness; do not thrash mid-builder-push.
 
 create_goal: "VoxelCraft VL/playability validation — document BUGS only"
 max_goal_rounds: generous; never mark complete yourself.
