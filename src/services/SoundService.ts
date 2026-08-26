@@ -8,6 +8,9 @@ export type SoundName =
   | 'pickup'
   | 'hit'
 
+/** Unique ambient sounds per mob type */
+export type MobAmbientType = 'cow' | 'pig' | 'chicken' | 'sheep' | 'zombie' | 'skeleton' | 'wolf' | 'bee'
+
 export interface SoundConfig {
   /** Master volume 0..1 */
   masterVolume: number
@@ -118,17 +121,24 @@ export class SoundService {
       case 'hit':
         this.playHit(volume)
         break
+      case 'mobAmbient':
+        // mobAmbient is dispatched via playMobAmbient(mobType) — this path handles direct calls
+        this.playMobAmbient('cow', volume)
+        break
     }
   }
 
-  /** Start ambient mob sounds */
+  /** Start ambient mob sounds — unique per mob type */
   startAmbient(): void {
     if (!this.enabled) return
-    this.scheduleAmbient('cow', 'blockPlace') // re-use blockPlace-like for cow moo
-    this.scheduleAmbient('pig', 'blockPlace')
-    this.scheduleAmbient('chicken', 'blockPlace')
-    this.scheduleAmbient('zombie', 'mobDeath') // re-use mobDeath-like for zombie groan
-    this.scheduleAmbient('skeleton', 'blockBreak') // re-use blockBreak-like for skeleton rattle
+    this.scheduleAmbient('cow', 'cow')
+    this.scheduleAmbient('pig', 'pig')
+    this.scheduleAmbient('chicken', 'chicken')
+    this.scheduleAmbient('zombie', 'zombie')
+    this.scheduleAmbient('skeleton', 'skeleton')
+    this.scheduleAmbient('sheep', 'sheep')
+    this.scheduleAmbient('wolf', 'wolf')
+    this.scheduleAmbient('bee', 'bee')
   }
 
   /** Stop all ambient sounds */
@@ -139,15 +149,32 @@ export class SoundService {
     this.ambientTimers.clear()
   }
 
-  /** Schedule an ambient sound */
-  scheduleAmbient(id: string, sound: SoundName): void {
+  /** Schedule an ambient sound for a specific mob type */
+  scheduleAmbient(id: string, mobType: MobAmbientType): void {
     if (!this.enabled) return
-    const delay = 2000 + Math.random() * 8000 // 2–10 seconds
+    const delay = 3000 + Math.random() * 9000 // 3–12 seconds
     this.ambientTimers.set(id, setTimeout(() => {
-      this.play(sound)
+      this.playMobAmbient(mobType, this.config.soundVolumes.mobAmbient ?? 0.3)
       // Reschedule
-      this.scheduleAmbient(id, sound)
+      this.scheduleAmbient(id, mobType)
     }, delay))
+  }
+
+  /** Play a unique ambient sound for a specific mob type */
+  playMobAmbient(mobType: MobAmbientType, volume: number = 0.3): void {
+    if (!this.enabled || !this.ctx || this.ctx.state === 'closed') return
+    if (volume <= 0) return
+
+    switch (mobType) {
+      case 'cow':    this.playCowMoo(volume); break
+      case 'pig':    this.playPigSnort(volume); break
+      case 'chicken': this.playChickenPeep(volume); break
+      case 'sheep':  this.playSheepBaa(volume); break
+      case 'zombie': this.playZombieGroan(volume); break
+      case 'skeleton': this.playSkeletonRattle(volume); break
+      case 'wolf':   this.playWolfHowl(volume); break
+      case 'bee':    this.playBeeBuzz(volume); break
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -297,5 +324,277 @@ export class SoundService {
 
     osc.start(now)
     osc.stop(now + duration)
+  }
+
+  // ---------------------------------------------------------------------------
+  // Mob-specific ambient sounds (P4-7: unique per mob type)
+  // ---------------------------------------------------------------------------
+
+  /** Cow moo: low descending saw with vibrato */
+  private playCowMoo(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.6
+
+    const osc = this.ctx.createOscillator()
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(180, now)
+    osc.frequency.exponentialRampToValueAtTime(120, now + duration)
+
+    // Vibrato LFO
+    const lfo = this.ctx.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 5
+    const lfoGain = this.ctx.createGain()
+    lfoGain.gain.value = 8
+    lfo.connect(lfoGain)
+    lfoGain.connect(osc.frequency)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(volume * 0.15, now + 0.05)
+    gain.gain.setValueAtTime(volume * 0.15, now + duration * 0.7)
+    gain.gain.linearRampToValueAtTime(0, now + duration)
+
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc.start(now)
+    osc.stop(now + duration)
+    lfo.start(now)
+    lfo.stop(now + duration)
+  }
+
+  /** Pig snort: short noise burst with bandpass */
+  private playPigSnort(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.15
+
+    const bufferSize = this.ctx.sampleRate * duration
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.5)
+    }
+
+    const noiseSource = this.ctx.createBufferSource()
+    noiseSource.buffer = buffer
+
+    const filter = this.ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.value = 400
+    filter.Q.value = 2
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(volume * 0.25, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+    noiseSource.connect(filter)
+    filter.connect(gain)
+    gain.connect(this.masterGain)
+
+    noiseSource.start(now)
+    noiseSource.stop(now + duration)
+  }
+
+  /** Chicken peep: short high sine chirp */
+  private playChickenPeep(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.12
+
+    const osc = this.ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(1200, now)
+    osc.frequency.exponentialRampToValueAtTime(900, now + duration)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(volume * 0.2, now + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc.start(now)
+    osc.stop(now + duration)
+  }
+
+  /** Sheep baa: mid sawtooth with vibrato */
+  private playSheepBaa(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.5
+
+    const osc = this.ctx.createOscillator()
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(250, now)
+    osc.frequency.setValueAtTime(280, now + 0.15)
+    osc.frequency.setValueAtTime(220, now + duration)
+
+    const lfo = this.ctx.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 6
+    const lfoGain = this.ctx.createGain()
+    lfoGain.gain.value = 10
+    lfo.connect(lfoGain)
+    lfoGain.connect(osc.frequency)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(volume * 0.12, now + 0.04)
+    gain.gain.setValueAtTime(volume * 0.12, now + duration * 0.6)
+    gain.gain.linearRampToValueAtTime(0, now + duration)
+
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc.start(now)
+    osc.stop(now + duration)
+    lfo.start(now)
+    lfo.stop(now + duration)
+  }
+
+  /** Zombie groan: low detuned sawtooth, slow decay */
+  private playZombieGroan(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.8
+
+    const osc1 = this.ctx.createOscillator()
+    osc1.type = 'sawtooth'
+    osc1.frequency.setValueAtTime(70, now)
+    osc1.frequency.linearRampToValueAtTime(55, now + duration)
+
+    const osc2 = this.ctx.createOscillator()
+    osc2.type = 'sawtooth'
+    osc2.frequency.setValueAtTime(73, now)
+    osc2.frequency.linearRampToValueAtTime(58, now + duration)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(volume * 0.1, now + 0.08)
+    gain.gain.setValueAtTime(volume * 0.1, now + duration * 0.7)
+    gain.gain.linearRampToValueAtTime(0, now + duration)
+
+    osc1.connect(gain)
+    osc2.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc1.start(now)
+    osc1.stop(now + duration)
+    osc2.start(now)
+    osc2.stop(now + duration)
+  }
+
+  /** Skeleton rattle: fast noise pulses */
+  private playSkeletonRattle(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.4
+    const pulses = 12
+
+    const bufferSize = this.ctx.sampleRate * duration
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / this.ctx.sampleRate
+      const pulse = Math.sin(t * pulses * Math.PI * 2 * 20)
+      data[i] = (Math.random() * 2 - 1) * Math.abs(pulse) * Math.pow(1 - i / bufferSize, 0.5)
+    }
+
+    const noiseSource = this.ctx.createBufferSource()
+    noiseSource.buffer = buffer
+
+    const filter = this.ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.value = 800
+    filter.Q.value = 3
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(volume * 0.2, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+    noiseSource.connect(filter)
+    filter.connect(gain)
+    gain.connect(this.masterGain)
+
+    noiseSource.start(now)
+    noiseSource.stop(now + duration)
+  }
+
+  /** Wolf howl: mid-high sine with slow pitch sweep and vibrato */
+  private playWolfHowl(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 1.2
+
+    const osc = this.ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(300, now)
+    osc.frequency.linearRampToValueAtTime(600, now + duration * 0.3)
+    osc.frequency.linearRampToValueAtTime(550, now + duration * 0.7)
+    osc.frequency.linearRampToValueAtTime(400, now + duration)
+
+    // Vibrato
+    const lfo = this.ctx.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 4
+    const lfoGain = this.ctx.createGain()
+    lfoGain.gain.value = 12
+    lfo.connect(lfoGain)
+    lfoGain.connect(osc.frequency)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(volume * 0.18, now + 0.15)
+    gain.gain.setValueAtTime(volume * 0.18, now + duration * 0.7)
+    gain.gain.linearRampToValueAtTime(0, now + duration)
+
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc.start(now)
+    osc.stop(now + duration)
+    lfo.start(now)
+    lfo.stop(now + duration)
+  }
+
+  /** Bee buzz: low-frequency square with harmonic buzz */
+  private playBeeBuzz(volume: number): void {
+    if (!this.ctx || !this.masterGain) return
+    const now = this.ctx.currentTime
+    const duration = 0.3
+
+    const osc = this.ctx.createOscillator()
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(200, now)
+    osc.frequency.setValueAtTime(220, now + duration * 0.5)
+
+    // Sub harmonic
+    const sub = this.ctx.createOscillator()
+    sub.type = 'sawtooth'
+    sub.frequency.value = 100
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(volume * 0.08, now)
+    gain.gain.setValueAtTime(volume * 0.08, now + duration * 0.6)
+    gain.gain.linearRampToValueAtTime(0, now + duration)
+
+    // LP filter to tame the square wave harshness
+    const filter = this.ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 600
+
+    osc.connect(filter)
+    sub.connect(filter)
+    filter.connect(gain)
+    gain.connect(this.masterGain)
+
+    osc.start(now)
+    osc.stop(now + duration)
+    sub.start(now)
+    sub.stop(now + duration)
   }
 }

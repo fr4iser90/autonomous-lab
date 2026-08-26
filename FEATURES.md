@@ -79,5 +79,47 @@
   - `MobManager.ts`: New `meleeHit()` — raycast cone check against hostile mobs within 3-block range and 30° cone
   - `main.ts`: New `performMelee()` — checks crosshair for mobs, deals damage from held item, applies knockback + hurt flash
   - `main.ts`: Left-click handler now tries melee first, falls through to block mining on miss
-- **Gate:** 268/268 tests pass, build 543KB
+- **Gate:** 268/268 tests pass, build 544KB
 - **Visual:** Mobs knock back and flash red when hit; hit sound plays; left-click on mobs damages them, left-click on blocks mines them
+
+## P4-4 — Health Regeneration ✅
+- **Decision:** Add player health regeneration — heals 1 HP every 2s after 5s without taking damage
+- **Rationale:** Players have no way to recover from combat damage without respawning; regeneration adds survival depth and reduces frustration
+- **Changes:**
+  - `Player.ts`: New `damageFreeTimer` property tracks seconds since last damage
+  - `Player.ts`: New `regenerate(dt, maxHp)` — heals 1 HP every 2s after 5s damage-free, stops at maxHp
+  - `main.ts`: `damageFreeTimer` reset to 0 on mob contact damage + lava damage
+  - `main.ts`: `damageFreeTimer` reset to 0 on player death/respawn
+  - `main.ts`: `player.regenerate(dt)` called every frame after `player.update()`
+- **Gate:** 268/268 tests pass, build 544KB
+- **Visual:** Player slowly recovers HP when safe; damage resets the regen timer
+
+## P4-5 — Mob HP Bar Billboarding ✅
+- **Decision:** Make mob HP bars billboard (face the camera) so they are always readable from any angle
+- **Rationale:** HP bars existed but were static planes facing +Z — nearly invisible from most camera angles, defeating their purpose
+- **Changes:**
+  - `Mob.ts`: `updateHPBar()` accepts optional `cameraPos: THREE.Vector3` — calls `lookAt(cameraPos)` on HP bar + background planes; background always visible (bar hidden at 0 HP); simplified color to flat green/yellow/red
+  - `MobManager.ts`: `update()` passes `playerPos` as camera position to `updateHPBar()` for every mob each frame
+  - `main.ts`: Melee hit handler passes `renderer.camera.position` to `updateHPBar()` for instant post-hit feedback
+  - `Mob.ts`: HP bar background (`hpBarBg`) now always visible (was previously not managed separately)
+- **Gate:** 268/268 tests pass, build 544KB
+- **Visual:** HP bars now always face the player regardless of mob rotation or camera angle
+
+## P4-6 — Block Breaking Particles ✅
+- **Decision:** Add visual particle burst when breaking blocks — satisfying block-break feedback like Minecraft
+- **Rationale:** Blocks disappear instantly when broken with no visual feedback; particles add satisfying "pop" and confirm break action
+- **Changes:**
+  - `Particle.ts` (new): `ParticleManager` — `spawnBlockBreak(x, y, z, color)` creates 12 particles with random outward velocity; `update(dt)` applies gravity, fades alpha over 1.5s lifetime, shrinks proportionally, disposes dead particles to prevent memory leaks
+  - `main.ts`: `ParticleManager` instantiated, scene attached, particles spawned on block break via `getBlock()` lookup for color match, updated every frame in game loop
+- **Gate:** 268/268 tests pass, build 546KB
+- **Visual:** 12 colored cubes burst outward from each broken block, falling with gravity and fading — matches the broken block's color
+
+## P4-7 — Unique Ambient Sounds Per Mob Type
+- **Decision:** Give each mob type a procedurally unique ambient sound via Web Audio API synthesis
+- **Rationale:** All 8 ambient streams (cow, pig, chicken, zombie, skeleton, sheep, wolf, bee) previously shared only 3 generic sounds; unique sounds add world immersion
+- **Changes:**
+  - `SoundService.ts`: New `MobAmbientType` union type; `scheduleAmbient()` now takes `MobAmbientType` instead of `SoundName`; `playMobAmbient()` dispatches to 8 unique synthesis methods
+  - **8 procedural sounds:** Cow moo (sawtooth+vibrato), pig snort (noise burst), chicken peep (sine chirp), sheep baa (sawtooth sweep), zombie groan (dual detuned saw), skeleton rattle (modulated noise), wolf howl (sine sweep+vibrato), bee buzz (square+sub LP)
+  - **HurtFlash.ts fix:** Removed unused `this.scene` field and `opacity` destructuring to resolve TS6133 errors
+- **Gate:** 268/268 tests pass, build 551KB
+- **Audio:** 8 concurrent ambient streams with unique timbres, 3–12s random intervals

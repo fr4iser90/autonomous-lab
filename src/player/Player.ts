@@ -20,6 +20,8 @@ export class Player {
   public height: number
   public waterDrag: number
   public lavaDamageTimer: number
+  /** Phase 4 P4-4: Time since last damage taken (seconds) */
+  public damageFreeTimer: number
 
   constructor(x: number, y: number, z: number) {
     this.state = {
@@ -37,12 +39,29 @@ export class Player {
     this.height = 1.8
     this.waterDrag = 0.8 // Speed reduction factor in water
     this.lavaDamageTimer = 0
+    this.damageFreeTimer = 0
   }
 
   reset(x: number, y: number, z: number): void {
     this.state.position.set(x, y, z)
     this.state.velocity.set(0, 0, 0)
     this.state.onGround = false
+  }
+
+  /** Phase 4 P4-4: Health regeneration — heals 1 HP every 2s after 5s damage-free */
+  regenerate(dt: number, maxHp: number = 20): void {
+    this.damageFreeTimer += dt
+    if (this.damageFreeTimer >= 5 && this.state.hp < maxHp) {
+      const regenRate = 2 // seconds per HP after initial delay
+      const elapsed = this.damageFreeTimer - 5 // time past the initial delay
+      const ticks = Math.floor(elapsed / regenRate)
+      const healed = Math.min(ticks, maxHp - this.state.hp)
+      if (healed > 0) {
+        this.state.hp = Math.min(maxHp, this.state.hp + healed)
+        // Keep timer anchored at 5 + remaining time after heals
+        this.damageFreeTimer = 5 + (elapsed - healed * regenRate)
+      }
+    }
   }
 
   /** Get bounding box */

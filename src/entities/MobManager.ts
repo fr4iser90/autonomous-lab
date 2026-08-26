@@ -196,8 +196,8 @@ export class MobManager {
         mob.mesh.position.copy(mob.position)
         mob.mesh.rotation.y = mob.rotation
 
-        // Update HP bar
-        Mob.updateHPBar(mob.mesh, mob.def, mob.hp, mob.maxHp)
+        // Update HP bar (billboard toward player)
+        Mob.updateHPBar(mob.mesh, mob.def, mob.hp, mob.maxHp, playerPos)
 
         // Flash red when hurt
         if (mob.hurtTimer > 0) {

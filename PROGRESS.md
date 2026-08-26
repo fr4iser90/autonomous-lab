@@ -2,10 +2,10 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** 6197833 (Phase 4 P4-3: Player melee attack on mobs)
-**Tests:** 268/268 passing | Build: ✅ 543KB
-**PR:** #3 Merged ✅ | **Current PR:** #11 — P4-3 pushed, CI pending
-**SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
+**SHA:** 85b5d8d (Phase 4 P4-7: Unique ambient sounds per mob type)
+**Tests:** 268/268 passing | Build: ✅ 551KB
+**PR:** #3 Merged ✅ | **Current PR:** #14 — P4-7 pushed, CI pending
+**SYNC:** Merged origin/main (3be2139). Resolved boilerplate updates to README.md + example-prompts + FEATURES.md. Kept game src/ and Phase 3 demo intact.
 
 ## CAPS
 ```
@@ -118,4 +118,45 @@ Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 - **Hurt flash:** `hurtTimer` reset on hit — mob mesh blinks red each frame until timer expires
 - **Hit sound:** `'hit'` sound plays on every successful melee hit
 - **Left-click flow:** Melee check runs first → if a mob is hit, skips block mining → else falls through to mining
-- **Gate:** 268/268 tests pass, build 543KB
+- **Gate:** 268/268 tests pass, build 544KB
+
+### P4-4: Health Regeneration ✅
+- **Damage-free timer:** `Player.damageFreeTimer` accumulates seconds since last damage taken
+- **Regeneration:** `Player.regenerate(dt)` — after 5s damage-free, heals 1 HP every 2 seconds until full
+- **Damage reset:** `damageFreeTimer` reset to 0 when player takes damage from mobs or lava
+- **Respawn reset:** `damageFreeTimer` reset to 0 on player death/respawn (full HP = no regen needed)
+- **Game loop:** `player.regenerate(dt)` called after `player.update()` each frame
+- **Gate:** 268/268 tests pass, build 544KB
+
+### P4-5: Mob HP Bar Billboarding ✅
+- **Billboarding:** `Mob.updateHPBar()` now accepts optional `cameraPos` parameter — calls `lookAt(cameraPos)` on HP bar + background planes so they always face the player
+- **Visibility fix:** HP bar background always visible (even when HP=0, background remains); health bar hidden at 0 HP
+- **Color polish:** Green (full) → Yellow (mid) → Red (low) — simplified to flat colors for clarity instead of interpolated
+- **Call sites updated:** `MobManager.update()` passes `playerPos` as camera position; melee hit in `main.ts` passes `renderer.camera.position`
+- **Backward compatible:** `cameraPos` is optional — existing callers without it still work (no billboarding)
+- **Gate:** 268/268 tests pass, build 544KB
+
+### P4-6: Block Breaking Particles ✅
+- **Particle system:** New `src/effects/Particle.ts` — `ParticleManager` with `spawnBlockBreak(x, y, z, color)` and per-frame `update(dt)`
+- **Particle physics:** 12 particles per break, random outward velocity, gravity (-8 m/s²), fade alpha over 1.5s lifetime, shrink proportionally
+- **Color match:** Particles use the block's RGB color via `getBlock()` for accurate visual feedback
+- **Memory safety:** Dead particles removed from scene; geometry + material disposed to prevent leaks
+- **Integration:** Spawned in `main.ts` game loop after block break; updated every frame
+- **Gate:** 268/268 tests pass, build 546KB
+
+### P4-7: Unique Ambient Sounds Per Mob Type
+- **Problem:** All mobs shared the same reused sounds (cow/pig/chicken all used `blockPlace`-like sound). No audio variety.
+- **New type:** `MobAmbientType = 'cow' | 'pig' | 'chicken' | 'sheep' | 'zombie' | 'skeleton' | 'wolf' | 'bee'`
+- **8 unique procedural sounds** — each mob type gets a distinct timbre:
+  - **Cow moo:** Low sawtooth with vibrato LFO, descending 180→120Hz, 0.6s
+  - **Pig snort:** Noise burst through 400Hz bandpass filter, short 0.15s
+  - **Chicken peep:** Sine chirp 1200→900Hz, quick attack, 0.12s
+  - **Sheep baa:** Sawtooth with vibrato, 250→280→220Hz sweep, 0.5s
+  - **Zombie groan:** Dual detuned sawtooth (70Hz+73Hz) slow decay, 0.8s
+  - **Skeleton rattle:** Modulated noise burst with 12 pulse envelope, 800Hz bandpass, 0.4s
+  - **Wolf howl:** Sine with slow pitch sweep 300→600→550→400Hz + vibrato, 1.2s
+  - **Bee buzz:** Square wave (200Hz) + sub sawtooth (100Hz) through LP filter, 0.3s
+- **Ambient scheduler:** `scheduleAmbient()` now takes `MobAmbientType` instead of `SoundName`; each mob reschedules independently at 3–12s intervals
+- **Ambient density:** 8 concurrent ambient streams (up from 5), each with unique timbre
+- **HurtFlash fix:** Removed unused `this.scene` field and `opacity` destructuring (TS6133 errors blocking gate)
+- **Gate:** 268/268 tests pass, build 551KB
