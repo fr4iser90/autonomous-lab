@@ -237,7 +237,7 @@ DOCUMENTATION (same turn as the code that makes them stale)
                 last ACCEPT, latest git tag / commit. History below NOW. No essays.
   CONTENT.md    Registries + CAPS line. Not a second PROGRESS.
   FEATURES.md   Decide log before each C-cycle / P4-1.
-  BUGS.md       ## Open queue (validator + soak + UI smoke). Drain at C-0 / P4-0.
+  BUGS.md       ## Open queue (builder + validators). **Commit on agent branch** when you append.
   SOAK.md / DEMO.md / README.md / shared/design.md
 
 On context loss: PROGRESS NOW → BUGS.md ## Open → CONTENT.md CAPS → resume.
@@ -250,13 +250,43 @@ BUGS.md QUEUE (builder + VL-validation agent)
 - **Git/CI validator** (`voxel-craft-git-validation.md`): PR conflicts, missing
   `gate`, stuck Actions queue → ## Open (`blocker` / merge health).
 - **Builder (you):** at every **C-0** and **P4-0** (and on follow-up resume):
-  1. Read BUGS.md ## Open.
+  1. Read BUGS.md ## Open (external validators may append — **do not rely on them**;
+     you must catch play bugs via UI smoke + PLAY CHECK below).
   2. Fix all `blocker` + `playability` (incl. merge conflicts / red or missing
      `gate` when noted) before new content. `visual` / `polish` may wait one
      cycle if PLAYABILITY is green.
   3. After fix: move entry to ## Fixed with SHA + one-line cause; re-run repro /
      re-check PR checks.
+  4. When **you** find a bug (UI smoke, PLAY CHECK, soak): append ## Open **and
+     commit `BUGS.md` on `agent/*` in the same cycle — uncommitted BUGS does not
+     count; external validator notes are hints only until merged onto your branch.
 - Do not clear ## Open without a fix. Deduplicate with validator entries.
+
+================================================================
+PLAY CHECK (builder-owned — do not skip for external validators)
+================================================================
+
+Light UI smoke runs every LIVE LOOP. **PLAY CHECK** is a deeper in-game pass on
+a schedule so features do not stack on a broken title screen or black canvas.
+
+**Phase 4:** every **5** cycles (when cycle N is divisible by 5 — at **P4-0**
+before P4-1 on those cycles):
+1. Boot `pnpm run dev` → `/autonomous-lab/` → **Create New World** (zero pageerror).
+2. **30–60 s in-world:** move (WASD), look, break one block, place one block if
+   possible, open inventory (E), close; Continue path if a save exists.
+3. Screenshot `demo/play-check/cycle-N.png` from `#game-canvas` (world + HUD visible).
+4. Call **`read_image`** on that path → PASS/FAIL (terrain/meshes/HUD coherent —
+   not title screen, not uniform black, not error overlay).
+5. FAIL → append **BUGS.md** ## Open (`blocker` or `playability`), commit on
+   `agent/*`, **FIX-ONLY** — no P4-1 feature work until PLAY CHECK PASS.
+6. PASS → log in PROGRESS NOW: `PLAY_CHECK: cycle-N PASS` + screenshot path.
+
+**Phase 2:** every **10** content cycles (C10, C20, …) — same steps; path
+`demo/play-check/C<N>.png`. On FAIL: FIX-ONLY before next C-1 registry add.
+
+**Do not** substitute git polling, WIP branch reading, or validator-only BUGS
+for your own PLAY CHECK on this schedule. External VL/git validators are optional
+watchdogs; **you** own playable truth on the agent branch.
 
 ================================================================
 CONTENT CAP CONSTANT — HUMAN: set before overnight
@@ -401,7 +431,12 @@ D) **UI interaction + render gate (mandatory from M1 onward — keep in repo):**
 
 E) Regression rule: every bug found in play (click dead, black canvas, seed
    ignored, crash on New World) becomes a permanent automated test in D/A
-   before the next content cycle. Append BUGS.md with the failing assertion.
+   before the next content cycle. Append BUGS.md with the failing assertion and
+   **commit BUGS.md on `agent/*`** in that cycle.
+
+F) **PLAY CHECK** (scheduled in-game pass — see PLAY CHECK section): deeper than
+   UI smoke D; every 5 Phase 4 cycles / every 10 Phase 2 cycles. FAIL blocks
+   new content until FIX-ONLY + PASS. Always `read_image` on play-check PNG.
 
 ================================================================
 MILESTONES (M1–M12 — full ACCEPT in this file)
@@ -545,7 +580,8 @@ wipe the false CAPS claim and redo missing cycles.
 CYCLE (C1, C2, …)
 
   C-0  Read BUGS.md ## Open → fix blocker/playability first. Then `npm test`
-       green else FIX-ONLY (no new content).
+       green else FIX-ONLY (no new content). On C10, C20, … run **PLAY CHECK**
+       (in-world 30–60s + `read_image` on `demo/play-check/C<N>.png`) before C-1.
   C-1  FEATURES.md **before** code (≤10 min). One primary add:
        1 block OR 1–2 items OR 1–2 recipes OR 1 npc.
        Optional micro-polish only if ≤3 extra files and zero registry adds.
@@ -619,7 +655,9 @@ Cycle forever until a human kills this process. Never delete demo/. Never comple
 After CAP/CAP, may grow content past CAP or polish — still one change per cycle.
 
   P4-0  Read BUGS.md ## Open → fix blocker/playability. Mini-soak (~20 iterations
-        or ~10 min). Fail → FIX-ONLY, then P4-0 again.
+        or ~10 min). On cycle N divisible by 5: run **PLAY CHECK** (see section)
+        before P4-1 — FAIL → FIX-ONLY, then P4-0 again. Other cycles: UI smoke
+        at LIVE LOOP is enough unless BUGS ## Open says otherwise.
   P4-1  FEATURES.md BEFORE code. ONE of:
         A) POLISH (prefer odd): lighting, HUD, meshing, mob AI, atlas, slot UX.
         B) FEATURE (prefer even): new block/item/recipe/npc (Phase 2 rules),
@@ -631,7 +669,8 @@ After CAP/CAP, may grow content past CAP or polish — still one change per cycl
         (no vision subagent); mini-soak; storyboard change → re-record demo/demo.webm keep
         .prev; commit `cycle N: <A|B> <goal>`; tag `cycle-N`.
         Push agent branch (LIVE LOOP); never push main/baseline. Zip every 10 cycles → releases/ (optional).
-  P4-4  PROGRESS NOW. Next tool = cycle N+1. Handoff every 5 cycles.
+  P4-4  PROGRESS NOW. Next tool = cycle N+1. Handoff every 5 cycles (include
+        PLAY CHECK result when due).
 
 Flow: M1–M12 → PHASE GATE → Phase 2 to CAP/CAP → PHASE GATE → Phase 2b →
 PHASE GATE → Phase 3 real demo.webm → PHASE GATE → Phase 4 forever.
