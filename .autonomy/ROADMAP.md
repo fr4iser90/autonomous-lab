@@ -15,7 +15,7 @@
 | M9 | Inventory drops / item pickup | COMPLETE ✅ |
 | M10 | Sound effects (block break/place, mob sounds) | COMPLETE ✅ |
 | M11 | Water physics + lava | COMPLETE ✅ |
-| M12 | Achievement system + save migration | PENDING |
+| M12 | Achievement system + save migration | COMPLETE ✅ |
 
 ## Phase 2: Content Cycles
 - Cycles to reach CAP/CAP for all registries

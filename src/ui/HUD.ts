@@ -281,4 +281,82 @@ export class HUD {
   isSoundMuted(): boolean {
     return this.soundMuted
   }
+
+  /** M11: Show liquid status info */
+  showLiquidStatus(inWater: boolean, inLava: boolean): void {
+    // Remove any existing status
+    const existing = document.getElementById('liquid-status')
+    if (existing) existing.remove()
+
+    if (!inWater && !inLava) return
+
+    const el = document.createElement('div')
+    el.id = 'liquid-status'
+    el.style.cssText = `
+      position: absolute; bottom: 100px; left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 12px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      font-size: 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      text-shadow: 1px 1px 1px black;
+    `
+    el.textContent = inLava ? '🔥 Lava Damage!' : '🌊 Swimming...'
+    this.container.appendChild(el)
+  }
+
+  /** M12: Show achievement unlocked notification */
+  showAchievementUnlock(name: string, icon: string): void {
+    // Remove any existing achievement notification
+    const existing = document.getElementById('achievement-notification')
+    if (existing) existing.remove()
+
+    const el = document.createElement('div')
+    el.id = 'achievement-notification'
+    el.style.cssText = `
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 12px 24px;
+      background: rgba(0,0,0,0.85);
+      color: #ffcc00;
+      font-size: 18px;
+      border: 2px solid #ffcc00;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      text-shadow: 1px 1px 2px black;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(255,204,0,0.3);
+      animation: achievementPulse 0.5s ease-out;
+    `
+    el.innerHTML = `
+      <div style="font-size:28px;margin-bottom:4px">${icon}</div>
+      <div>🏆 Achievement Unlocked!</div>
+      <div style="font-size:16px;color:white;margin-top:4px">${name}</div>
+    `
+    this.container.appendChild(el)
+
+    // Fade out after 3 seconds
+    setTimeout(() => {
+      el.style.transition = 'opacity 1s'
+      el.style.opacity = '0'
+      setTimeout(() => el.remove(), 1000)
+    }, 3000)
+  }
+
+  /** M12: Update debug with achievement progress */
+  updateAchievementStats(unlocked: number, total: number, stats: Record<string, number | boolean>): void {
+    const unlockedCount = typeof stats['unlockedCount'] === 'number'
+      ? stats['unlockedCount']
+      : unlocked
+    const lines = [
+      `M12 Achievements: ${unlockedCount}/${total}`,
+    ]
+    if (stats['blocksMined']) lines.push(`⛏️ Mined: ${stats['blocksMined']}`)
+    if (stats['mobsKilled']) lines.push(`⚔️ Mobs: ${stats['mobsKilled']}`)
+    if (stats['dropsCollected']) lines.push(`📦 Dropped: ${stats['dropsCollected']}`)
+    if (stats['blocksPlaced']) lines.push(`🧱 Placed: ${stats['blocksPlaced']}`)
+    this.debugEl.textContent = lines.join('\n')
+  }
 }

@@ -1,6 +1,6 @@
 // M1 smoke tests: registry counts, save service, chunk generation
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { ALL_BLOCKS, BLOCK_COUNT, getBlock, BlockBedrock, BlockAir } from '../src/data/blocks'
 import { findRecipe } from '../src/data/recipes'
 import { ALL_ITEMS, ITEM_COUNT } from '../src/data/items'
@@ -2506,6 +2506,277 @@ describe('M10: MobManager plays sounds', () => {
 
     expect(manager['mobs'].length).toBe(0)
     expect(deathPlayed).toBe(true)
+  })
+})
+
+// M12: Achievement System smoke tests
+import { AchievementService } from '../src/services/AchievementService'
+
+describe('M12: AchievementService', () => {
+  it('starts with 0 unlocked achievements', () => {
+    const svc = new AchievementService()
+    expect(svc.getUnlockedCount()).toBe(0)
+  })
+
+  it('reports correct total achievement count (10)', () => {
+    const svc = new AchievementService()
+    expect(svc.getDefinitions().length).toBe(10)
+  })
+
+  it('first_steps unlocks at 1 block mined', () => {
+    const svc = new AchievementService()
+    expect(svc.isUnlocked('first_steps')).toBe(false)
+    svc.updateStats({ blocksMined: 1 })
+    expect(svc.isUnlocked('first_steps')).toBe(true)
+  })
+
+  it('deep_diver unlocks at deepestY ≤ 10', () => {
+    const svc = new AchievementService()
+    expect(svc.isUnlocked('deep_diver')).toBe(false)
+    svc.updateStats({ deepestY: 10 })
+    expect(svc.isUnlocked('deep_diver')).toBe(true)
+  })
+
+  it('deep_diver does not unlock at deepestY = 11', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ deepestY: 11 })
+    expect(svc.isUnlocked('deep_diver')).toBe(false)
+  })
+
+  it('explorer unlocks at 500 blocks walked', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ distanceWalked: 500 })
+    expect(svc.isUnlocked('explorer')).toBe(true)
+  })
+
+  it('explorer does not unlock at 499 blocks walked', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ distanceWalked: 499 })
+    expect(svc.isUnlocked('explorer')).toBe(false)
+  })
+
+  it('builder unlocks at 1 block placed', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ blocksPlaced: 1 })
+    expect(svc.isUnlocked('builder')).toBe(true)
+  })
+
+  it('survivor unlocks at 1 mob killed', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ mobsKilled: 1 })
+    expect(svc.isUnlocked('survivor')).toBe(true)
+  })
+
+  it('collector unlocks at 1 drop collected', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ dropsCollected: 1 })
+    expect(svc.isUnlocked('collector')).toBe(true)
+  })
+
+  it('water_world unlocks when swimming in water', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ hasSwumInWater: true })
+    expect(svc.isUnlocked('water_world')).toBe(true)
+  })
+
+  it('fire_starter unlocks when touching lava', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ hasTouchedLava: true })
+    expect(svc.isUnlocked('fire_starter')).toBe(true)
+  })
+
+  it('master_miner unlocks at 100 blocks mined', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ blocksMined: 100 })
+    expect(svc.isUnlocked('master_miner')).toBe(true)
+  })
+
+  it('deep_explorer unlocks at deepestY ≤ 5', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ deepestY: 5 })
+    expect(svc.isUnlocked('deep_explorer')).toBe(true)
+  })
+
+  it('deep_explorer does not unlock at deepestY = 6', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ deepestY: 6 })
+    expect(svc.isUnlocked('deep_explorer')).toBe(false)
+  })
+
+  it('onAchievementUnlock callback fires for newly unlocked achievement', () => {
+    const svc = new AchievementService()
+    let fired = false
+    svc.onAchievementUnlock(() => { fired = true })
+    svc.updateStats({ blocksMined: 1 }) // triggers first_steps
+    expect(fired).toBe(true)
+  })
+
+  it('callback does not fire for already-unlocked achievement', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ blocksMined: 1 }) // unlocks first_steps
+    let fired = false
+    svc.onAchievementUnlock(() => { fired = true })
+    svc.updateStats({ blocksMined: 5 }) // still unlocked, no new unlock
+    expect(fired).toBe(false)
+  })
+
+  it('serialize returns current unlocked list and stats', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ blocksMined: 1 })
+    const data = svc.serialize()
+    expect(data.unlocked.length).toBe(1)
+    expect(data.unlocked[0].id).toBe('first_steps')
+    expect(data.stats.blocksMined).toBe(1)
+  })
+
+  it('deserialize restores unlocked list and stats', () => {
+    const svc = new AchievementService()
+    const serialized = {
+      unlocked: [{ id: 'first_steps', unlockedAt: '2026-01-01T00:00:00.000Z' }],
+      stats: { blocksMined: 5, mobsKilled: 2, dropsCollected: 3, blocksPlaced: 1, deepestY: 8, distanceWalked: 100, hasSwumInWater: false, hasTouchedLava: false },
+    }
+    svc.deserialize(serialized)
+    expect(svc.isUnlocked('first_steps')).toBe(true)
+    expect(svc.getStats().blocksMined).toBe(5)
+    expect(svc.getStats().mobsKilled).toBe(2)
+  })
+
+  it('serialize/deserialize round-trip preserves state', () => {
+    const svc1 = new AchievementService()
+    svc1.updateStats({ blocksMined: 10, deepestY: 5, mobsKilled: 1, dropsCollected: 2, blocksPlaced: 3, distanceWalked: 200, hasSwumInWater: true })
+    const data = svc1.serialize()
+    const svc2 = new AchievementService()
+    svc2.deserialize(data)
+    expect(svc2.getUnlockedCount()).toBe(svc1.getUnlockedCount())
+    expect(svc2.getStats().blocksMined).toBe(svc1.getStats().blocksMined)
+    expect(svc2.getStats().deepestY).toBe(svc1.getStats().deepestY)
+    expect(svc2.getStats().hasSwumInWater).toBe(svc1.getStats().hasSwumInWater)
+  })
+
+  it('reset clears all progress', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ blocksMined: 100, deepestY: 0, mobsKilled: 5 })
+    expect(svc.isUnlocked('first_steps')).toBe(true)
+    svc.reset()
+    expect(svc.getUnlockedCount()).toBe(0)
+    expect(svc.getStats().blocksMined).toBe(0)
+    expect(svc.getStats().mobsKilled).toBe(0)
+  })
+
+  it('multiple stats updates accumulate correctly', () => {
+    const svc = new AchievementService()
+    svc.updateStats({ blocksMined: 10 })
+    svc.updateStats({ blocksMined: 20 }) // should set to 20, not add
+    expect(svc.getStats().blocksMined).toBe(20)
+  })
+})
+
+// M12: SaveService v2 migration tests
+describe('M12: SaveService v2 migration', () => {
+  function clearSlot(slot: number) {
+    localStorage.removeItem(`voxel-craft-world-v2-slot-${slot}`)
+    localStorage.removeItem(`voxel-craft-slot-meta-${slot}`)
+  }
+
+  beforeEach(() => {
+    // Clean all 3 slots before each test
+    clearSlot(0)
+    clearSlot(1)
+    clearSlot(2)
+  })
+
+  it('creates new world with achievements field', () => {
+    const svc = new SaveService()
+    svc.createNewWorld(0, 12345)
+    const world = svc.loadWorld(0)
+    expect(world).not.toBeNull()
+    expect(world!.achievements).toBeDefined()
+    expect(world!.achievements.unlocked).toEqual([])
+    expect(world!.achievements.stats.blocksMined).toBe(0)
+  })
+
+  it('v1 save is migrated to v2 with default achievements', () => {
+    const v1Data = {
+      version: 1,
+      seed: 54321,
+      overrides: [[0, 0, 0, 1]],
+      inventory: [],
+      stats: { blocksMined: 5, deepestY: 10, distanceWalked: 50 },
+    }
+    localStorage.setItem('voxel-craft-world-v2-slot-0', JSON.stringify(v1Data))
+
+    const svc = new SaveService()
+    const world = svc.loadWorld(0)
+    expect(world).not.toBeNull()
+    expect(world!.version).toBe(2)
+    expect(world!.achievements).toBeDefined()
+    expect(world!.achievements.unlocked).toEqual([])
+    expect(world!.achievements.stats.blocksMined).toBe(0)
+    expect(world!.achievements.stats.mobsKilled).toBe(0)
+  })
+
+  it('v1 save migration does not lose world data', () => {
+    const v1Data = {
+      version: 1,
+      seed: 99999,
+      overrides: [["1,1,1", 15]],
+      inventory: [{ itemId: 1, count: 10 }],
+      stats: { blocksMined: 20, deepestY: -5, distanceWalked: 500 },
+    }
+    localStorage.setItem('voxel-craft-world-v2-slot-1', JSON.stringify(v1Data))
+
+    const svc = new SaveService()
+    const world = svc.loadWorld(1)
+    expect(world).not.toBeNull()
+    expect(world!.seed).toBe(99999)
+    expect(world!.overrides.get('1,1,1')).toBe(15)
+  })
+
+  it('v2 save loads without migration', () => {
+    const v2Data = {
+      version: 2,
+      seed: 77777,
+      overrides: [[2, 2, 2, 4]],
+      inventory: [],
+      stats: { blocksMined: 3, deepestY: 15, distanceWalked: 10 },
+      achievements: {
+        unlocked: [{ id: 'first_steps', unlockedAt: '2026-01-01T00:00:00.000Z' }],
+        stats: { blocksMined: 3, mobsKilled: 0, dropsCollected: 1, blocksPlaced: 0, deepestY: 15, distanceWalked: 10, hasSwumInWater: false, hasTouchedLava: false },
+      },
+    }
+    localStorage.setItem('voxel-craft-world-v2-slot-2', JSON.stringify(v2Data))
+
+    const svc = new SaveService()
+    const world = svc.loadWorld(2)
+    expect(world).not.toBeNull()
+    expect(world!.version).toBe(2)
+    expect(world!.achievements.unlocked.length).toBe(1)
+    expect(world!.achievements.stats.blocksMined).toBe(3)
+  })
+
+  it('invalid version is rejected', () => {
+    const badData = {
+      version: 99,
+      seed: 123,
+      overrides: [],
+      inventory: [],
+      stats: { blocksMined: 0, deepestY: 0, distanceWalked: 0 },
+      achievements: { unlocked: [], stats: {} },
+    }
+    localStorage.setItem('voxel-craft-world-v2-slot-0', JSON.stringify(badData))
+
+    const svc = new SaveService()
+    expect(svc.loadWorld(0)).toBeNull()
+  })
+
+  it('SlotMeta includes achievements count field', () => {
+    const svc = new SaveService()
+    svc.createNewWorld(0, 11111)
+    const meta = svc.getSlotMeta(0)
+    expect(meta).toBeDefined()
+    if (meta) {
+      expect(meta.achievements).toBeDefined()
+    }
   })
 })
 

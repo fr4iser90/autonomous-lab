@@ -1,9 +1,9 @@
 // SaveService: 3-slot localStorage persistence for VoxelCraft
-// Slot keys: voxel-craft-slots-v1 (metadata), voxel-craft-world-v1-slot-{N} (world data)
+// Slot keys: voxel-craft-slots-v2 (metadata), voxel-craft-world-v2-slot-{N} (world data)
 
-const SLOTS_KEY = 'voxel-craft-slots-v1'
-const WORLD_KEY_PREFIX = 'voxel-craft-world-v1-slot-'
-const VERSION = 1
+const SLOTS_KEY = 'voxel-craft-slots-v2'
+const WORLD_KEY_PREFIX = 'voxel-craft-world-v2-slot-'
+export const VERSION = 2
 const SLOT_COUNT = 3
 
 export interface SlotMeta {
@@ -14,6 +14,7 @@ export interface SlotMeta {
   blocksMined: number
   deepestY: number
   distanceWalked: number
+  achievements: number // count of unlocked achievements
 }
 
 export interface WorldData {
@@ -22,6 +23,19 @@ export interface WorldData {
   overrides: Map<string, number> // "x,y,z" -> blockId
   inventory: InventorySlot[]
   stats: { blocksMined: number; deepestY: number; distanceWalked: number }
+  achievements: {
+    unlocked: Array<{ id: string; unlockedAt: string }>
+    stats: {
+      blocksMined: number
+      mobsKilled: number
+      dropsCollected: number
+      blocksPlaced: number
+      deepestY: number
+      distanceWalked: number
+      hasSwumInWater: boolean
+      hasTouchedLava: boolean
+    }
+  }
 }
 
 export interface InventorySlot {
@@ -40,7 +54,7 @@ export interface SlotsData {
 }
 
 const DEFAULT_SLOTS: SlotsData = {
-  version: 1,
+  version: VERSION,
   settings: { masterVolume: 1, musicVolume: 0.7, sensitivity: 1 },
   activeSlot: 0,
   slots: [null, null, null] as [SlotEntry, SlotEntry, SlotEntry],
@@ -59,7 +73,9 @@ export class SaveService {
       if (!raw) return DEFAULT_SLOTS
       const data = JSON.parse(raw) as SlotsData
       if (data.version !== VERSION) {
-        // Version mismatch: reset slots
+        // Version mismatch: attempt migration
+        const migrated = this.migrateSlots(data)
+        if (migrated) return migrated
         return DEFAULT_SLOTS
       }
       if (!Array.isArray(data.slots) || data.slots.length !== SLOT_COUNT) {
@@ -68,6 +84,20 @@ export class SaveService {
       return data
     } catch {
       return DEFAULT_SLOTS
+    }
+  }
+
+  private migrateSlots(oldData: SlotsData): SlotsData | null {
+    try {
+      // v1 slots data — just bump the version, keep existing slots
+      const migrated: SlotsData = {
+        ...oldData,
+        version: VERSION,
+      }
+      this.saveSlots()
+      return migrated
+    } catch {
+      return null
     }
   }
 
@@ -113,7 +143,20 @@ export class SaveService {
       seed,
       overrides: new Map(),
       inventory: Array.from({ length: 36 }, () => ({ itemId: 0, count: 0 })),
-      stats: { blocksMined: 0, deepestY: 0, distanceWalked: 0 },
+      stats: { blocksMined: 0, deepestY: 64, distanceWalked: 0 },
+      achievements: {
+        unlocked: [],
+        stats: {
+          blocksMined: 0,
+          mobsKilled: 0,
+          dropsCollected: 0,
+          blocksPlaced: 0,
+          deepestY: 64,
+          distanceWalked: 0,
+          hasSwumInWater: false,
+          hasTouchedLava: false,
+        },
+      },
     }
     const meta: SlotMeta = {
       version: VERSION,
@@ -121,8 +164,9 @@ export class SaveService {
       name: `World ${slot + 1}`,
       lastPlayed: new Date().toISOString(),
       blocksMined: 0,
-      deepestY: 0,
+      deepestY: 64,
       distanceWalked: 0,
+      achievements: 0,
     }
     this.saveWorld(slot, world)
     this.updateSlotMeta(slot, meta)
@@ -150,11 +194,76 @@ export class SaveService {
         overrides: [string, number][]
         inventory: InventorySlot[]
         stats: { blocksMined: number; deepestY: number; distanceWalked: number }
+        achievements?: {
+          unlocked?: Array<{ id: string; unlockedAt: string }>
+          stats?: {
+            blocksMined?: number
+            mobsKilled?: number
+            dropsCollected?: number
+            blocksPlaced?: number
+            deepestY?: number
+            distanceWalked?: number
+            hasSwumInWater?: boolean
+            hasTouchedLava?: boolean
+          }
+        }
       }
+
+      // Migration: if version is 1, upgrade to 2 and add default achievements
+      if (data.version === 1) {
+        data.version = VERSION
+        data.achievements = {
+          unlocked: [],
+          stats: {
+            blocksMined: 0,
+            mobsKilled: 0,
+            dropsCollected: 0,
+            blocksPlaced: 0,
+            deepestY: 64,
+            distanceWalked: 0,
+            hasSwumInWater: false,
+            hasTouchedLava: false,
+          },
+        }
+      }
+
+      // Ensure achievements field exists (for v1 saves that were already upgraded in slots)
+      if (!data.achievements) {
+        data.achievements = {
+          unlocked: [],
+          stats: {
+            blocksMined: 0,
+            mobsKilled: 0,
+            dropsCollected: 0,
+            blocksPlaced: 0,
+            deepestY: 64,
+            distanceWalked: 0,
+            hasSwumInWater: false,
+            hasTouchedLava: false,
+          },
+        }
+      }
+
       if (data.version !== VERSION) return null
       return {
-        ...data,
+        version: data.version,
+        seed: data.seed,
         overrides: new Map(data.overrides),
+        inventory: data.inventory,
+        stats: data.stats,
+        achievements: {
+          unlocked: data.achievements?.unlocked ?? [],
+          stats: {
+            blocksMined: data.achievements?.stats?.blocksMined ?? 0,
+            mobsKilled: data.achievements?.stats?.mobsKilled ?? 0,
+            dropsCollected: data.achievements?.stats?.dropsCollected ?? 0,
+            blocksPlaced: data.achievements?.stats?.blocksPlaced ?? 0,
+            deepestY: data.achievements?.stats?.deepestY ?? 0,
+            distanceWalked: data.achievements?.stats?.distanceWalked ?? 0,
+            hasSwumInWater: data.achievements?.stats?.hasSwumInWater ?? false,
+            hasTouchedLava: data.achievements?.stats?.hasTouchedLava ?? false,
+          },
+        },
       }
     } catch {
       return null

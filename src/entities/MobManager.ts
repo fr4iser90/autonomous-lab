@@ -31,10 +31,18 @@ export class MobManager {
   private playerHp: number = 20
   private dropManager?: DropManager
   private soundService?: SoundService
+  private mobsKilledCount: number = 0
 
   constructor(scene: THREE.Scene, config: MobConfig = DEFAULT_MOB_CONFIG) {
     this.scene = scene
     this.config = config
+  }
+
+  /** Get and reset mob kill count (for achievement tracking) */
+  getAndResetMobKills(): number {
+    const count = this.mobsKilledCount
+    this.mobsKilledCount = 0
+    return count
   }
 
   /** Attach drop manager for mob death drops */
@@ -178,6 +186,7 @@ export class MobManager {
 
   /** Remove a dead mob (dispose mesh, optionally add drops) */
   private removeMob(mob: MobEntity): void {
+    this.mobsKilledCount++
     // M10: Play death sound
     this.soundService?.play('mobDeath')
 

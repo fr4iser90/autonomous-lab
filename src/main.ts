@@ -2,7 +2,7 @@
 // Handles title screen -> game loop transition, plus M3 raycast break/place, M4 inventory
 
 import * as THREE from 'three'
-import { SaveService } from './services/SaveService'
+import { SaveService, VERSION } from './services/SaveService'
 import { DayNightCycle } from './services/DayNightCycle'
 import { SoundService } from './services/SoundService'
 import { TitleScreen } from './ui/TitleScreen'
@@ -28,6 +28,7 @@ import { ChunkLighting, updateChunkLighting as calcLighting } from './physics/Li
 import { DropManager } from './entities/DropManager'
 import { MobManager } from './entities/MobManager'
 import { WaterSystem } from './services/WaterSystem'
+import { AchievementService } from './services/AchievementService'
 
 // Game states
 type GameState = 'title' | 'playing'
@@ -67,6 +68,15 @@ class VoxelCraftGame {
   private autosaveTimer: number = 0
   // M11: Water/lava simulation throttle
   private waterSimTimer: number = 0
+  // M12: Achievement tracking
+  private achievementService = new AchievementService()
+  // M12: Player position for distance tracking
+  private lastPlayerPos?: THREE.Vector3
+  // M12: Block counters for achievements
+  private blocksMinedCount = 0
+  private blocksPlacedCount = 0
+  // M12: Achievement notification throttle
+  private lastAchievementTime = 0
   private readonly autosaveInterval: number = 60 // seconds
   // M9: Drop items on ground
   private dropManager?: DropManager
@@ -91,6 +101,16 @@ class VoxelCraftGame {
     document.body.appendChild(this.canvas)
 
     this.saveService = new SaveService()
+    // M12: Subscribe to achievement unlocks
+    this.achievementService.onAchievementUnlock((achievement) => {
+      const now = performance.now()
+      if (now - this.lastAchievementTime < 5000) return // throttle to one per 5 seconds
+      this.lastAchievementTime = now
+      const def = this.achievementService.getDefinitions().find((d) => d.id === achievement.id)
+      if (def) {
+        this.hud?.showAchievementUnlock(def.icon, def.name)
+      }
+    })
     this.setupTitleScreen()
     this.setupInputHandlers()
   }
@@ -141,7 +161,7 @@ class VoxelCraftGame {
     const spawnY = this.world.getHeight(spawnX, spawnZ) + 2
 
     this.player = new Player(spawnX, spawnY, spawnZ)
-
+    this.lastPlayerPos = this.player.state.position.clone()
     // M4: Populate inventory with default items
     for (const item of this.defaultInventoryItems) {
       insertItem(this.inventory, item.itemId, item.count)
@@ -320,12 +340,14 @@ class VoxelCraftGame {
       if (this.world && this.player) {
         const slot = this.saveService.getActiveSlot()
         const overrides = this.world.getOverrides()
+        const ach = this.achievementService.serialize()
         this.saveService.saveWorld(slot, {
-          version: 1,
+          version: VERSION,
           seed: this.world.seed,
           overrides,
           inventory: this.inventory,
           stats: { blocksMined: 0, deepestY: 0, distanceWalked: 0 },
+          achievements: ach,
         })
       }
 
@@ -522,6 +544,8 @@ class VoxelCraftGame {
     if (hit) {
       const placed = this.blockInteraction?.placeBlock(hit.position, hit.normal)
       if (placed) {
+        this.blocksPlacedCount++
+        this.achievementService.updateStats({ blocksPlaced: this.blocksPlacedCount })
         // Rebuild affected chunks
         const [px, py, pz] = hit.position
         const n = hit.normal
@@ -708,6 +732,8 @@ class VoxelCraftGame {
     if (this.mouseDownLeft && this.blockInteraction) {
       const broken = this.blockInteraction.updateMining(dt)
       if (broken) {
+        this.blocksMinedCount++
+        this.achievementService.updateStats({ blocksMined: this.blocksMinedCount })
         // Spawn a drop item at the broken block's position
         if (this.dropManager) {
           const drop = this.blockInteraction.getAndClearLastDrop()
@@ -745,6 +771,7 @@ class VoxelCraftGame {
           this.hud?.showDropNotification(collected.name, inserted)
           // M10: Play pickup sound
           this.soundService?.play('pickup')
+          this.achievementService.updateStats({ dropsCollected: this.achievementService.getStats().dropsCollected + collected.count })
         }
       }
     }
@@ -762,6 +789,38 @@ class VoxelCraftGame {
       }
     }
 
+    // M12: Update achievement stats
+    if (this.player) {
+      const ppos = this.player.state.position
+      // Distance walked
+      if (this.lastPlayerPos) {
+        const dx = ppos.x - this.lastPlayerPos.x
+        const dz = ppos.z - this.lastPlayerPos.z
+        const dist = Math.sqrt(dx * dx + dz * dz)
+        if (dist > 0.1) {
+          this.achievementService.updateStats({ distanceWalked: this.achievementService.getStats().distanceWalked + dist })
+        }
+      }
+      this.lastPlayerPos = ppos.clone()
+
+      // Deepest Y
+      this.achievementService.updateStats({ deepestY: Math.floor(ppos.y) })
+
+      // Liquid checks
+      const checkX = Math.round(ppos.x)
+      const checkY = Math.round(ppos.y)
+      if (this.waterSystem) {
+        const inWater = this.waterSystem.isLiquid(checkX, checkY, Math.round(ppos.z))
+        const inLava = this.waterSystem.isLava(checkX, checkY, Math.round(ppos.z))
+        this.achievementService.updateStats({
+          hasSwumInWater: inWater,
+          hasTouchedLava: inLava,
+        })
+        // M11: Show liquid status
+        this.hud?.showLiquidStatus(inWater, inLava)
+      }
+    }
+
     // M8: Update day/night cycle
     if (this.renderer && this.dayNightCycle) {
       const state = this.dayNightCycle.getState()
@@ -776,12 +835,14 @@ class VoxelCraftGame {
       this.autosaveTimer = 0
       const slot = this.saveService.getActiveSlot()
       const overrides = this.world.getOverrides()
+      const ach = this.achievementService.serialize()
       this.saveService.saveWorld(slot, {
-        version: 1,
+        version: VERSION,
         seed: this.world.seed,
         overrides,
         inventory: this.inventory,
         stats: { blocksMined: 0, deepestY: 0, distanceWalked: 0 },
+        achievements: ach,
       })
       // Show autosave notification
       this.hud?.setDebug(`Auto-saved at ${this.dayNightCycle?.getPhase()}`)
@@ -791,8 +852,11 @@ class VoxelCraftGame {
     const pos = player.state.position
     if (!this.dayNightCycle || this.autosaveTimer < this.autosaveInterval) {
       const mobCount = this.mobManager ? this.mobManager.getMobs().length : 0
+      const achStats = this.achievementService.getStats()
+      const achUnlocked = this.achievementService.getUnlockedCount()
+      this.hud?.updateAchievementStats(achUnlocked, this.achievementService.getDefinitions().length, { ...achStats })
       this.hud?.setDebug(
-        `VoxelCraft M10\n` +
+        `VoxelCraft M12\n` +
         `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}\n` +
         `Chunks: ${this.loadedChunks.size}\n` +
         `Drops: ${this.dropManager ? this.dropManager.getDrops().length : 0}\n` +

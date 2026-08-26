@@ -185,6 +185,7 @@ export class TitleScreen {
           <div style="font-size:16px;font-weight:bold">${meta.name}</div>
           <div style="font-size:12px;color:#aaa">Seed: ${meta.seed} | Last: ${meta.lastPlayed ? new Date(meta.lastPlayed).toLocaleDateString() : 'N/A'}</div>
           <div style="font-size:11px;color:#888">Mined: ${meta.blocksMined} | Deep: ${meta.deepestY} | Walked: ${Math.floor(meta.distanceWalked)} blocks</div>
+          <div style="font-size:10px;color:#666">🏆 ${meta.achievements || 0} achievements</div>
         `
         continueBtn.disabled = false
         continueBtn.style.opacity = '1'
