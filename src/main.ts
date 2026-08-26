@@ -328,7 +328,7 @@ class VoxelCraftGame {
       // Player death: respawn at spawn point
       if (!this.player) return
       this.player.state.hp = 20 // full health on respawn
-      this.player.damageFreeTimer = 0
+     this.player.damageFreeTimer = 0
       this.player.state.velocity.set(0, 0, 0)
       // Reset position to spawn
       const spawnX = 0, spawnZ = 0
@@ -656,7 +656,7 @@ class VoxelCraftGame {
         // Reset hurt timer for flash effect
         hitMob.hurtTimer = 0.3
 
-        // Update HP bar for the hit mob (billboard toward camera)
+    // Update HP bar for the hit mob (billboard toward camera)
         if (hitMob.mesh) {
           Mob.updateHPBar(hitMob.mesh, hitMob.def, hitMob.hp, hitMob.maxHp, this.renderer?.camera?.position)
         }

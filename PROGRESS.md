@@ -2,10 +2,10 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** d7c161d (Phase 4 P4-6: Block breaking particles)
+**SHA:** 58342c4 (Phase 4 P4-6: Block breaking particles)
 **Tests:** 268/268 passing | Build: ✅ 546KB
 **PR:** #3 Merged ✅ | **Current PR:** #11 — P4-6 pushed, CI pending
-**SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
+**SYNC:** Merged origin/main (3be2139). Resolved boilerplate updates to README.md + example-prompts + FEATURES.md. Kept game src/ and Phase 3 demo intact.
 
 ## CAPS
 ```
