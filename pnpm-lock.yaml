@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      decimal.js:
-        specifier: ^10.6.0
-        version: 10.6.0
     devDependencies:
       jsdom:
         specifier: ^26.1.0

@@ -108,5 +108,11 @@ agent-default-model:
 <!-- RUN_OWNED: agent replaces this section for the shipped game. Keep the
      Autonomous Lab header above intact. -->
 
-**No game shipped on this branch yet** — scaffold toys under `src/` only.
-After an overnight run automerges, `main` shows the live game here (and on Pages).
+**Signal Ascent** — a Celestial-inspired layered prestige incremental (DOM UI).
+Harvest cosmic **Signal**, build **Relays**, buy **Resonators**, and **Ascend**
+through the Strata for permanent **Harmonics** multipliers.
+
+- Live: https://fr4iser90.github.io/autonomous-lab/
+- Run branch: `agent/celestial-inc-20260826` · tracking: `PROGRESS.md`
+- Stack: Vite + TypeScript + DOM-only UI · 20 Hz engine · decimal big numbers
+- Status: M1 — title + play shell (economy lands M2, layers M5, prestige M8, Phase 2 specials at layers 10/20/30/40/50)
