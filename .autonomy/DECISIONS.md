@@ -1,16 +1,43 @@
-<!-- BOILERPLATE_PLACEHOLDER / LEGACY_OPTIONAL: pin engine choices in PROGRESS.md or FEATURES.md. See BOILERPLATE.md -->
+# DECISIONS — VoxelCraft
 
-# Decisions
+## Engine: Three.js r160
+- WebGL rendering for voxel world
+- Chosen for maturity, ecosystem, and browser support
 
-Boilerplate defaults (stable — do not fight these from the agent):
+## World: Infinite chunks (16×16×96)
+- Deterministic generation from (seed, chunkX, chunkZ)
+- Override map for player edits
+- Chunk queue for loading/unloading
 
-- **Hosting:** GitHub Pages from `main`; Vite `base` = `/autonomous-lab/`.
-- **Branches:** `baseline` frozen boilerplate; `agent/<run-id>` for work; never push `main`/`baseline` from the agent.
-- **Gates:** `npm run gate` (test + build) is the mechanical Definition of Done.
-- **Live publish:** Push to `agent/*` opens a PR; green CI `gate` automerges (squash) into `main` → Pages.
-- **Ownership:** `BOILERPLATE.md` allow/deny lists.
-- **Genre:** Comes from the active run objective only — not from `baseline` toys.
+## Save: localStorage, 3 slots
+- `voxel-craft-slots-v1` for metadata
+- `voxel-craft-world-v1-slot-{N}` for world data
+- No cloud, no auth
 
-Run-specific decisions (append below when first chosen, or put them in PROGRESS/FEATURES):
+## Textures: Procedural 16×16 atlas
+- Generated at runtime, no image files
+- 3-row grid: top-face / side-face / bottom-face textures per block
+- Grass: green top, grass-on-dirt side, brown bottom
+- Log: bark rings on ends, vertical grain on sides
+- Dirt: brown on all faces (sides slightly darker)
+- NearestFilter for pixel-perfect voxel look
 
-- *(none yet)*
+## Testing: Vitest for logic, Playwright for UI
+- Pure logic tests: registries, chunk gen, save service
+- UI tests: title screen, HUD, canvas rendering
+
+## Raycast: DDA voxel traversal
+- Amanatides & Woo algorithm for efficient voxel stepping
+- Returns hit position, face normal, and distance
+- 6-block reach distance (configurable)
+- Highlight overlay: wireframe box with color based on mining progress
+
+## Mining: Hold-to-break with progress bar
+- Speed inversely proportional to block hardness
+- HUD progress bar: fills from 0→100% as mining progresses
+- Block turns red as it's about to break, white when just started
+- Bedrock (hardness=0) is unbreakable
+
+## Branch: agent/voxel-craft-20260825
+- Cut from origin/baseline
+- PR into main for Pages deploy
