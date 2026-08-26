@@ -2,9 +2,9 @@
 
 **Branch:** `agent/voxel-craft-20260825`
 **Phase:** Phase 3 DEMO COMPLETE ✅ | Phase 2 ✅ | Phase 2b SOAK ✅ | Phase 4: INFINITE IMPROVE
-**SHA:** b803c23 (Phase 3 DEMO, merged main sync)
-**Tests:** 268/268 passing | Build: ✅ 535KB
-**PR:** #3 Merged ✅ | **Current PR:** #11 — Phase 3 DEMO pushed, waiting gate
+**SHA:** 88046f6 (Phase 4 P4-1: Player HP + mob AI polish)
+**Tests:** 268/268 passing | Build: ✅ 537KB
+**PR:** #3 Merged ✅ | **Current PR:** #11 — Phase 4 P4-1 pushed, CI pending
 **SYNC:** Merged origin/main (16d79ba). Resolved boilerplate updates to README.md + PROGRESS.md. Kept game src/ and Phase 3 demo intact.
 
 ## CAPS
@@ -85,4 +85,18 @@ PHASE GATE Phase 3→Phase 4: COMPLETE — Phase 3 DEMO verified, gate green, 26
 
 Drain `BUGS.md` ## Open before each cycle. No STOP_AFTER_DEMO set.
 
-(End of file)
+### P4-0: Mini-soak — BUGS.md Open = empty ✅
+- **Gate:** 268/268 tests pass, build 535KB
+- **Open bugs:** 0 (clean)
+
+### P4-1: Player HP System + Mob AI Polish ✅
+- **Player HP → HUD hearts:** `updateHearts()` wired into game loop (every frame)
+- **Mob damage callback:** `MobManager.setPlayerDamageHandler()` connects mob contact → player HP drain → HUD update
+- **Death/respawn:** Player respawns at spawn point (ground Y) with full HP on death
+- **Better chase:** `moveToward()` with wall-sliding obstacle steering (tries partial slides when blocked in both axes)
+- **Stair climbing:** `tryJumpOnStairs()` detects 1-block walls ahead and jumps to climb them
+- **Hostile mobs face player:** Rotation update in chase and wander states
+- **Mob-to-mob collision:** Push mobs apart if within 2-block minimum (prevents stacking)
+- **Safe spawning:** 2-block minimum separation between mobs; wider spread for passive mobs
+- **Hit sound:** Added `'hit'` to SoundService (low thud, 150→50Hz sine pulse)
+- **Gate:** 268/268 tests pass, build 537KB
