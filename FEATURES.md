@@ -24,3 +24,11 @@ _(empty — nothing decided yet)_
   runs the fixed **20 Hz loop** (`step(0.05)` + re-render) and an **autosave stub**:
   every 15 s it persists `{ version, signal, relays }` to `signal-ascent-save-v1`
   (localStorage, corrupt-safe) and a reload restores progress (`src/economy/save.ts`).
+- M5: **Strata (layers)** — `layerDef(N)` (`src/data/layers.ts`): procedural name
+  (20 prefixes × 3 generation suffixes, unique for N ≤ LAYER_CAP=50), golden-angle hue
+  color, flavor line, ascend threshold `1e6 × 10^(N-1)`; every 10th layer flagged
+  `special` (Phase 2 mechanics). `LayerEngine` (`src/economy/layers.ts`): stratum
+  state, `canAscend()`/`ascend()` (M8 adds the Harmonics reward + Signal wipe).
+  Save bumped to **v2** (`layer` in payload; v1 saves migrate to layer 1).
+  **`simulateToLayer(N, seed?)`** in `tests/simulate.ts` is the headless depth truth
+  (deterministic, real engine, no DOM) — verified through layer 3.

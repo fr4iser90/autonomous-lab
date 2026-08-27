@@ -1,10 +1,12 @@
 /**
  * Signal Ascent — app shell (view state machine).
- * title <-> play. Owns the single EconomyEngine; views render its state.
- * M4: restores state from the save stub, runs the fixed 20 Hz economy
- * loop (step + re-render), and autosaves every 15 s.
+ * title <-> play. Owns the single EconomyEngine + LayerEngine; views
+ * render engine state. M4: restores from the save stub, runs the fixed
+ * 20 Hz economy loop (step + re-render), autosaves every 15 s.
+ * M5: the stratum (LayerEngine) is restored/saved alongside the economy.
  */
 import { EconomyEngine } from '../economy/engine'
+import { LayerEngine } from '../economy/layers'
 import { loadEngineState, saveEngineState } from '../economy/save'
 import { buildPlayView, buildTitleView, type PlayView } from './views'
 
@@ -13,6 +15,7 @@ export type View = 'title' | 'play'
 export interface Shell {
   readonly current: View
   readonly engine: EconomyEngine
+  readonly layers: LayerEngine
   enterPlay: () => void
   returnToTitle: () => void
   destroy: () => void
@@ -31,7 +34,9 @@ export const AUTOSAVE_MS = 15_000
 export function createShell(root: HTMLElement, options: ShellOptions = {}): Shell {
   const tickMs = options.tickMs ?? TICK_MS
   const autosaveMs = options.autosaveMs ?? AUTOSAVE_MS
-  const engine = new EconomyEngine(loadEngineState() ?? {})
+  const loaded = loadEngineState()
+  const engine = new EconomyEngine(loaded ? { signal: loaded.signal, relays: loaded.relays } : {})
+  const layers = new LayerEngine(loaded ? { layer: loaded.layer } : {})
   const titleView = buildTitleView()
   const playView: PlayView = buildPlayView(engine)
   let current: View = 'title'
@@ -47,8 +52,11 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     engine.step(tickMs / 1000)
     if (current === 'play') playView.render()
   }, tickMs)
-  // Autosave stub (M4): persist engine state on an interval.
-  const saveTimer = setInterval(() => saveEngineState(engine.state), autosaveMs)
+  // Autosave stub (M4/M5): persist engine state + stratum on an interval.
+  const saveTimer = setInterval(
+    () => saveEngineState(engine.state, layers.state.layer),
+    autosaveMs,
+  )
 
   titleView.querySelector('#play-btn')?.addEventListener('click', () => show('play'))
   playView.root.querySelector('#title-btn')?.addEventListener('click', () => show('title'))
@@ -61,6 +69,7 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
       return current
     },
     engine,
+    layers,
     enterPlay: () => show('play'),
     returnToTitle: () => show('title'),
     destroy: () => {

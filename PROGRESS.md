@@ -2,16 +2,16 @@
 
 ## NOW
 - Phase: Milestones M1–M12
-- Milestone: M4 (main PLAY UI: relay list + 20 Hz loop + autosave stub) — gate green, pre-PR visual PASS
+- Milestone: M5 (Strata: layerDef 1–50, LayerEngine, save v2, simulateToLayer) — gate green, pre-PR visual PASS
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
-- LAYER_CAP: 50 (planned; LayerEngine lands M5)
-- deepest_soak_layer: n/a (simulateToLayer lands M5)
-- Last ACCEPT: M3 — merged to main as 74bd47c (PR #18); M4 in PR #19 (CI pending → automerge)
-- Last SHA: 3b5c309 (SAFE SYNC merge over M4 f4cae86) — pending push
+- LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
+- deepest_soak_layer: 3 (simulateToLayer(3) green, seed 0)
+- Last ACCEPT: M4 — merged to main as c2cc723 (PR #19)
+- Last SHA: 349900d (SAFE SYNC merge over M5 a73ddbc) — pending push
 - Pre-PR visual: demo/pre-pr/m4-play.png — read_image PASS (relay list, owned 1, cost 17.3, +0.5/sec, Signal 0.8)
 - Gate: `npm test && npm run test:ui && npm run build` — 33 vitest + self-managed UI smoke + build
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
-- Next: push SAFE SYNC (updates PR #19) → M5 LayerEngine (layers 1–3, layerDef(N), simulateToLayer(3))
+- Next: push → PR #20 (M5) → M6 Resonators (≥5 upgrades + shop tab)
 
 ## Log
 - 2026-08-26: Run started. Cloned boilerplate; branch agent/celestial-inc-20260826 from origin/baseline.
@@ -32,4 +32,8 @@
 - 2026-08-26: M4 pre-PR visual PASS (read_image): demo/pre-pr/m4-play.png — relay list (Whisper 1 owned / 17.3, Pulse 250, Beam 5.00K), +0.5/sec, Signal 0.8, zero pageerror.
 - 2026-08-26: M3 ACCEPT — PR #18 CI green + automerged squash to main @ 74bd47c; Pages live.
 - 2026-08-26: M4 LIVE LOOP — pushed f4cae86 → PR #19 opened (M4: relay list, 20 Hz loop, autosave stub; gate = test + test:ui + build).
+- 2026-08-26: M5 built — `src/data/layers.ts` (layerDef 1–50: unique names, golden-angle colors, threshold 1e6×10^(N-1), special every 10), `src/economy/layers.ts` (LayerEngine + clamp, ±Inf corrupt-save safe), save v2 (layer in payload, v1→layer 1 migration), `tests/simulate.ts` (simulateToLayer, seeded deterministic sim) green through layer 3. 48 vitest + UI smoke + build green → a73ddbc.
+- 2026-08-26: M5 pre-PR visual PASS (read_image): smoke re-captured all four shots — m1-title (title view), m1-play (Signal 0), m2-play (Signal 5), m4-play (Whisper 1/17.3, +0.5/sec) — UI unchanged in M5 (engine-only).
+- 2026-08-26: M4 ACCEPT — PR #19 CI green + automerged squash to main @ c2cc723; Pages live.
+- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (c2cc723 = M4 squash) over M5; 8 add/add conflicts (squash re-added M4 files), all taken --ours; tree byte-identical to a73ddbc (0-line diff); gate green post-sync → 349900d.
 - 2026-08-26: SYNC: SAFE SYNC — merged origin/main (74bd47c = M3 squash) into M4; conflicts on CONTENT/FEATURES/PROGRESS only, kept ours; backup/celestial-inc-20260826-f4cae86; tree byte-identical to M4, gate green post-sync (3b5c309).

@@ -140,7 +140,7 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     expect(root.querySelector('#signal')?.textContent).toBe('1')
   })
 
-  it('autosave stub persists engine state every 15 s', () => {
+  it('autosave stub persists engine state + stratum every 15 s', () => {
     const root = makeRoot()
     const shell = enterPlay(root)
     clickHarvest(root, 5)
@@ -149,12 +149,26 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(1)
+    expect(saved.version).toBe(2)
     expect(saved.signal).toBe('5')
+    expect(saved.layer).toBe(1)
     // a fresh shell restores the saved signal
     shell.destroy()
     shells.splice(shells.indexOf(shell), 1)
     const again = makeShell(makeRoot())
     expect(again.engine.state.signal.toString()).toBe('5')
+    expect(again.layers.state.layer).toBe(1)
+  })
+
+  it('restores a saved stratum (M5)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({ version: 2, signal: '42', relays: {}, layer: 3, meta: { savedAt: 1 } }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.layers.state.layer).toBe(3)
+    expect(shell.layers.def.id).toBe(3)
+    expect(root.querySelector('#signal')?.textContent).toBe('42')
   })
 })
