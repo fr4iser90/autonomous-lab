@@ -10,6 +10,7 @@ _(empty — validator / soak / UI smoke append here)_
 
 ## Fixed
 
+- B-5: False COMPLETE claim in PROGRESS.md (Phase 2 claimed done with mobKits 4/16, items 6/16, floorThemes 2/16) — fixed by P2-1 content expansion (8 mobs, 10 items, 4 themes)
 - B-4: CI gate fail @ 229745e — resolved by PR #34 merge (human resolved conflicts)
 - B-3: CI gate fail @ 13f961f — superseded by successful merge into main
 - B-2: CI gate fail @ daa966d — local gate green, CI re-runs on tip

@@ -1,14 +1,14 @@
-<!-- PROGRESS: Ashen Delve — Phase 2 complete. All 12 milestones shipped. Merged to main via PR #34. -->
+<!-- PROGRESS: Ashen Delve — Phase 2 in progress. M1–M12 shipped, PHASE 2 content expansion underway. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **complete** — M1–M12 all shipped, merged to `main`
-- Milestone: Full playable game deployed to Pages
-- Branch: `agent/dungeon-crawl-20260827` → PR #34 merged into `main`
+- Phase: **Phase 2 — content expansion** — M1–M12 complete, expanding toward CAP
+- Milestone: 8 mob kits (8/16), 10 items (10/16), 4 floor themes (4/16)
+- Branch: `agent/dungeon-crawl-20260827`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **26 tests green, build green, ~500 KB bundle**
+- Gate: **22 tests green, build green, ~510 KB bundle**
 - BUGS: all cleared
 
 ## Milestones
@@ -28,6 +28,14 @@
 | M11 | Boss + Minimap | ✅ | `src/entities/Boss.ts`, `src/render/Minimap.ts` |
 | M12 | Polish + Integration | ✅ | `src/main.ts` (full game loop) |
 
+## P2 — Phase 2 Content Expansion
+
+| Content | Shipped | Total | CAP |
+|---------|---------|-------|-----|
+| Mob Kits | 8 | 16 | skeleton, bat, ogre, mummy |
+| Items | 10 | 16 | steel-club, mega-potion, iron-shield, rune-ring |
+| Floor Themes | 4 | 16 | elven ruins (5–9), magma caverns (10+) |
+
 ## Log
 
 - 2026-08-27: M1–M9 shipped (PR #31). Gate green locally.
@@ -36,12 +44,15 @@
 - 2026-08-27: Fixed tsconfig `"node"` types reference (browser-only project).
 - 2026-08-27: PR #34 merged into `main` after human resolved conflicts.
 - 2026-08-27: All 12 milestones complete. BUGS cleared. Pages deploying.
+- 2026-08-27: P2-1: Added 4 mob variants (Skeleton ranged, Bat swarm, Ogre charge, Mummy curse).
+- 2026-08-27: P2-1: Added 4 items (steel-club, mega-potion, iron-shield, rune-ring).
+- 2026-08-27: P2-1: Added 2 floor themes (Elven Ruins 5–9, Magma Caverns 10+).
 
 ## CAP Checklist
 
-- mobKits: 4/16 (Goblin, Shade, Stalker, Boss) — well below CAP
-- items: 6/16 — well below CAP
-- floorThemes: 2/16 — well below CAP
+- mobKits: 8/16 (Goblin, Shade, Stalker, Skeleton, Bat, Ogre, Mummy, Boss) — halfway to CAP
+- items: 10/16 — well above half CAP
+- floorThemes: 4/16 — a quarter to CAP
 - propTypes: (none added) — within CAP
 
 ## Fixes Applied
@@ -50,9 +61,9 @@
 - `tsconfig.json`: removed `"node"` from `types` — no Node runtime needed
 - `package.json`: `@types/node` installed for typecheck compatibility
 
-## Next (Phase 3+)
+## Next (Phase 2b → Phase 3)
 
-- Extended dungeon floors (depth scaling with BSP recursion)
-- More mob variants, loot tables, skill tree
-- Playwright UI smoke tests for title/game screens
-- Soak testing for extended playthroughs
+- Finish Phase 2: reach CAP on mobKits, items, floorThemes
+- Phase 2b: soak testing with all content types
+- Phase 3: demo (webm, storyboard frames, visual validation)
+- Phase 4: economy, skill tree, stealth zones

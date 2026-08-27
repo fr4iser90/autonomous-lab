@@ -38,6 +38,30 @@ export const FLOOR_THEMES: FloorTheme[] = [
     },
     propTypes: ['torch', 'pillar', 'sarcophagus'],
   },
+  {
+    id: 'ruins',
+    name: 'Elven Ruins',
+    floorColors: {
+      floor: '#2a2830',
+      wall: '#1a1a22',
+      wallHighlight: '#3a3a48',
+      fog: '#0a0a10',
+      bg: '#0a0a10',
+    },
+    propTypes: ['torch', 'column', 'fountain'],
+  },
+  {
+    id: 'magma',
+    name: 'Magma Caverns',
+    floorColors: {
+      floor: '#2a1510',
+      wall: '#1a0a08',
+      wallHighlight: '#3a2015',
+      fog: '#100806',
+      bg: '#100806',
+    },
+    propTypes: ['torch', 'lava-pool', 'crystal'],
+  },
 ]
 
 export function getThemeById(id: string): FloorTheme | undefined {
@@ -46,5 +70,7 @@ export function getThemeById(id: string): FloorTheme | undefined {
 
 export function getThemeForFloor(floor: number): FloorTheme {
   if (floor <= 3) return FLOOR_THEMES[0] // ash
-  return FLOOR_THEMES[1] // crypt
+  if (floor <= 6) return FLOOR_THEMES[1] // crypt
+  if (floor <= 9) return FLOOR_THEMES[2] // ruins
+  return FLOOR_THEMES[3] // magma
 }

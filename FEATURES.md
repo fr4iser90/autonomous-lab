@@ -5,17 +5,17 @@
 
 **PlayerKit** — Capsule body, sphere head, cone helm, inverted cone cloak. Walk bob animation, attack lean.
 
-**Mob System** — Goblin (standard melee), Shade (fast ghost), Stalker (slow tanky). Chase AI with configurable aggro/chase ranges. Fade animation on death.
+**Mob System** — 7 mob variants (Goblin, Shade, Stalker, Skeleton, Bat, Ogre, Mummy) + Boss. Chase AI with configurable aggro/chase ranges. Specialized AI: Skeleton ranged, Bat swarm, Ogre charge, Mummy curse aura. Fade animation on death.
 
 **Boss** — 60 HP, golden crown with emissive glow, burning red eyes (intensity 2.0), cloak. Crown glow pulses during attacks.
 
 **CombatEngine** — Melee attacks, 15% crit chance (2x damage), combat log with emoji (💥 CRIT, 💀 death). Max 20 log entries.
 
-**Inventory** — 6 items (3 weapons, 2 potions, 1 key). Items drop from mobs. Toggle with E key.
+**Inventory** — 10 items (4 weapons, 3 potions, 1 key, 2 armor). Items drop from mobs. Toggle with E key.
 
-**Floor Themes** — 2 themes: Ash Stone Catacombs (floors 1–3), Ancient Crypt (4+). Procedural color palette.
+**Floor Themes** — 4 themes: Ash Stone Catacombs (1–3), Ancient Crypt (4–6), Elven Ruins (7–9), Magma Caverns (10+). Procedural color palette.
 
-**AudioEngine** — Web Audio procedural: footsteps, mob growls, attack swoosh, 55Hz ambient drone. Volume controls.
+**AudioEngine** — Web Audio procedural: footsteps, mob growls, attack swoosh, ambient 55Hz drone. Volume controls.
 
 **Minimap** — Canvas 2D top-down overlay. Floor/door/stairs cells, spawn green, stairs white, player red.
 
@@ -62,3 +62,9 @@
 
 ## M1: Visual Spec + Shell
 - Title screen, game canvas, style sheet
+
+## P2: Phase 2 Content Expansion
+- **4 new mobs**: Skeleton (ranged), Bat (swarm), Ogre (tanky brute), Mummy (curse aura)
+- **4 new items**: steel-club (+9 DMG), mega-potion (+32 HP), iron-shield (+2 DEF), rune-ring (+2 HP)
+- **2 new floor themes**: Elven Ruins (floors 7–9), Magma Caverns (10+)
+- mobKits: 8/16, items: 10/16, floorThemes: 4/16
