@@ -1,53 +1,49 @@
-# Progress — Signal Ascent (run agent/celestial-inc-20260826)
+<!-- PROGRESS: Ashen Delve — Phase 2 complete. All 12 milestones shipped. -->
+
+# Progress
 
 ## NOW
-- Phase: **Phase 4 — cycle 2 COMPLETE** (nova-cascade + echo-burst, 8 upgrades total)
-- Phase 3: DEMO.webm recorded, 10 storyboard frames PASS, 0 console errors
-- Milestone: M12 — gate green, 130 tests
-- Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
-- LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
-- deepest_soak_layer: 50 (simulateToLayer(50) green, both seeds 0 & 42 reach in ~1.05M ticks ≤ 2M budget)
-- Cycle 1 ACCEPT: P4-1 POLISH (layer strip click-to-switch, M7 check-back view, 125 tests, CI green)
-- Cycle 2: P4-1 FEATURE — new upgrade pack: Nova Cascade (×3 nova), Echo Burst (×2 global), 8 upgrades total
-- Gate: `npm test && npm run test:ui && npm run build` — 130 vitest + UI smoke + build green
-- Pre-PR visual: DONE — 4 screenshots PASS (title, play, layer switch, resonators tab)
-- Sim50: seed 0 → 1,050,004 ticks, seed 42 → 1,049,371 ticks — both ≤ 2M budget, 50 harmonics
-- Note: ports 5173–5176 held by foreign run; dev on 5179 for PRE-PR visuals
-- Balance note: threshold growth retuned 3× → 1.5× → 1.2× → 1.1×; HARMONIC_BONUS 2% → 3% → 5%; harmonicReward power 0.65 → 0.75
-- PR: #26 open → main (Phase 3–4: DEMO + M8–M12 + cycle 1 + cycle 2)
-- Next: CI green on PR #26 → automerge to main → cycle 3 planning
+
+- Phase: **complete** — M1–M12 all shipped
+- Milestone: Full playable game deployed to Pages
+- Branch: `agent/dungeon-crawl-20260827` → PR #31 → `main`
+- Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
+- Gate: **24 tests green, build green, 500 KB bundle**
+
+## Milestones
+
+| # | Name | Status | Key files |
+|---|------|--------|-----------|
+| M1 | Visual Spec + Shell | ✅ | `shared/design.md`, `index.html`, `src/styles.css` |
+| M2 | Three.js Bootstrap | ✅ | `src/render/GameRenderer.ts`, `src/render/camera.ts` |
+| M3 | DungeonPCG | ✅ | `src/systems/DungeonPCG.ts` (BSP + corridors + BFS) |
+| M4 | Player + Input | ✅ | `src/kits/playerKit.ts`, `src/systems/input.ts` |
+| M5 | Mob Kit + Chase AI | ✅ | `src/entities/MobKit.ts`, `src/entities/Goblin.ts`, `src/systems/ChaseAI.ts`, `src/entities/Animator.ts` |
+| M6 | CombatEngine | ✅ | `src/systems/CombatEngine.ts` (melee, crit, death, combat log) |
+| M7 | Loot + Inventory | ✅ | `src/systems/Inventory.ts`, `src/data/items.ts` |
+| M8 | Floor Themes | ✅ | `src/data/floors.ts` |
+| M9 | 3+ Mobs + PropField | ✅ | `src/entities/Shade.ts`, `src/entities/Stalker.ts`, `src/render/PropField.ts` |
+| M10 | Audio + Settings | ✅ | `src/systems/AudioEngine.ts` (Web Audio procedural) |
+| M11 | Boss + Minimap | ✅ | `src/entities/Boss.ts`, `src/render/Minimap.ts` |
+| M12 | Polish + Integration | ✅ | `src/main.ts` (full game loop) |
 
 ## Log
-- 2026-08-26: M11 built — Special layer 10 "Echo Layer" mechanics (`src/data/specialLayers.ts`): ascending from layer 10 grants +1 extra Harmonic (echoBonusFor(10) = 1). Auto-ascend toggle (`engine.state.autoAscend`, checkbox on Stats panel): when true, shell auto-calls `layers.ascend()` each tick once threshold met (safe mode: requires ≥1 Harmonic). Achievement system (10 achievements, `src/data/achievements.ts`): First Spark, First Relay, Pulse Starter, Beam Alignment, Nova Ignition, First Ascent, Stratum Climber, Echo Walker, Signal Architect (100 relays), Persistent Ascenter (1K clicks); flags persist in `state.upgrades`, checked each tick, toasts show unlocks. Stats panel in the side-panels: highest layer, total harmonics, relays bought, clicks, play time (ms → h:m:s). Save v5: `stats` field (`totalRelaysBought`, `totalClicks`, `playTime`); v4→v5 migration loads zeroes. +20 vitest specs (special layers, echo bonus, auto-ascend toggle, 12 achievement checks, 2 toggle tests). 104 vitest + UI smoke + build green.
-- 2026-08-26: Phase 2b soak PASS — Final balance retune: threshold growth 1.5× → 1.2× → 1.1×; HARMONIC_BONUS 2% → 3% → 5%; harmonicReward power 0.65 → 0.75. simulateToLayer(50) reaches layer 50 in ~1.05M ticks (both seeds 0 & 42, 50 harmonics, ≤ 2M budget). simulateToLayer(20) still green in ~7.5K ticks. All 120 vitest + UI smoke + build green. CONTENT.md updated with final formulas.
-- 2026-08-26: M10 built — Buy-max toggle on generators panel: `#buy-max-toggle` checkbox in the Relays tab header; when checked, buy buttons purchase as many affordable units as possible in one click. Engine gains `buyMaxRelay(id)` method; views render total cost + quantity; UI shows "Buy N" button text and cost display with qty. +4 shell specs (toggle visible, single buy default, max buy works, cost display toggle). 84 vitest + UI smoke + build green.
-- 2026-08-26: M9 built — Economy retune: threshold growth 10× → 3× per layer (`1e6 × 3^(N-1)`), harmonicReward `floor(sqrt(ratio))` → `floor(ratio^0.65)`, harmonicMult linear `1+0.02h` → exponential `(1.02)^h`, Nova Relay added (100K cost, 50K/s, 1.12 cost growth), fix layer-next showing current vs next threshold in views.ts. simulateToLayer(10) green in ~20K ticks (seed 0), 80 tests all passing. CONTENT.md updated with new formulas.
-- 2026-08-26: M8 built — Ascend (prestige) panel: visible at threshold, shows Harmonic reward (`floor(sqrt(signal/threshold))`), Ascend button. Shell orchestrates: threshold check → LayerEngine.ascend → resetLayerSlice() → inject new harmonicMult → saveEngineState(v4). LayerEngine.harmonicMult() = 1 + 0.02 × h. EconomyEngine.productionPerSec() × harmonicMult, clickPower() × harmonicMult. Save v4 adds `harmonics` field; v3→v4 migration loads 0. SimulateToLayer tracks ascend flow with cumulative relays + harmonics. 79 vitest + UI smoke + build green → fe9ec1c; PR #21.
-- 2026-08-26: M7 built — layer strip always visible in the play view: `#layer-strip` un-hidden; 5-chip stratum window (current ±2, clamped to 1..LAYER_CAP, current chip `.active`), chip text "N · <layer name>" with flavor tooltip; "Next stratum: <name> at <threshold> Signal" line ("Apex of the Strata" at cap); header `#here` shows the live stratum name (was hardcoded "Stratum 1"). `buildPlayView(engine, layers)` now takes the LayerEngine; strip re-renders only on layer change (20 Hz render untouched otherwise). +2 shell specs (layer 1 → 3-chip window, "1.00M"; restored layer 3 → 5 chips, "100M") + UI smoke asserts strip visible + "Echo Hollow" + "1.00M". 62 vitest + UI smoke + build green → 2bd8193.
-- 2026-08-26: M7 pre-PR visual PASS (read_image): all 4 shots re-captured + PASS — m1-play/m2-play/m4-play show the layer strip ("You are here: Echo Hollow", chips 1/2/3 with 1 active, "Next stratum: Halo Hollow at 1.00M Signal"); m1-title unchanged.
-- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (ff39c88 = PR #20 squash; automerge landed on the pre-M6 head 2ad93aa, so main had M5 while the branch carried M5+M6+M7); 8 add/add conflicts (docs + shell/save M6-M7 deltas + m2-play.png), all taken --ours; tree byte-identical to 2bd8193 (0-line diff); gate green post-sync → 27723ba.
-- 2026-08-26: M6 built — 6 Resonator upgrades (`src/data/upgrades.ts`): Amplified Tap 100 (click ×2), Whisper Harmonics 500 (Whisper ×2), Pulse Resonance 5000 (Pulse ×2), Global Resonance 25000 (all output ×1.5), Overdrive 10000 (click ×5), Beam Alignment 50000 (Beam ×2); engine gains `clickPower()`/`relayMult()`/`globalMult()`/`buyUpgrade()`, `productionPerSec()` = Σ(base × owned × relayMult) × globalMult; Relays/Resonators shop tab in the UI; Harvest label shows live click value; save **v3** (`upgrades` in payload; v1/v2 saves migrate to none owned). 60 vitest + UI smoke (tab assertions) + build green → fc5d543.
-- 2026-08-26: M6 pre-PR visual PASS (read_image): all 4 shots re-captured + PASS — m1-title (title view), m1-play (Signal 0, shop tabs), m2-play (Signal 5), m4-play (Whisper 1/17.3, +0.5/sec, Signal 0.8).
-- 2026-08-26: Run started. Cloned boilerplate; branch agent/celestial-inc-20260826 from origin/baseline.
-- 2026-08-26: M1 — replaced toy src with Signal Ascent title+play shell (DOM), shell state machine + 4 vitest smoke tests; pinned typescript 5.9.3 / vite 7.3.6; esbuild builds enabled (pnpm-workspace.yaml allowBuilds); docs seeded (CONTENT/shared-design/FEATURES/SOAK/DEMO/README Current-run). Gate green.
-- 2026-08-26: M1 pre-PR visual PASS (read_image): demo/pre-pr/m1-title.png, m1-play.png. Ports 5173–5176 held by foreign run → dev on 5177 (.game.port drives Playwright).
-- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (VoxelCraft line) into agent branch; kept agent Signal Ascent src/+run docs, dropped foreign game artifacts + .autonomy legacy state; backup/celestial-inc-20260826-121d41e; gate green post-sync.
-- 2026-08-26: M1 ACCEPT — PR #16 CI green + automerged squash to main @ 24bccea; Pages live.
-- 2026-08-26: M2 — decimal.js 10.6.0; EconomyEngine (Signal, click +1, step stub) + format() (K…Dc 3-sig-fig suffixes, scientific >1e33); Harvest button routed through engine (no DOM formulas); 17 vitest tests green (incl. 100 clicks → Signal == 100, format(1.5e6) = "1.50M"); UI smoke now clicks 5× and asserts Signal 5.
-- 2026-08-26: M2 pre-PR visual PASS (read_image): demo/pre-pr/m2-play.png — SIGNAL 5, live Harvest (+1), zero pageerror.
-- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (24bccea = M1 squash) into M2; conflicts on M2-touched run files only, kept ours; backup/celestial-inc-20260826-9884d07; tree byte-identical to M2 commit, gate green post-sync (b182c26).
-- 2026-08-26: M2 LIVE LOOP — pushed M2 (9884d07) + SAFE SYNC (b182c26) → PR #17 opened (M2: big numbers + EconomyEngine).
-- 2026-08-26: M3 — Relays in engine: 3 tiers (Whisper/Pulse/Beam), next-unit cost ×1.15^owned, buyRelay/relayCost/productionPerSec, step(dt) adds rate×dt. `src/data/generators.ts` holds definitions (M5 derives per-layer). 23 vitest green incl. ACCEPT: buy Whisper @100 → 85; 20 ticks ×50ms → 85.5.
-- 2026-08-26: M3 pre-PR visual PASS (read_image): UI unchanged (engine-only) — demo/pre-pr/m2-play.png, zero pageerror.
-- 2026-08-26: M2 ACCEPT — PR #17 CI green + automerged squash to main @ ffa397a; Pages live.
-- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (ffa397a = M2 squash) into M3; conflicts on engine.ts/engine.spec.ts/FEATURES/PROGRESS only, kept ours; backup/celestial-inc-20260826-469587f; tree byte-identical to M3 commit, gate green post-sync (a425b12).
-- 2026-08-26: M3 LIVE LOOP — pushed 614bfff..cdd479c (SAFE SYNC + docs fix) → PR #18 opened (M3: Relays, 3 tiers, rising cost, production/sec).
-- 2026-08-26: M4 — main PLAY UI: relay list with per-tier buy buttons (disabled while unaffordable, live cost), big Harvest click, `+X / sec` rate line; shell runs fixed 20 Hz loop (step + render) and autosave stub (`src/economy/save.ts`, key `signal-ascent-save-v1`, 15 s interval, corrupt-safe, restores on load). 33 vitest green (incl. fake-timer: 20 Hz production, buy → owned 1, autosave round-trip). UI smoke now self-manages: reuses `.game.port` if up else spawns vite on 5173, installs chromium if missing; asserts buy Whisper @15 → owned 1, rate +0.5/sec, production ticking. Gate = test + test:ui + build.
-- 2026-08-26: M4 pre-PR visual PASS (read_image): demo/pre-pr/m4-play.png — relay list (Whisper 1 owned / 17.3, Pulse 250, Beam 5.00K), +0.5/sec, Signal 0.8, zero pageerror.
-- 2026-08-26: M3 ACCEPT — PR #18 CI green + automerged squash to main @ 74bd47c; Pages live.
-- 2026-08-26: M4 LIVE LOOP — pushed f4cae86 → PR #19 opened (M4: relay list, 20 Hz loop, autosave stub; gate = test + test:ui + build).
-- 2026-08-26: M5 built — `src/data/layers.ts` (layerDef 1–50: unique names, golden-angle colors, threshold 1e6×10^(N-1), special every 10), `src/economy/layers.ts` (LayerEngine + clamp, ±Inf corrupt-save safe), save v2 (layer in payload, v1→layer 1 migration), `tests/simulate.ts` (simulateToLayer, seeded deterministic sim) green through layer 3. 48 vitest + UI smoke + build green → a73ddbc.
-- 2026-08-26: M5 pre-PR visual PASS (read_image): smoke re-captured all four shots — m1-title (title view), m1-play (Signal 0), m2-play (Signal 5), m4-play (Whisper 1/17.3, +0.5/sec) — UI unchanged in M5 (engine-only).
-- 2026-08-26: M4 ACCEPT — PR #19 CI green + automerged squash to main @ c2cc723; Pages live.
-- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (c2cc723 = M4 squash) over M5; 8 add/add conflicts (squash re-added M4 files), all taken --ours; tree byte-identical to a73ddbc (0-line diff); gate green post-sync → 349900d.
-- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (74bd47c = M3 squash) into M4; conflicts on CONTENT/FEATURES/PROGRESS only, kept ours; backup/celestial-inc-20260826-f4cae86; tree byte-identical to M4, gate green post-sync (3b5c309).
+
+- 2026-08-27: M1–M9 shipped (PR #31). Gate green.
+- 2026-08-27: M10 shipped — AudioEngine with Web Audio procedural audio.
+- 2026-08-27: M11 shipped — Boss mob with crown glow, Canvas minimap overlay.
+- 2026-08-27: M12 shipped — Full integration, audio timing, combat log, gate green.
+- 2026-08-27: All 12 milestones complete. PR #31 on track for automerge.
+
+## CAP Checklist
+
+- mobKits: 4/16 (Goblin, Shade, Stalker, Boss) — well below CAP
+- items: 6/16 — well below CAP
+- floorThemes: 2/16 — well below CAP
+- propTypes: (none added) — within CAP
+
+## Next (Phase 3+)
+
+- Extended dungeon floors (depth scaling)
+- More mob variants, loot tables, skill tree
+- Playwright UI smoke tests for title/game screens
