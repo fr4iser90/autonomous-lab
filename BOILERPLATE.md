@@ -36,12 +36,17 @@ Replace when the overnight objective / game prompt starts:
 
 ## Conflict resolution cheat-sheet
 
-When merging `origin/main` into `agent/*`:
+**Automerge (Actions)** when an `agent/*` PR is CONFLICTING but tip `gate` is
+green: merges **into `main`** (not a sync push to `agent/*`):
 
-1. **BOILERPLATE_OWNED** (incl. README Lab header) → keep Lab header; take
-   workflow / AGENTS / BOILERPLATE from main when those conflict.
-2. **RUN_OWNED game** (`src/`, `tests/`, `demo/`, run docs, README `# Current run`)
-   → keep **agent** version.
+1. **BOILERPLATE_OWNED** → keep **main**
+2. **RUN_OWNED** (`src/`, `tests/`, `demo/`, run docs, …) → keep **agent**
+3. `npm run gate` on the merged tree must pass before push to `main`
+
+When a human/agent merges `origin/main` into `agent/*` locally:
+
+1. **BOILERPLATE_OWNED** → take main
+2. **RUN_OWNED** → keep agent
 3. Never `reset --hard` to main to “clear” conflicts.
 
 ## After the first game merge
