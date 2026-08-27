@@ -120,6 +120,21 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     engine.setHarmonicMult(layers.harmonicMult())
   }
 
+  // P4-1: switch to a check-back layer via layer strip click.
+  function switchLayer(n: number): boolean {
+    const ok = layers.switchLayer(n)
+    if (ok) {
+      saveEngineState(
+        engine.state,
+        layers.state.layer,
+        layers.state.harmonics,
+        { totalRelaysBought, totalClicks, playTime: playTimeMs },
+        engine.state.autoAscend,
+      )
+    }
+    return ok
+  }
+
   const playView: PlayView = buildPlayView(engine, layers, ascend, {
     onAchievementUnlock(ids: string[]): void {
       achievementNotifs = ids.map((id) => {
@@ -130,6 +145,9 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     },
     onClick(): void {
       totalClicks++
+    },
+    onSwitchLayer(layer: number): boolean {
+      return switchLayer(layer)
     },
   })
 

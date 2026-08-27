@@ -322,6 +322,12 @@ body {
   padding: 4px 12px;
   font-size: 12px;
   cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.layer-chip:hover:not(.active) {
+  color: #fff;
+  background: rgba(56, 214, 255, 0.12);
 }
 
 .layer-chip.active {

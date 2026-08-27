@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LAYER_CAP } from '../data/layers'
+import { LAYER_CAP, layerDef } from '../data/layers'
 import { HARMONIC_BONUS, LayerEngine, clampHarmonics, clampLayer, harmonicReward } from './layers'
 
 describe('LayerEngine (M5)', () => {
@@ -100,5 +100,69 @@ describe('Harmonics + Ascend (M8)', () => {
 
   it('HARMONIC_BONUS is the +5% base for exponential harmonic compounding (M12)', () => {
     expect(HARMONIC_BONUS.toString()).toBe('0.05')
+  })
+})
+
+describe('Layer switch / check-back (P4-1)', () => {
+  it('switchLayer allows check-back to a previously reached layer', () => {
+    const layers = new LayerEngine()
+    // Start at layer 1
+    expect(layers.state.layer).toBe(1)
+    // Switch to layer 1 or higher: no-op (must go down)
+    expect(layers.switchLayer(1)).toBe(false)
+    expect(layers.switchLayer(2)).toBe(false)
+    // Ascend to layer 3
+    layers.ascend('1000000') // 1 → 2
+    layers.ascend('1100000') // 2 → 3
+    expect(layers.state.layer).toBe(3)
+    // Now can switch back to layer 1 or 2
+    expect(layers.switchLayer(2)).toBe(true)
+    expect(layers.state.layer).toBe(2)
+    expect(layers.switchLayer(1)).toBe(true)
+    expect(layers.state.layer).toBe(1)
+    // Switching back up or to current: no-op
+    expect(layers.switchLayer(2)).toBe(false)
+    expect(layers.switchLayer(3)).toBe(false)
+  })
+
+  it('switchLayer clamps out-of-range targets', () => {
+    const layers = new LayerEngine()
+    layers.ascend('1000000') // 1 → 2
+    // 0 → clamped to 1, which is < 2 so switch is allowed
+    expect(layers.switchLayer(0)).toBe(true)
+    expect(layers.state.layer).toBe(1)
+    // 9999 → clamped to LAYER_CAP, which is >= 1, so no-op
+    expect(layers.switchLayer(9999)).toBe(false)
+  })
+
+  it('switchLayer preserves harmonics across check-backs', () => {
+    const layers = new LayerEngine()
+    layers.ascend('1000000')
+    const h = layers.state.harmonics
+    expect(h).toBeGreaterThan(0)
+    layers.switchLayer(1)
+    expect(layers.state.harmonics).toBe(h)
+    layers.switchLayer(2)
+    expect(layers.state.harmonics).toBe(h)
+  })
+
+  it('layerDef names are unique for N ≤ LAYER_CAP', () => {
+    const names = new Set<string>()
+    for (let i = 1; i <= LAYER_CAP; i++) {
+      const def = layerDef(i)
+      expect(names.has(def.name)).toBe(false)
+      names.add(def.name)
+    }
+  })
+
+  it('layerDef threshold grows by GROWTH per layer', () => {
+    const d1 = layerDef(1)
+    const d2 = layerDef(2)
+    const d50 = layerDef(50)
+    // d2 should be d1 × 1.1
+    expect(d2.threshold.div(d1.threshold).toString()).toBe('1.1')
+    // d50 should be d1 × 1.1^49 ≈ 106.72
+    const ratio = d50.threshold.div(d1.threshold)
+    expect(ratio.toString()).toBe('106.71895716335937864')
   })
 })
