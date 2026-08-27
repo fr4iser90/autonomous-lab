@@ -207,9 +207,9 @@ describe('shop tabs + Resonators (M6)', () => {
     ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(root.querySelector('#upgrades-panel')?.classList.contains('hidden')).toBe(false)
     expect(root.querySelector('#generators-panel')?.classList.contains('hidden')).toBe(true)
-    expect(root.querySelectorAll('#upgrade-list .upgrade-row').length).toBe(6)
+    expect(root.querySelectorAll('#upgrade-list .upgrade-row').length).toBe(8)
     // nothing affordable at Signal 0
-    for (const id of ['amp', 'overdrive', 'whisper-harmonics', 'pulse-resonance', 'beam-alignment', 'global-resonance']) {
+    for (const id of ['amp', 'overdrive', 'whisper-harmonics', 'pulse-resonance', 'beam-alignment', 'global-resonance', 'nova-cascade', 'echo-burst']) {
       expect((root.querySelector(`#buy-${id}`) as HTMLButtonElement).disabled).toBe(true)
     }
   })

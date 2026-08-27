@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Decimal } from 'decimal.js'
 import { EconomyEngine, initialState } from './engine'
+import { UPGRADES } from '../data/upgrades'
 
 describe('EconomyEngine (M2)', () => {
   it('starts with zero Signal', () => {
@@ -189,5 +190,48 @@ describe('EconomyEngine (M8: Ascend support)', () => {
     const engine = new EconomyEngine({ relays: { whisper: 1 } }, '1.06')
     engine.resetLayerSlice()
     expect(engine.harmonicMult.toString()).toBe('1.06')
+  })
+})
+
+describe('EconomyEngine (P4-1 cycle-2: nova-cascade + echo-burst)', () => {
+  it('nova-cascade triples nova production (2 nova × 50K base × 3 = 300K)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(10_000_000),
+      relays: { nova: 2 },
+    })
+    expect(engine.buyUpgrade('nova-cascade')).not.toBeNull() // -1M
+    // 2 * 50_000 * 3 = 300_000
+    expect(engine.productionPerSec().toString()).toBe('300000')
+  })
+
+  it('echo-burst doubles ALL relay output (global ×2)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(20_000_000),
+      relays: { whisper: 2, beam: 1 },
+    })
+    expect(engine.buyUpgrade('echo-burst')).not.toBeNull() // -5M
+    // (2 * 0.5 + 80) * 2 = 162
+    expect(engine.productionPerSec().toString()).toBe('162')
+  })
+
+  it('nova-cascade + echo-burst compose (nova ×6 total)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(20_000_000),
+      relays: { nova: 1 },
+    })
+    engine.buyUpgrade('nova-cascade') // ×3
+    engine.buyUpgrade('echo-burst') // ×2 global
+    // 1 * 50_000 * 3 * 2 = 300_000
+    expect(engine.productionPerSec().toString()).toBe('300000')
+  })
+
+  it('refuses unaffordable new upgrades', () => {
+    const engine = new EconomyEngine({ signal: new Decimal('999999') })
+    expect(engine.buyUpgrade('nova-cascade')).toBeNull()
+    expect(engine.buyUpgrade('echo-burst')).toBeNull()
+  })
+
+  it('upgrade count is 8', () => {
+    expect(UPGRADES.length).toBe(8)
   })
 })

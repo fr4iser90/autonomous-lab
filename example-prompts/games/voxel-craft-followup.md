@@ -82,7 +82,8 @@ PLAYABILITY TRIAGE (before more content cycles)
   CONTENT VISUAL (`demo/content/C<N>-<kind>-<id>.png` from `#game-canvas` while
   playing). HTML/NPC-stat tables / RGB swatch boards = FAIL — redo with rendered
   meshes. Title-screen PRE-PR is not enough.
-- Optional live E2E: `voxel-craft-VL-validation.md`. Git/CI watchdog:
+- Optional live E2E: `voxel-craft-VL-validation.md`. Full gametest matrix:
+  `voxel-craft-gametest.md` (+ follow-up). Git/CI watchdog:
   `voxel-craft-git-validation.md`. Builder stays on local `:5173` for play.
 
 INFINITY MODE (Phase 4 — re-arm on every follow-up)

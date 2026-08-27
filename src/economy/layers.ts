@@ -76,6 +76,14 @@ export class LayerEngine {
     return this.state.layer >= LAYER_CAP ? null : layerDef(this.state.layer + 1)
   }
 
+  /** Switch to a previously reached layer (check-back view, M7). */
+  switchLayer(target: number): boolean {
+    const clamped = clampLayer(target)
+    if (clamped < 1 || clamped >= this.state.layer) return false
+    this.state.layer = clamped
+    return true
+  }
+
   /** Can the given Signal total ascend from the current layer? */
   canAscend(signal: Decimal.Value): boolean {
     return new Decimal(signal).gte(this.def.threshold)
