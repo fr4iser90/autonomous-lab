@@ -16,8 +16,9 @@ The public game on Pages is whatever last automerged to `main` — not this file
 
 | Job | Prompt | Model role |
 |---|---|---|
-| Overnight build | `example-prompts/games/<game>.md` | **`fast`** — `read_image` on PNGs (no vision subagent) |
-| Resume / stuck run | `example-prompts/games/<game>-followup.md` | **`fast`** — same; ignore create_goal policy errors |
+| **Role path (generic)** | `roles/{concept,arch,feature,fix}.md` + `roles/IDEA.slot.md` + optional `domains/{game,app}.md` | **`fast`** (concept/arch/feature/fix); see [`MODEL_STACKS.md`](MODEL_STACKS.md) for STACK=auto |
+| Overnight build (genre pack) | `example-prompts/games/<game>.md` | **`fast`** — `read_image` on PNGs (no vision subagent) |
+| Resume / stuck run | `example-prompts/games/<game>-followup.md` or role follow-up | **`fast`** — same; ignore create_goal policy errors |
 | Idle **nudge** (harness) | short continue cue from DSH idle prompting | **`fast`** (same session) |
 | Hard code root-cause only | (spawned from overnight) meshing/lighting/AI | optional **`smart`** subagent — **not** for PNGs |
 | Playability / VL validation | `example-prompts/games/<game>-VL-validation.md` | **`smart`** — click Pages first → BUGS.md |

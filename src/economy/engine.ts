@@ -108,11 +108,11 @@ export class EconomyEngine {
   buyMaxRelay(id: string): Decimal {
     let total = new Decimal(0)
     let spent: Decimal | null
-    do {
+    for (;;) {
       spent = this.buyRelay(id)
       if (spent) total = total.plus(spent)
       else break
-    } while (true)
+    }
     return total
   }
 

@@ -23,8 +23,11 @@ Files and dirs are tagged:
   `# Current run` (purpose, harness link, gates, settings example). Do **not**
   delete or rewrite that block; only update `# Current run` below it.
 - Prefer not to edit `example-prompts/**` on overnight runs (human maintains
-  objectives / VL-validation prompts).
+  objectives / role packs / VL-validation prompts).
 - **`SETUP.md`** — human host notes (harness, hardware, settings); do not rewrite.
+- **`MODEL_STACKS.md`** — model × stack catalog; Arch/Feature may read, not rewrite.
+- **`eslint.config.js`**, **`.dependency-cruiser.cjs`** — keep `gate` health;
+  agents must not delete lint/boundaries to silence failures.
 
 ## BOILERPLATE_PLACEHOLDER / TOY → become RUN_OWNED
 

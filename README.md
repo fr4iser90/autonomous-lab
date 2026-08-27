@@ -17,6 +17,8 @@ and on the live site is **AI-generated** — used to probe **local LLM** capabil
 | **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
 | **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork; idle nudge; Docker) |
 | **This host’s setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
+| **Model × stack** | [`MODEL_STACKS.md`](MODEL_STACKS.md) |
+| **Role prompts** | [`example-prompts/roles/`](example-prompts/roles/) |
 | **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
 
 Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
@@ -25,7 +27,8 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 
 | Session | Paste | Model |
 |---|---|---|
-| Overnight / follow-up / idle nudge | `*-craft.md` / `*-followup.md` (+ harness nudge) | **fast** + `read_image` (~50–60 tok/s) |
+| Role path (concept→arch→feature/fix) | `roles/*.md` + IDEA + `domains/*` | **fast** (+ `read_image` when UI) |
+| Overnight / follow-up / idle nudge | genre `games/*.md` / follow-up (+ harness nudge) | **fast** + `read_image` (~50–60 tok/s) |
 | VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** + `read_image` (~15–20 tok/s) |
 | Git / CI validation | `*-git-validation.md` (+ follow-up) | **fast** — PR / `gate` / Actions queue |
 
@@ -34,15 +37,15 @@ Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
 ## Live loop & gates
 
 ```
-agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash
-  or conflict-resolve) → main → Pages → sync agent/* tip to main
+agent/* commit → Open agent PR → CI `gate` (typecheck + lint + boundaries + test + build)
+  → Automerge (squash or conflict-resolve) → main → Pages → sync agent/* tip to main
 ```
 
 Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fire `push`).
 
 | Check / surface | Role |
 |---|---|
-| `gate` | Required: Vitest + production build |
+| `gate` | Required: typecheck + eslint + dependency-cruiser + Vitest + production build |
 | `protect-boilerplate` | Agent PRs must not edit workflows / `AGENTS.md` / `BOILERPLATE.md` / … |
 | Automerge | Squash (or conflict-resolve) `agent/*` → `main` when tip gate is green; then reset that `agent/*` to `main` |
 | Pages | Deploys **only** from `main` (what outsiders play) |
