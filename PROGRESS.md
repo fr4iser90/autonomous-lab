@@ -7,7 +7,7 @@
 - LAYER_CAP: 50 (planned; LayerEngine lands M5)
 - deepest_soak_layer: n/a (simulateToLayer lands M5)
 - Last ACCEPT: M1 — merged to main as 24bccea (PR #16); M2 in PR #17 (CI pending)
-- Last SHA: b182c26 (SAFE SYNC merge over M2 9884d07); M3 commit pending push
+- Last SHA: a425b12 (SAFE SYNC merge over M3 469587f) — pending push/PR
 - Pre-PR visual: demo/pre-pr/m2-play.png — read_image PASS (UI unchanged by engine-only M3)
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
 - Next: M3 LIVE LOOP (commit→push→PR), then M4 main PLAY UI + wire test:ui into gate
@@ -24,3 +24,5 @@
 - 2026-08-26: M2 LIVE LOOP — pushed M2 (9884d07) + SAFE SYNC (b182c26) → PR #17 opened (M2: big numbers + EconomyEngine).
 - 2026-08-26: M3 — Relays in engine: 3 tiers (Whisper/Pulse/Beam), next-unit cost ×1.15^owned, buyRelay/relayCost/productionPerSec, step(dt) adds rate×dt. `src/data/generators.ts` holds definitions (M5 derives per-layer). 23 vitest green incl. ACCEPT: buy Whisper @100 → 85; 20 ticks ×50ms → 85.5.
 - 2026-08-26: M3 pre-PR visual PASS (read_image): UI unchanged (engine-only) — demo/pre-pr/m2-play.png, zero pageerror.
+- 2026-08-26: M2 ACCEPT — PR #17 CI green + automerged squash to main @ ffa397a; Pages live.
+- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (ffa397a = M2 squash) into M3; conflicts on engine.ts/engine.spec.ts/FEATURES/PROGRESS only, kept ours; backup/celestial-inc-20260826-469587f; tree byte-identical to M3 commit, gate green post-sync (a425b12).
