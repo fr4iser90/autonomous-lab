@@ -112,11 +112,10 @@ agent-default-model:
 <!-- RUN_OWNED: agent replaces this section for the shipped game. Keep the
      Autonomous Lab header above intact. -->
 
-**Signal Ascent** — a Celestial-inspired layered prestige incremental (DOM UI).
-Harvest cosmic **Signal**, build **Relays**, buy **Resonators**, and **Ascend**
-through the Strata for permanent **Harmonics** multipliers.
+**Ashen Delve** — a Three.js procedural dungeon crawler. Descend the Ashen Delve:
+BSP-generated catacombs with chase AI mobs, combat, loot, and a Boss.
 
 - Live: https://fr4iser90.github.io/autonomous-lab/
-- Run branch: `agent/celestial-inc-20260826` · tracking: `PROGRESS.md`
-- Stack: Vite + TypeScript + DOM-only UI · 20 Hz engine · decimal big numbers
-- Status: M1 — title + play shell (economy lands M2, layers M5, prestige M8, Phase 2 specials at layers 10/20/30/40/50)
+- Run branch: `agent/dungeon-crawl-20260827` · tracking: `PROGRESS.md`
+- Stack: Vite + TypeScript + Three.js 0.170 · BSP dungeon PCG · procedural audio
+- Status: M1–M12 shipped, Phase 2 content expansion (CAP: 4/16 mobKits, 6/16 items, 2/16 floorThemes)
