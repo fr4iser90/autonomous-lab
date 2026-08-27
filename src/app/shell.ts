@@ -4,6 +4,10 @@
  * render engine state. M4: restores from the save stub, runs the fixed
  * 20 Hz economy loop (step + re-render), autosaves every 15 s.
  * M5: the stratum (LayerEngine) is restored/saved alongside the economy.
+ * M7: the play view renders the layer strip (live stratum window) from it.
+ * M8: Ascend (prestige) orchestration — the ONLY place both engines meet:
+ *     check threshold → LayerEngine.ascend (grants Harmonics) →
+ *     engine.resetLayerSlice() → inject the new harmonic mult → save.
  */
 import { EconomyEngine } from '../economy/engine'
 import { LayerEngine } from '../economy/layers'
@@ -35,11 +39,42 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
   const tickMs = options.tickMs ?? TICK_MS
   const autosaveMs = options.autosaveMs ?? AUTOSAVE_MS
   const loaded = loadEngineState()
-  const engine = new EconomyEngine(loaded ? { signal: loaded.signal, relays: loaded.relays } : {})
-  const layers = new LayerEngine(loaded ? { layer: loaded.layer } : {})
+  // M8: layers (with permanent Harmonics) are built first so the engine can
+  // start with the correct harmonic multiplier; the shell keeps them in sync.
+  const layers = new LayerEngine(
+    loaded ? { layer: loaded.layer, harmonics: loaded.harmonics } : {},
+  )
+  const engine = new EconomyEngine(
+    loaded
+      ? { signal: loaded.signal, relays: loaded.relays, upgrades: loaded.upgrades }
+      : {},
+    layers.harmonicMult(),
+  )
   const titleView = buildTitleView()
-  const playView: PlayView = buildPlayView(engine)
+
+  // M8: ascend orchestration — the only place both engines meet.
+  function ascend(): void {
+    if (!layers.canAscend(engine.state.signal)) return
+    if (!layers.ascend(engine.state.signal)) return
+    engine.resetLayerSlice()
+    engine.setHarmonicMult(layers.harmonicMult())
+    saveEngineState(engine.state, layers.state.layer, layers.state.harmonics)
+  }
+
+  const playView: PlayView = buildPlayView(engine, layers, ascend)
   let current: View = 'title'
+
+  // M6: shop tabs — Relays (default) and Resonators panels, one visible.
+  const generatorsPanel = playView.root.querySelector('#generators-panel') as HTMLElement
+  const upgradesPanel = playView.root.querySelector('#upgrades-panel') as HTMLElement
+  const tabRelays = playView.root.querySelector('#tab-relays') as HTMLButtonElement
+  const tabUpgrades = playView.root.querySelector('#tab-upgrades') as HTMLButtonElement
+  function setShopTab(tab: 'relays' | 'upgrades'): void {
+    generatorsPanel.classList.toggle('hidden', tab !== 'relays')
+    upgradesPanel.classList.toggle('hidden', tab !== 'upgrades')
+    tabRelays.classList.toggle('active', tab === 'relays')
+    tabUpgrades.classList.toggle('active', tab === 'upgrades')
+  }
 
   function show(view: View): void {
     current = view
@@ -52,14 +87,16 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     engine.step(tickMs / 1000)
     if (current === 'play') playView.render()
   }, tickMs)
-  // Autosave stub (M4/M5): persist engine state + stratum on an interval.
+  // Autosave (M4–M8): persist engine state + stratum + Harmonics on an interval.
   const saveTimer = setInterval(
-    () => saveEngineState(engine.state, layers.state.layer),
+    () => saveEngineState(engine.state, layers.state.layer, layers.state.harmonics),
     autosaveMs,
   )
 
   titleView.querySelector('#play-btn')?.addEventListener('click', () => show('play'))
   playView.root.querySelector('#title-btn')?.addEventListener('click', () => show('title'))
+  tabRelays.addEventListener('click', () => setShopTab('relays'))
+  tabUpgrades.addEventListener('click', () => setShopTab('upgrades'))
 
   root.replaceChildren(titleView, playView.root)
   show('title')

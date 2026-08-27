@@ -149,9 +149,11 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(2)
+    expect(saved.version).toBe(4)
     expect(saved.signal).toBe('5')
     expect(saved.layer).toBe(1)
+    expect(saved.upgrades).toEqual({})
+    expect(saved.harmonics).toBe(0)
     // a fresh shell restores the saved signal
     shell.destroy()
     shells.splice(shells.indexOf(shell), 1)
@@ -170,5 +172,230 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     expect(shell.layers.state.layer).toBe(3)
     expect(shell.layers.def.id).toBe(3)
     expect(root.querySelector('#signal')?.textContent).toBe('42')
+  })
+})
+
+describe('shop tabs + Resonators (M6)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  function clickHarvest(root: HTMLElement, times: number): void {
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+
+  it('defaults to the Relays tab; Resonators tab reveals the upgrade list', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    expect((root.querySelector('#tab-relays') as HTMLButtonElement).classList.contains('active')).toBe(true)
+    expect((root.querySelector('#tab-upgrades') as HTMLButtonElement).classList.contains('active')).toBe(false)
+    expect(root.querySelector('#generators-panel')?.classList.contains('hidden')).toBe(false)
+    expect(root.querySelector('#upgrades-panel')?.classList.contains('hidden')).toBe(true)
+    ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(root.querySelector('#upgrades-panel')?.classList.contains('hidden')).toBe(false)
+    expect(root.querySelector('#generators-panel')?.classList.contains('hidden')).toBe(true)
+    expect(root.querySelectorAll('#upgrade-list .upgrade-row').length).toBe(6)
+    // nothing affordable at Signal 0
+    for (const id of ['amp', 'overdrive', 'whisper-harmonics', 'pulse-resonance', 'beam-alignment', 'global-resonance']) {
+      expect((root.querySelector(`#buy-${id}`) as HTMLButtonElement).disabled).toBe(true)
+    }
+  })
+
+  it('buying an upgrade from the DOM deducts Signal and marks it Attuned', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 100)
+    ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const buyBtn = root.querySelector('#buy-amp') as HTMLButtonElement
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(root.querySelector('#signal')?.textContent).toBe('0')
+    expect(buyBtn.textContent).toBe('Attuned')
+    expect(buyBtn.disabled).toBe(true)
+    expect(shell.engine.isUpgradeOwned('amp')).toBe(true)
+    // click power is now ×2
+    clickHarvest(root, 1)
+    expect(root.querySelector('#signal')?.textContent).toBe('2')
+    expect((root.querySelector('#click-signal') as HTMLButtonElement).textContent).toBe('Harvest Signal (+2)')
+  })
+
+  it('restores saved upgrades (M6)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 3,
+        signal: '5',
+        relays: {},
+        layer: 1,
+        upgrades: { amp: true },
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.engine.clickPower().toString()).toBe('2')
+    ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const buyBtn = root.querySelector('#buy-amp') as HTMLButtonElement
+    expect(buyBtn.textContent).toBe('Attuned')
+    expect(buyBtn.disabled).toBe(true)
+  })
+})
+
+describe('layer strip (M7)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  it('shows the strip with the live stratum at layer 1', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    expect(root.querySelector('#layer-strip')?.classList.contains('hidden')).toBe(false)
+    expect(root.querySelector('#here')?.textContent).toBe('You are here: Echo Hollow')
+    const chips = root.querySelectorAll('#layer-strip .layer-chip')
+    expect(chips.length).toBe(3) // window clamped at the low end: layers 1..3
+    expect(root.querySelector('.layer-chip[data-layer-chip="1"]')?.textContent).toContain('Echo Hollow')
+    expect(root.querySelector('.layer-chip[data-layer-chip="1"]')?.classList.contains('active')).toBe(true)
+    expect(root.querySelector('.layer-chip[data-layer-chip="2"]')?.classList.contains('active')).toBe(false)
+    const nextLine = root.querySelector('.layer-next')
+    expect(nextLine?.textContent).toContain('Halo Hollow')
+    expect(nextLine?.textContent).toContain('1.00M')
+  })
+
+  it('re-renders the strip for a restored stratum (layer 3)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 3,
+        signal: '42',
+        relays: {},
+        layer: 3,
+        upgrades: {},
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.layers.state.layer).toBe(3)
+    expect(root.querySelector('#here')?.textContent).toBe('You are here: Drift Hollow')
+    const chips = root.querySelectorAll('#layer-strip .layer-chip')
+    expect(chips.length).toBe(5) // layers 1..5 around the current
+    expect(root.querySelector('.layer-chip[data-layer-chip="3"]')?.classList.contains('active')).toBe(true)
+    const nextLine = root.querySelector('.layer-next')
+    expect(nextLine?.textContent).toContain('Veil Hollow')
+    expect(nextLine?.textContent).toContain('100M')
+  })
+})
+
+describe('Ascend / prestige (M8)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  it('prestige panel is hidden below the threshold', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root) // fresh save: Signal 0
+    expect(shell.engine.state.signal.toString()).toBe('0')
+    expect(root.querySelector('#prestige-panel')?.classList.contains('hidden')).toBe(true)
+    expect((root.querySelector('#ascend-btn') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('panel appears at the threshold; ascend grants harmonics and wipes the slice (ACCEPT)', () => {
+    // Seed a save that has just met the layer-1 threshold.
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 4,
+        signal: '1000000',
+        relays: { whisper: 10 },
+        layer: 1,
+        upgrades: { amp: true },
+        harmonics: 0,
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    const panel = root.querySelector('#prestige-panel') as HTMLElement
+    expect(panel.classList.contains('hidden')).toBe(false)
+    const reward = root.querySelector('#prestige-reward') as HTMLElement
+    expect(reward.textContent).toContain('1 Harmonic')
+    expect(reward.textContent).toContain('Halo Hollow')
+    expect((root.querySelector('#ascend-btn') as HTMLButtonElement).disabled).toBe(false)
+
+    ;(root.querySelector('#ascend-btn') as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+
+    // Layer advances; harmonics granted; permanent mult > 1.
+    expect(shell.layers.state.layer).toBe(2)
+    expect(shell.layers.state.harmonics).toBe(1)
+    expect(shell.layers.harmonicMult().gt(1)).toBe(true)
+    // The layer slice is wiped.
+    expect(shell.engine.state.signal.toString()).toBe('0')
+    expect(Object.keys(shell.engine.state.relays)).toHaveLength(0)
+    expect(shell.engine.isUpgradeOwned('amp')).toBe(false)
+    // Panel hides again (layer-2 threshold 1e7 not met).
+    expect(panel.classList.contains('hidden')).toBe(true)
+    // The ascend saved the new state immediately.
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY)!)
+    expect(saved.version).toBe(4)
+    expect(saved.layer).toBe(2)
+    expect(saved.harmonics).toBe(1)
+    expect(saved.signal).toBe('0')
+  })
+
+  it('a fresh shell restores harmonics into the engine multiplier (save→load invariant)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 4,
+        signal: '10',
+        relays: { whisper: 1 },
+        layer: 2,
+        upgrades: {},
+        harmonics: 3,
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.layers.state.harmonics).toBe(3)
+    expect(shell.engine.harmonicMult.toString()).toBe('1.06')
+    // 1 whisper = 0.5/s × 1.06 = 0.53
+    expect(shell.engine.productionPerSec().toString()).toBe('0.53')
   })
 })

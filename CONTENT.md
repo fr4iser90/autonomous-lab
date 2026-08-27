@@ -7,8 +7,9 @@ permanent **Harmonics** multiplier. Deep prestige loops with check-back rewards,
 Original names/mechanics — inspired by multi-layer prestige idles, nothing imported (no TMT/Modding Tree).
 
 ## Currencies
-- **Signal** — per-layer currency. Click +1 base (EconomyEngine, M2 — all math in
-  `src/economy/`, never DOM-only); Relays produce /sec (M3+).
+- **Signal** — per-layer currency. Click +1 base (EconomyEngine, M2; Resonators
+  multiply clicks from M6 — all math in `src/economy/`, never DOM-only); Relays
+  produce /sec (M3+).
 - **Number format** — `format()` in `src/economy/format.ts`: integers < 1000, then
   short-scale suffixes K…Dc with 3 significant figures (`format(1.5e6)` = "1.50M"),
   scientific beyond 1e33.
@@ -39,12 +40,39 @@ definitions in `src/data/generators.ts`. Cost of next unit: `baseCost × 1.15^ow
 - **Beam Relay** — "A needle of light through the dark." — 5,000 Signal, +80/sec
 (M5+ derives per-layer relay templates procedurally from `layerDef(N)`.)
 
-## Autosave (M4 stub, v2 at M5)
+## Resonators — Upgrades (M6, live)
+One-time attunements under the **Resonators** shop tab (the Relays/Resonators tab
+pair in the shop panel). Definitions in `src/data/upgrades.ts`; all cost/effect math
+lives in `EconomyEngine` (`buyUpgrade`, `clickPower`, `relayMult`, `globalMult`) —
+never DOM-only. Owned flags persist in save v3 (`upgrades` field).
+Effect kinds: `click-mult` (Signal per click), `relay-mult` (one relay's output),
+`global-mult` (ALL relay output).
+- **Amplified Tap** — "Your clicks echo one octave higher." — 100 Signal — Click ×2
+- **Overdrive** — "Every tap rings like a struck bell." — 10,000 Signal — Click ×5
+- **Whisper Harmonics** — "The whisperers sing in tune." — 500 Signal — Whisper Relay ×2
+- **Pulse Resonance** — "Pulses stack into standing waves." — 5,000 Signal — Pulse Relay ×2
+- **Beam Alignment** — "The beams find the same crack in the sky." — 50,000 Signal — Beam Relay ×2
+- **Global Resonance** — "Everything hums at the same frequency." — 25,000 Signal — All output ×1.5
+(M9+ extends the list; effects compose multiplicatively: relay base × owned × relayMult × globalMult.)
+
+## Strata — Layer Strip (M7, live)
+Always-visible navigator in the play view (`#layer-strip`): a 5-chip window of the
+strata (current ±2, clamped to 1..LAYER_CAP), the current chip highlighted
+(`.layer-chip.active`), chip text "N · <layer name>" with the layer's flavor line as
+tooltip. Below the chips: "Next stratum: <name> at <threshold> Signal"
+("Apex of the Strata" at the cap). The header line shows the live stratum name —
+"You are here: <name>" from `LayerEngine.def` (was hardcoded "Stratum 1").
+Rendered purely from engine state; the strip rebuilds only when the layer changes.
+Chips are informational at M7 (no click action); M8's Ascension panel performs the
+prestige.
+
+## Autosave (M4 stub, v2 at M5, v3 at M6)
 - Key: `signal-ascent-save-v1` (localStorage), payload
-  `{ version: 2, signal, relays, layer, meta.savedAt }`.
+  `{ version: 3, signal, relays, layer, upgrades, meta.savedAt }`.
 - The shell autosaves every **15 s** and on a fresh load restores signal + relay counts
-  + stratum (`src/economy/save.ts`); corrupt/wrong-version payloads are ignored,
-  never fatal. v1 saves (no `layer`) migrate to layer 1.
+  + stratum + owned Resonators (`src/economy/save.ts`); corrupt/wrong-version payloads
+  are ignored, never fatal. v1 saves (no `layer`) migrate to layer 1; v1/v2 saves
+  (no `upgrades`) migrate to none owned.
 - M10 adds settings + offline progress (8 h cap, 25% check-back) on top of the same key.
 
 ## Names

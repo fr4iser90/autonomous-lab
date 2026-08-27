@@ -2,18 +2,23 @@
 
 ## NOW
 - Phase: Milestones M1–M12
-- Milestone: M5 (Strata: layerDef 1–50, LayerEngine, save v2, simulateToLayer) — gate green, pre-PR visual PASS
+- Milestone: M7 (layer strip: always-visible stratum window + live #here + next-threshold line) — gate green, pre-PR visual PASS
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
 - LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
 - deepest_soak_layer: 3 (simulateToLayer(3) green, seed 0)
-- Last ACCEPT: M4 — merged to main as c2cc723 (PR #19)
-- Last SHA: 349900d (SAFE SYNC merge over M5 a73ddbc) — pending push
-- Pre-PR visual: demo/pre-pr/m4-play.png — read_image PASS (relay list, owned 1, cost 17.3, +0.5/sec, Signal 0.8)
-- Gate: `npm test && npm run test:ui && npm run build` — 33 vitest + self-managed UI smoke + build
+- Last ACCEPT: M5 — merged to main as ff39c88 (PR #20, pre-M6 head); M6+M7 on agent branch pending new PR
+- Last SHA: 2bd8193 (M7 code commit; SAFE SYNC merge 27723ba over ff39c88)
+- Pre-PR visual: all 4 shots read_image PASS (title / play-0 / play-5 / post-buy Whisper 1/17.3, +0.5/sec, Signal 0.8; layer strip: Echo Hollow active, "Next stratum: Halo Hollow at 1.00M Signal")
+- Gate: `npm test && npm run test:ui && npm run build` — 62 vitest + self-managed UI smoke + build
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
-- Next: push → PR #20 (M5) → M6 Resonators (≥5 upgrades + shop tab)
+- Next: push M6+M7 → new PR (CI gate) → M8 (Ascend: `floor(sqrt(signal/threshold))` Harmonics reward + Signal wipe + prestige panel)
 
 ## Log
+- 2026-08-26: M7 built — layer strip always visible in the play view: `#layer-strip` un-hidden; 5-chip stratum window (current ±2, clamped to 1..LAYER_CAP, current chip `.active`), chip text "N · <layer name>" with flavor tooltip; "Next stratum: <name> at <threshold> Signal" line ("Apex of the Strata" at cap); header `#here` shows the live stratum name (was hardcoded "Stratum 1"). `buildPlayView(engine, layers)` now takes the LayerEngine; strip re-renders only on layer change (20 Hz render untouched otherwise). +2 shell specs (layer 1 → 3-chip window, "1.00M"; restored layer 3 → 5 chips, "100M") + UI smoke asserts strip visible + "Echo Hollow" + "1.00M". 62 vitest + UI smoke + build green → 2bd8193.
+- 2026-08-26: M7 pre-PR visual PASS (read_image): all 4 shots re-captured + PASS — m1-play/m2-play/m4-play show the layer strip ("You are here: Echo Hollow", chips 1/2/3 with 1 active, "Next stratum: Halo Hollow at 1.00M Signal"); m1-title unchanged.
+- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (ff39c88 = PR #20 squash; automerge landed on the pre-M6 head 2ad93aa, so main had M5 while the branch carried M5+M6+M7); 8 add/add conflicts (docs + shell/save M6-M7 deltas + m2-play.png), all taken --ours; tree byte-identical to 2bd8193 (0-line diff); gate green post-sync → 27723ba.
+- 2026-08-26: M6 built — 6 Resonator upgrades (`src/data/upgrades.ts`): Amplified Tap 100 (click ×2), Whisper Harmonics 500 (Whisper ×2), Pulse Resonance 5000 (Pulse ×2), Global Resonance 25000 (all output ×1.5), Overdrive 10000 (click ×5), Beam Alignment 50000 (Beam ×2); engine gains `clickPower()`/`relayMult()`/`globalMult()`/`buyUpgrade()`, `productionPerSec()` = Σ(base × owned × relayMult) × globalMult; Relays/Resonators shop tab in the UI; Harvest label shows live click value; save **v3** (`upgrades` in payload; v1/v2 saves migrate to none owned). 60 vitest + UI smoke (tab assertions) + build green → fc5d543.
+- 2026-08-26: M6 pre-PR visual PASS (read_image): all 4 shots re-captured + PASS — m1-title (title view), m1-play (Signal 0, shop tabs), m2-play (Signal 5), m4-play (Whisper 1/17.3, +0.5/sec, Signal 0.8).
 - 2026-08-26: Run started. Cloned boilerplate; branch agent/celestial-inc-20260826 from origin/baseline.
 - 2026-08-26: M1 — replaced toy src with Signal Ascent title+play shell (DOM), shell state machine + 4 vitest smoke tests; pinned typescript 5.9.3 / vite 7.3.6; esbuild builds enabled (pnpm-workspace.yaml allowBuilds); docs seeded (CONTENT/shared-design/FEATURES/SOAK/DEMO/README Current-run). Gate green.
 - 2026-08-26: M1 pre-PR visual PASS (read_image): demo/pre-pr/m1-title.png, m1-play.png. Ports 5173–5176 held by foreign run → dev on 5177 (.game.port drives Playwright).

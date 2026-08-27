@@ -32,3 +32,21 @@ _(empty — nothing decided yet)_
   Save bumped to **v2** (`layer` in payload; v1 saves migrate to layer 1).
   **`simulateToLayer(N, seed?)`** in `tests/simulate.ts` is the headless depth truth
   (deterministic, real engine, no DOM) — verified through layer 3.
+- M6: **Resonators (upgrades)** — 6 one-time attunements in the shop's second tab
+  (Relays ↔ Resonators; definitions in `src/data/upgrades.ts`, all math in the engine):
+  Amplified Tap 100 (click ×2), Whisper Harmonics 500 (Whisper ×2),
+  Pulse Resonance 5000 (Pulse ×2), Global Resonance 25000 (all output ×1.5),
+  Overdrive 10000 (click ×5), Beam Alignment 50000 (Beam ×2). Engine gains
+  `clickPower()`/`relayMult()`/`globalMult()`/`buyUpgrade()`; `productionPerSec()`
+  = Σ(base × owned × relayMult) × globalMult. The Harvest button label shows the
+  live click value. Save bumped to **v3** (`upgrades` in payload; v1/v2 saves
+  migrate to none owned).
+- M7: **Layer strip (live stratum navigator)** — the play view always renders
+  `#layer-strip`: a 5-chip window (current ±2, clamped to 1..LAYER_CAP) with the
+  current chip `.active` ("N · <name>", flavor tooltip), plus a
+  "Next stratum: <name> at <threshold> Signal" line ("Apex of the Strata" at the
+  cap). Header `#here` shows the live stratum name (was hardcoded "Stratum 1").
+  `buildPlayView(engine, layers)` takes the LayerEngine; the strip re-renders only
+  on layer change (the 20 Hz render is otherwise untouched). +2 shell specs
+  (layer-1 window = 3 chips / "1.00M"; restored layer 3 = 5 chips / "100M");
+  UI smoke asserts strip visible + "Echo Hollow" + "1.00M".

@@ -81,3 +81,113 @@ describe('EconomyEngine (M3: Relays)', () => {
     expect(engine.buyRelay('nope')).toBeNull()
   })
 })
+
+describe('EconomyEngine (M6: Resonator upgrades)', () => {
+  it('clickPower is 1 with no upgrades; click gains +1', () => {
+    const engine = new EconomyEngine()
+    expect(engine.clickPower().toString()).toBe('1')
+    expect(engine.click().toString()).toBe('1')
+  })
+
+  it('click upgrades multiply clicks (amp ×2, overdrive ×5 → ×10)', () => {
+    const engine = new EconomyEngine({ signal: new Decimal(20_000) })
+    expect(engine.buyUpgrade('amp')).not.toBeNull() // -100 -> 19900
+    expect(engine.clickPower().toString()).toBe('2')
+    expect(engine.buyUpgrade('overdrive')).not.toBeNull() // -10000 -> 9900
+    expect(engine.clickPower().toString()).toBe('10')
+    engine.click()
+    expect(engine.state.signal.toString()).toBe('9910') // 9900 + 10
+  })
+
+  it('buyUpgrade charges the cost once; re-buying is a no-op', () => {
+    const engine = new EconomyEngine({ signal: new Decimal(100) })
+    expect(engine.buyUpgrade('amp')).not.toBeNull()
+    expect(engine.state.signal.toString()).toBe('0')
+    expect(engine.isUpgradeOwned('amp')).toBe(true)
+    expect(engine.buyUpgrade('amp')).toBeNull()
+  })
+
+  it('refuses unaffordable and unknown upgrades (no state change)', () => {
+    const engine = new EconomyEngine({ signal: new Decimal(50) })
+    expect(engine.buyUpgrade('amp')).toBeNull()
+    expect(engine.buyUpgrade('nope')).toBeNull()
+    expect(engine.state.signal.toString()).toBe('50')
+    expect(Object.keys(engine.state.upgrades)).toHaveLength(0)
+  })
+
+  it('relay upgrades double only that relay (2 whisper + harmonics → 2/sec, pulse untouched)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(1_000),
+      relays: { whisper: 2, pulse: 1 },
+    })
+    expect(engine.buyUpgrade('whisper-harmonics')).not.toBeNull() // -500
+    // 2 * 0.5 * 2 + 1 * 6 = 2 + 6 = 8
+    expect(engine.productionPerSec().toString()).toBe('8')
+  })
+
+  it('global upgrades scale ALL relay output (×1.5)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(30_000),
+      relays: { whisper: 2, pulse: 1 },
+    })
+    expect(engine.productionPerSec().toString()).toBe('7') // 1 + 6
+    expect(engine.buyUpgrade('global-resonance')).not.toBeNull() // -25000
+    // (2 * 0.5 + 6) * 1.5 = 10.5
+    expect(engine.productionPerSec().toString()).toBe('10.5')
+  })
+
+  it('relay + global multipliers compose (2 whisper, ×2 relay, ×1.5 global → 3)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(26_000),
+      relays: { whisper: 2 },
+    })
+    engine.buyUpgrade('whisper-harmonics')
+    engine.buyUpgrade('global-resonance')
+    // (2 * 0.5 * 2) * 1.5 = 3
+    expect(engine.productionPerSec().toString()).toBe('3')
+  })
+})
+
+describe('EconomyEngine (M8: Ascend support)', () => {
+  it('resetLayerSlice wipes Signal, Relays and Resonator upgrades', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal('12345'),
+      relays: { whisper: 3, pulse: 2 },
+      upgrades: { amp: true },
+    })
+    expect(engine.productionPerSec().gt(0)).toBe(true)
+    engine.resetLayerSlice()
+    expect(engine.state.signal.toString()).toBe('0')
+    expect(Object.keys(engine.state.relays)).toHaveLength(0)
+    expect(engine.isUpgradeOwned('amp')).toBe(false)
+    expect(engine.productionPerSec().toString()).toBe('0')
+  })
+
+  it('the harmonic multiplier boosts click power and production (ACCEPT: mult > 1)', () => {
+    const engine = new EconomyEngine({ relays: { whisper: 2 } }, '1.02')
+    // 2 * 0.5 * 1.02 = 1.02
+    expect(engine.productionPerSec().toString()).toBe('1.02')
+    expect(engine.clickPower().toString()).toBe('1.02')
+    engine.click()
+    expect(engine.state.signal.toString()).toBe('1.02')
+  })
+
+  it('setHarmonicMult accepts finite values >= 1 and rejects corrupt input', () => {
+    const engine = new EconomyEngine()
+    expect(engine.harmonicMult.toString()).toBe('1')
+    engine.setHarmonicMult('1.02')
+    expect(engine.harmonicMult.toString()).toBe('1.02')
+    engine.setHarmonicMult(Number.NaN)
+    expect(engine.harmonicMult.toString()).toBe('1.02') // unchanged
+    engine.setHarmonicMult('0.5')
+    expect(engine.harmonicMult.toString()).toBe('1.02') // sub-1 rejected
+    engine.setHarmonicMult('not-a-number')
+    expect(engine.harmonicMult.toString()).toBe('1.02')
+  })
+
+  it('the harmonic multiplier is not wiped by resetLayerSlice (it persists)', () => {
+    const engine = new EconomyEngine({ relays: { whisper: 1 } }, '1.06')
+    engine.resetLayerSlice()
+    expect(engine.harmonicMult.toString()).toBe('1.06')
+  })
+})

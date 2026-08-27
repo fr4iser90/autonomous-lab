@@ -5,6 +5,10 @@
  * forward (fixed dt, no DOM) with a deterministic strategy and a seeded RNG,
  * and reports whether the target stratum is reachable without NaN/Infinity.
  * Same target + seed → identical report (Phase 2b invariant).
+ *
+ * M8: ascends are real now — each one wipes the layer slice (Signal, Relays;
+ * Resonators don't enter the sim yet) and injects the new Harmonic multiplier,
+ * so every stratum is farmed from zero. `harmonics` is part of the report.
  */
 import { EconomyEngine } from '../src/economy/engine'
 import { LayerEngine } from '../src/economy/layers'
@@ -30,6 +34,10 @@ export interface SimReport {
   seconds: number
   signal: string
   relays: Record<string, number>
+  /** Cumulative relays bought across all ascends (M8: post-ascend relays may be empty). */
+  totalRelays: number
+  /** Harmonics banked by the sim's ascends (M8) — 0 for single-layer runs. */
+  harmonics: number
   fail: string | null
 }
 
@@ -57,6 +65,8 @@ export function simulateToLayer(target: number, options: SimOptions = {}): SimRe
 
   const economy = new EconomyEngine()
   const layers = new LayerEngine()
+  let totalRelays = 0
+
   const report = (fail: string | null): SimReport => ({
     ok: fail === null && layers.state.layer >= target && economy.state.signal.isFinite(),
     target,
@@ -65,6 +75,8 @@ export function simulateToLayer(target: number, options: SimOptions = {}): SimRe
     seconds: 0,
     signal: economy.state.signal.toString(),
     relays: { ...economy.state.relays },
+    totalRelays,
+    harmonics: layers.state.harmonics,
     fail,
   })
 
@@ -111,9 +123,15 @@ export function simulateToLayer(target: number, options: SimOptions = {}): SimRe
       }
     }
 
-    // Ascend the moment the threshold is met (repeat for multi-layer gaps).
+    // M8: ascend the moment the threshold is met (repeat for multi-layer gaps).
+    // Each ascend wipes the layer slice — the next stratum is farmed from
+    // zero with the new permanent Harmonic multiplier.
     while (layers.next !== null && layers.canAscend(economy.state.signal)) {
+      totalRelays += Object.values(economy.state.relays).reduce((a, b) => a + b, 0)
       if (!layers.ascend(economy.state.signal)) break
+      economy.resetLayerSlice()
+      economy.setHarmonicMult(layers.harmonicMult())
+      for (let i = 0; i < RELAYS.length; i++) costs[i] = economy.relayCost(RELAYS[i].id)
     }
 
     // Invariant: no NaN/Infinity anywhere along the way.
@@ -124,6 +142,9 @@ export function simulateToLayer(target: number, options: SimOptions = {}): SimRe
       return r
     }
   }
+
+  // Count relays on the final layer before reporting.
+  totalRelays += Object.values(economy.state.relays).reduce((a, b) => a + b, 0)
 
   const r = report(null)
   r.ticks = ticks
