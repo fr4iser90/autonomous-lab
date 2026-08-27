@@ -1,14 +1,15 @@
-<!-- PROGRESS: Ashen Delve — Phase 2 complete. All 12 milestones shipped. -->
+<!-- PROGRESS: Ashen Delve — Phase 2 complete. All 12 milestones shipped. Merged to main via PR #34. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **complete** — M1–M12 all shipped
+- Phase: **complete** — M1–M12 all shipped, merged to `main`
 - Milestone: Full playable game deployed to Pages
-- Branch: `agent/dungeon-crawl-20260827` → PR #31 → `main`
+- Branch: `agent/dungeon-crawl-20260827` → PR #34 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **24 tests green, build green, 500 KB bundle**
+- Gate: **26 tests green, build green, ~500 KB bundle**
+- BUGS: all cleared
 
 ## Milestones
 
@@ -29,11 +30,12 @@
 
 ## Log
 
-- 2026-08-27: M1–M9 shipped (PR #31). Gate green.
-- 2026-08-27: M10 shipped — AudioEngine with Web Audio procedural audio.
-- 2026-08-27: M11 shipped — Boss mob with crown glow, Canvas minimap overlay.
-- 2026-08-27: M12 shipped — Full integration, audio timing, combat log, gate green.
-- 2026-08-27: All 12 milestones complete. PR #31 on track for automerge.
+- 2026-08-27: M1–M9 shipped (PR #31). Gate green locally.
+- 2026-08-27: M10–M12 shipped — Audio, Boss, Minimap, full integration.
+- 2026-08-27: Fixed `@vitest/ui` version conflict (4.1.11 → 3.2.4) for CI npm compatibility.
+- 2026-08-27: Fixed tsconfig `"node"` types reference (browser-only project).
+- 2026-08-27: PR #34 merged into `main` after human resolved conflicts.
+- 2026-08-27: All 12 milestones complete. BUGS cleared. Pages deploying.
 
 ## CAP Checklist
 
@@ -42,8 +44,15 @@
 - floorThemes: 2/16 — well below CAP
 - propTypes: (none added) — within CAP
 
+## Fixes Applied
+
+- `@vitest/ui`: `^4.1.11` → `^3.2.4` — resolved npm peer dep conflict with vitest@3.2.7
+- `tsconfig.json`: removed `"node"` from `types` — no Node runtime needed
+- `package.json`: `@types/node` installed for typecheck compatibility
+
 ## Next (Phase 3+)
 
-- Extended dungeon floors (depth scaling)
+- Extended dungeon floors (depth scaling with BSP recursion)
 - More mob variants, loot tables, skill tree
 - Playwright UI smoke tests for title/game screens
+- Soak testing for extended playthroughs
