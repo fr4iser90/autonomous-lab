@@ -251,3 +251,59 @@ describe('shop tabs + Resonators (M6)', () => {
     expect(buyBtn.disabled).toBe(true)
   })
 })
+
+describe('layer strip (M7)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  it('shows the strip with the live stratum at layer 1', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    expect(root.querySelector('#layer-strip')?.classList.contains('hidden')).toBe(false)
+    expect(root.querySelector('#here')?.textContent).toBe('You are here: Echo Hollow')
+    const chips = root.querySelectorAll('#layer-strip .layer-chip')
+    expect(chips.length).toBe(3) // window clamped at the low end: layers 1..3
+    expect(root.querySelector('.layer-chip[data-layer-chip="1"]')?.textContent).toContain('Echo Hollow')
+    expect(root.querySelector('.layer-chip[data-layer-chip="1"]')?.classList.contains('active')).toBe(true)
+    expect(root.querySelector('.layer-chip[data-layer-chip="2"]')?.classList.contains('active')).toBe(false)
+    const nextLine = root.querySelector('.layer-next')
+    expect(nextLine?.textContent).toContain('Halo Hollow')
+    expect(nextLine?.textContent).toContain('1.00M')
+  })
+
+  it('re-renders the strip for a restored stratum (layer 3)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 3,
+        signal: '42',
+        relays: {},
+        layer: 3,
+        upgrades: {},
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.layers.state.layer).toBe(3)
+    expect(root.querySelector('#here')?.textContent).toBe('You are here: Drift Hollow')
+    const chips = root.querySelectorAll('#layer-strip .layer-chip')
+    expect(chips.length).toBe(5) // layers 1..5 around the current
+    expect(root.querySelector('.layer-chip[data-layer-chip="3"]')?.classList.contains('active')).toBe(true)
+    const nextLine = root.querySelector('.layer-next')
+    expect(nextLine?.textContent).toContain('Veil Hollow')
+    expect(nextLine?.textContent).toContain('100M')
+  })
+})

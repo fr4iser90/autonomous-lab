@@ -5,11 +5,14 @@
  * M4: main PLAY UI — big click, live rate, relay list with buy buttons,
  *     autosave stub wired in the shell (not in the view).
  * M6: shop tabs (Relays / Resonators) + Resonator upgrade list with buy.
+ * M7: layer strip always visible — live stratum window (5 chips) + next-threshold.
  */
 import { EconomyEngine } from '../economy/engine'
 import { RELAYS, getRelay } from '../data/generators'
 import { UPGRADES, type UpgradeEffect } from '../data/upgrades'
 import { format } from '../economy/format'
+import { LAYER_CAP, layerDef } from '../data/layers'
+import { LayerEngine } from '../economy/layers'
 
 /** Short human description of an upgrade effect (render only — M6). */
 function upgradeEffectText(effect: UpgradeEffect): string {
@@ -42,7 +45,7 @@ export interface PlayView {
   render: () => void
 }
 
-export function buildPlayView(engine: EconomyEngine): PlayView {
+export function buildPlayView(engine: EconomyEngine, layers: LayerEngine): PlayView {
   const section = document.createElement('section')
   section.id = 'play-view'
   section.className = 'view hidden'
@@ -61,7 +64,7 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
         <p id="economy-note" class="muted">Relays produce Signal every second. Progress autosaves.</p>
       </section>
       <aside id="side-panels" aria-label="Panels">
-        <nav id="layer-strip" class="hidden" aria-label="Layer navigator"></nav>
+        <nav id="layer-strip" aria-label="Layer navigator"></nav>
         <nav id="shop-tabs" aria-label="Shop tabs">
           <button id="tab-relays" type="button" class="shop-tab active">Relays</button>
           <button id="tab-upgrades" type="button" class="shop-tab">Resonators</button>
@@ -108,8 +111,34 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
   const signalEl = section.querySelector('#signal') as HTMLElement
   const rateEl = section.querySelector('#rate') as HTMLElement
   const clickBtn = section.querySelector('#click-signal') as HTMLButtonElement
+  const hereEl = section.querySelector('#here') as HTMLElement
+  const stripEl = section.querySelector('#layer-strip') as HTMLElement
+  let renderedLayer = -1
+
+  // M7: stratum window around the current layer (rebuild only on layer change).
+  function renderStrip(): void {
+    if (renderedLayer === layers.state.layer) return
+    renderedLayer = layers.state.layer
+    const curId = layers.state.layer
+    const cur = layers.def
+    hereEl.textContent = `You are here: ${cur.name}`
+    const start = Math.max(1, curId - 2)
+    const end = Math.min(LAYER_CAP, curId + 2)
+    const chips: string[] = []
+    for (let n = start; n <= end; n++) {
+      const d = layerDef(n)
+      const cls = n === curId ? 'layer-chip active' : 'layer-chip'
+      chips.push(`<span class="${cls}" data-layer-chip="${n}" title="${d.flavor}">${n} · ${d.name}</span>`)
+    }
+    const next = layers.next
+    const nextLine = next
+      ? `<p class="layer-next muted">Next stratum: ${next.name} at ${format(layers.def.threshold)} Signal</p>`
+      : `<p class="layer-next muted">Apex of the Strata</p>`
+    stripEl.innerHTML = chips.join('') + nextLine
+  }
 
   function render(): void {
+    renderStrip()
     signalEl.textContent = format(engine.state.signal)
     rateEl.textContent = `+${format(engine.productionPerSec())} / sec`
     clickBtn.textContent = `Harvest Signal (+${format(engine.clickPower())})`
