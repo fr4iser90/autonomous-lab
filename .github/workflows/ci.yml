@@ -40,8 +40,6 @@ jobs:
             'BOILERPLATE.md' \
             'SETUP.md' \
             'MODEL_STACKS.md' \
-            'eslint.config.js' \
-            '.dependency-cruiser.cjs' \
             'scripts/new-run.sh' \
             'LICENSE' \
             || true)
