@@ -9,8 +9,8 @@ describe('LayerEngine (M5)', () => {
     expect(layers.def.id).toBe(1)
     expect(layers.def.threshold.toString()).toBe('1000000')
     expect(layers.next?.id).toBe(2)
-    // layer 2 threshold: 1e6 × 3 = 3e6
-    expect(layers.next?.threshold.toString()).toBe('1500000')
+    // layer 2 threshold: 1e6 × 1.1 = 1.1e6
+    expect(layers.next?.threshold.toString()).toBe('1100000')
   })
 
   it('only ascends once the threshold is met', () => {
@@ -21,17 +21,20 @@ describe('LayerEngine (M5)', () => {
     expect(layers.state.layer).toBe(1)
     expect(layers.ascend('1000000')).toBe(true)
     expect(layers.state.layer).toBe(2)
-    // Next threshold is 1.5e6 — the 1e6 total is not enough.
+    // Next threshold is 1.1e6 — the 1e6 total is not enough.
     expect(layers.canAscend('1000000')).toBe(false)
     expect(layers.ascend('1000000')).toBe(false)
-    expect(layers.ascend('1500000')).toBe(true)
-    expect(layers.state.layer).toBe(3)
+    expect(layers.ascend('1100000')).toBe(true)
+    // After ascending to layer 3, threshold is 1.21e6
+    expect(layers.canAscend('1200000')).toBe(false)
+    expect(layers.ascend('1210000')).toBe(true)
+    expect(layers.state.layer).toBe(4)
   })
 
   it('stops at LAYER_CAP: next is null, ascend is a no-op', () => {
     const layers = new LayerEngine({ layer: LAYER_CAP })
     expect(layers.next).toBeNull()
-    // Layer 50's threshold is 1e6 × 10^49 = 1e55 — plenty of Signal…
+    // Layer 50's threshold is 1e6 × 1.1^49 ≈ 118 billion — plenty of Signal…
     expect(layers.canAscend('1e60')).toBe(true)
     // …but the cap holds: ascend is still a no-op.
     expect(layers.ascend('1e60')).toBe(false)
@@ -49,13 +52,13 @@ describe('LayerEngine (M5)', () => {
 })
 
 describe('Harmonics + Ascend (M8)', () => {
-  it('harmonicReward is floor((signal / threshold)^0.65)', () => {
+  it('harmonicReward is floor((signal / threshold)^0.75) (M12)', () => {
     expect(harmonicReward('1000000', '1000000')).toBe(1) // exactly at threshold
     expect(harmonicReward('999999', '1000000')).toBe(0) // below
-    expect(harmonicReward('4000000', '1000000')).toBe(2) // 4^0.65 ≈ 2.59
-    expect(harmonicReward('15999999', '1000000')).toBe(6) // 16^0.65 ≈ 6.06
-    expect(harmonicReward('16000000', '1000000')).toBe(6) // same ratio
-    expect(harmonicReward('100000000', '1000000')).toBe(19) // 100^0.65 ≈ 19.95
+    expect(harmonicReward('4000000', '1000000')).toBe(2) // 4^0.75 ≈ 2.83
+    expect(harmonicReward('15999999', '1000000')).toBe(7) // 15.999999^0.75 ≈ 7.99
+    expect(harmonicReward('16000000', '1000000')).toBe(8) // 16^0.75 = 8
+    expect(harmonicReward('100000000', '1000000')).toBe(31) // 100^0.75 ≈ 31.62
   })
 
   it('ascend grants harmonics > 0 and a permanent mult > 1 (ACCEPT)', () => {
@@ -66,17 +69,17 @@ describe('Harmonics + Ascend (M8)', () => {
     expect(layers.state.layer).toBe(2)
     expect(layers.state.harmonics).toBeGreaterThan(0)
     expect(layers.harmonicMult().gt(1)).toBe(true)
-    expect(layers.harmonicMult().toString()).toBe('1.02')
+    expect(layers.harmonicMult().toString()).toBe('1.05')
   })
 
   it('harmonics accumulate across ascends and the multiplier compounds exponentially', () => {
     const layers = new LayerEngine()
     layers.ascend('1000000') // layer 1 → 2: 1e6/1e6=1 → +1
-    layers.ascend('10000000') // layer 2 → 3: 10e6/1.5e6≈6.67 → pow(0.65)≈3 → +3
+    layers.ascend('10000000') // layer 2 → 3: 10e6/1.1e6≈9.09 → pow(0.75)≈4.84 → +5
     expect(layers.state.layer).toBe(3)
-    expect(layers.state.harmonics).toBe(4)
-    // exponential: 1.02^4 ≈ 1.0824
-    expect(layers.harmonicMult().gt(1.08)).toBe(true)
+    expect(layers.state.harmonics).toBe(6)
+    // exponential: 1.05^6 ≈ 1.340
+    expect(layers.harmonicMult().gt(1.33)).toBe(true)
   })
 
   it('below the threshold ascend grants nothing', () => {
@@ -95,7 +98,7 @@ describe('Harmonics + Ascend (M8)', () => {
     expect(clampHarmonics(Number.POSITIVE_INFINITY)).toBe(0)
   })
 
-  it('HARMONIC_BONUS is the +2% base for exponential harmonic compounding', () => {
-    expect(HARMONIC_BONUS.toString()).toBe('0.02')
+  it('HARMONIC_BONUS is the +5% base for exponential harmonic compounding (M12)', () => {
+    expect(HARMONIC_BONUS.toString()).toBe('0.05')
   })
 })

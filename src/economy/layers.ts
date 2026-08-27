@@ -21,8 +21,10 @@ export interface LayerState {
   harmonics: number
 }
 
-/** Permanent all-output bonus per Harmony (M8): +2%, stacking linearly. */
-export const HARMONIC_BONUS = new Decimal(0.02)
+/** Permanent all-output bonus per Harmony (M8 → M12): +5%, exponential stacking.
+ * M12: raised from 2% → 3% → 5% so simulateToLayer(50) reaches within 2M ticks.
+ * Stalled at layer 21 with 1.5× growth, layer 22 at 1.2×, layer 43 at 1.2×/3%. */
+export const HARMONIC_BONUS = new Decimal(0.05)
 
 export function clampLayer(n: number): number {
   // ±Infinity (corrupt save): +∞ → cap, −∞/NaN → layer 1.
@@ -39,17 +41,19 @@ export function clampHarmonics(n: number): number {
 
 /**
  * Harmonics earned by ascending out of a layer with the given Signal total
- * (M8 → M9): floor((signal / threshold)^0.65). 0 below the threshold, ≥ 1 at it.
+ * (M8 → M9 → M12): floor((signal / threshold)^0.75). 0 below the threshold, ≥ 1 at it.
  *
  * M9 retune: power raised from 0.5 (sqrt) to 0.65 to give faster harmonic
  * growth through deeper layers, compensating for the steeper exponential
  * threshold curve (3× per layer).  The old sqrt was too shallow —
  * sim stalled at layer 4.
+ * M12: power raised from 0.65 to 0.75 to give more harmonics per ascend,
+ * compensating for the 1.2× growth (deeper layer reach for sim50).
  */
 export function harmonicReward(signal: Decimal.Value, threshold: Decimal.Value): number {
   const ratio = new Decimal(signal).div(threshold)
   if (!ratio.isFinite() || ratio.lt(1)) return 0
-  return ratio.pow(0.65).floor().toNumber()
+  return ratio.pow(0.75).floor().toNumber()
 }
 
 export class LayerEngine {
