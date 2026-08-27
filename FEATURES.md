@@ -41,3 +41,12 @@ _(empty — nothing decided yet)_
   = Σ(base × owned × relayMult) × globalMult. The Harvest button label shows the
   live click value. Save bumped to **v3** (`upgrades` in payload; v1/v2 saves
   migrate to none owned).
+- M7: **Layer strip (live stratum navigator)** — the play view always renders
+  `#layer-strip`: a 5-chip window (current ±2, clamped to 1..LAYER_CAP) with the
+  current chip `.active` ("N · <name>", flavor tooltip), plus a
+  "Next stratum: <name> at <threshold> Signal" line ("Apex of the Strata" at the
+  cap). Header `#here` shows the live stratum name (was hardcoded "Stratum 1").
+  `buildPlayView(engine, layers)` takes the LayerEngine; the strip re-renders only
+  on layer change (the 20 Hz render is otherwise untouched). +2 shell specs
+  (layer-1 window = 3 chips / "1.00M"; restored layer 3 = 5 chips / "100M");
+  UI smoke asserts strip visible + "Echo Hollow" + "1.00M".
