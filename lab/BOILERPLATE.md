@@ -47,7 +47,7 @@ green: merges **into `main`**, then **resets that `agent/*` tip to `main`**
 
 1. **BOILERPLATE_OWNED** → keep **main** (including all of `lab/**`)
 2. **RUN_OWNED** (`src/`, `tests/`, `demo/`, run docs, …) → keep **agent**
-3. `npm run gate` / `pnpm run gate` on the merged tree must pass before push to `main`
+3. `pnpm run gate` on the merged tree must pass before push to `main`
 4. Sync `agent/<run-id>` → `origin/main` so the next push is not forever CONFLICTING
 
 When a human/agent merges `origin/main` into `agent/*` locally (usually unnecessary
