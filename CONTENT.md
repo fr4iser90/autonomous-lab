@@ -7,7 +7,11 @@ permanent **Harmonics** multiplier. Deep prestige loops with check-back rewards,
 Original names/mechanics — inspired by multi-layer prestige idles, nothing imported (no TMT/Modding Tree).
 
 ## Currencies
-- **Signal** — per-layer currency. Click +1 base; Relays produce /sec. (M2+)
+- **Signal** — per-layer currency. Click +1 base (EconomyEngine, M2 — all math in
+  `src/economy/`, never DOM-only); Relays produce /sec (M3+).
+- **Number format** — `format()` in `src/economy/format.ts`: integers < 1000, then
+  short-scale suffixes K…Dc with 3 significant figures (`format(1.5e6)` = "1.50M"),
+  scientific beyond 1e33.
 - **Harmonics** — meta currency gained on Ascend (prestige of layer N). Each grants a
   permanent multiplicative bonus to Signal production. (M8+)
 

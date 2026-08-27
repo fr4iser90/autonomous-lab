@@ -1,7 +1,10 @@
 /**
- * Signal Ascent — static view builders (M1 shell).
- * Panels are present but inert until the engines land (M2+).
+ * Signal Ascent — view builders.
+ * M2: the play view is live for the economy — all click math goes through
+ * EconomyEngine (never DOM-only formulas); views only render engine state.
  */
+import { EconomyEngine } from '../economy/engine'
+import { format } from '../economy/format'
 
 export function buildTitleView(): HTMLElement {
   const section = document.createElement('section')
@@ -16,7 +19,7 @@ export function buildTitleView(): HTMLElement {
   return section
 }
 
-export function buildPlayView(): HTMLElement {
+export function buildPlayView(engine: EconomyEngine): HTMLElement {
   const section = document.createElement('section')
   section.id = 'play-view'
   section.className = 'view hidden'
@@ -31,8 +34,8 @@ export function buildPlayView(): HTMLElement {
         <p class="label">Signal</p>
         <p id="signal" class="stat">0</p>
         <p id="rate" class="muted">+0 / sec</p>
-        <button id="click-signal" type="button" disabled>Harvest Signal</button>
-        <p id="economy-note" class="muted">Economy boots at the next milestone</p>
+        <button id="click-signal" type="button">Harvest Signal (+1)</button>
+        <p id="economy-note" class="muted">Every click harvests Signal. Relays come next.</p>
       </section>
       <aside id="side-panels" aria-label="Panels">
         <nav id="layer-strip" class="hidden" aria-label="Layer navigator"></nav>
@@ -42,5 +45,19 @@ export function buildPlayView(): HTMLElement {
       </aside>
     </div>
   `
+
+  const signalEl = section.querySelector('#signal') as HTMLElement
+  const clickBtn = section.querySelector('#click-signal') as HTMLButtonElement
+
+  function renderSignal(): void {
+    signalEl.textContent = format(engine.state.signal)
+  }
+
+  clickBtn.addEventListener('click', () => {
+    engine.click()
+    renderSignal()
+  })
+  renderSignal()
+
   return section
 }
