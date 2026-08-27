@@ -10,7 +10,10 @@
  *     the Harmonic reward, ascends through the `onAscend` callback (the shell
  *     orchestrates the slice wipe + multiplier update; the view only renders
  *     and forwards clicks).
+ * M10: buy-max toggle on generators panel — checkbox switches between buying
+ *     single units (default) and buying as many as affordable in one click.
  */
+import { Decimal } from 'decimal.js'
 import { EconomyEngine } from '../economy/engine'
 import { RELAYS, getRelay } from '../data/generators'
 import { UPGRADES, type UpgradeEffect } from '../data/upgrades'
@@ -78,7 +81,13 @@ export function buildPlayView(
           <button id="tab-upgrades" type="button" class="shop-tab">Resonators</button>
         </nav>
         <section id="generators-panel" class="panel" aria-label="Relays">
-          <h2 class="panel-title">Relays</h2>
+          <div class="panel-title-wrap">
+            <h2 class="panel-title">Relays</h2>
+            <label class="buy-max-label">
+              <input type="checkbox" id="buy-max-toggle" />
+              <span>Buy Max</span>
+            </label>
+          </div>
           <ul id="relay-list" class="relay-list">
             ${RELAYS.map((r) => `
               <li class="relay-row" data-relay-id="${r.id}">
@@ -129,6 +138,8 @@ export function buildPlayView(
   const prestigePanel = section.querySelector('#prestige-panel') as HTMLElement
   const prestigeReward = section.querySelector('#prestige-reward') as HTMLElement
   const ascendBtn = section.querySelector('#ascend-btn') as HTMLButtonElement
+  const buyMaxCheckbox = section.querySelector('#buy-max-toggle') as HTMLInputElement
+  let buyMax = false
   let renderedLayer = -1
 
   // M7: stratum window around the current layer (rebuild only on layer change).
@@ -154,6 +165,7 @@ export function buildPlayView(
   }
 
   function render(): void {
+    buyMax = buyMaxCheckbox.checked
     renderStrip()
     // M8: prestige panel — visible only once the layer threshold is met.
     const canAscend = layers.next !== null && layers.canAscend(engine.state.signal)
@@ -175,8 +187,33 @@ export function buildPlayView(
       const owned = engine.state.relays[def.id] ?? 0
       ;(row.querySelector('.relay-owned') as HTMLElement).textContent = String(owned)
       const cost = engine.relayCost(def.id)
-      ;(row.querySelector('.relay-cost') as HTMLElement).textContent = format(cost)
-      ;(row.querySelector(`#buy-${def.id}`) as HTMLButtonElement).disabled = engine.state.signal.lt(cost)
+      const costEl = row.querySelector('.relay-cost') as HTMLElement
+      const buyBtn = row.querySelector(`#buy-${def.id}`) as HTMLButtonElement
+      if (buyMax) {
+        // Count max affordable units
+        let qty = 0
+        let totalCost = new Decimal(0)
+        const signal = engine.state.signal
+        let tempCost = cost
+        while (signal.gte(tempCost)) {
+          qty++
+          totalCost = totalCost.plus(tempCost)
+          tempCost = tempCost.times(def.costGrowth)
+        }
+        if (qty > 0) {
+          costEl.innerHTML = `${format(totalCost)} <span class="muted">(${qty} × ${format(cost)})</span>`
+          buyBtn.textContent = `Buy ${qty}`
+          buyBtn.disabled = false
+        } else {
+          costEl.textContent = format(cost)
+          buyBtn.textContent = 'Buy'
+          buyBtn.disabled = true
+        }
+      } else {
+        costEl.textContent = format(cost)
+        buyBtn.textContent = 'Buy'
+        buyBtn.disabled = engine.state.signal.lt(cost)
+      }
     }
     for (const def of UPGRADES) {
       const row = section.querySelector(`.upgrade-row[data-upgrade-id="${def.id}"]`)
@@ -201,7 +238,11 @@ export function buildPlayView(
   for (const def of RELAYS) {
     const buyBtn = section.querySelector(`#buy-${def.id}`) as HTMLButtonElement
     buyBtn.addEventListener('click', () => {
-      engine.buyRelay(def.id)
+      if (buyMax) {
+        engine.buyMaxRelay(def.id)
+      } else {
+        engine.buyRelay(def.id)
+      }
       render()
     })
   }
@@ -213,6 +254,12 @@ export function buildPlayView(
       render()
     })
   }
+
+  // M10: buy-max toggle on the generators panel
+  buyMaxCheckbox.addEventListener('change', () => {
+    buyMax = buyMaxCheckbox.checked
+    render()
+  })
 
   // M8: the view only forwards the click — the shell orchestrates the ascend
   // (threshold check, harmonics grant, slice wipe, multiplier update, save).
