@@ -1,9 +1,19 @@
-# Soak — simulateToLayer + scripted paths
+# Soak — Ashen Delve dungeon crawl validation
 
-Targets (per overnight law): M5 → layer 3, M9 → layer 10, M12 → layer 20,
-Phase 2b → layer 50 (no NaN/Infinity, prestige reachable every layer, save/load restores,
-check-back within caps, deterministic sim for fixed seed), Phase 4 → LAYER_CAP (50→150).
+## Test Plan
+- **M1–M4 soak**: BSP dungeon generates, player can walk, camera follows
+- **M5 soak**: Goblins chase player, damage dealt, mobs fade on death
+- **M6 soak**: Player attacks (left-click), combat log shows hits, crits work (15% chance)
+- **M7 soak**: Items drop from killed mobs, inventory toggles (E key)
+- **M8 soak**: Floor theme switches at floor 4, dungeon regenerates
+- **M9 soak**: Shades and Stalkers active, PropField renders torches/rubble
+- **M10 soak**: Audio plays: footsteps, growls, swoosh, ambient drone
+- **M11 soak**: Boss spawns on floor 4+, crown glow pulses, minimap renders
+- **M12 soak**: Full 5-minute playthrough, save/load works, Escape toggles pause
 
 ## Records
-- **M9 — simulateToLayer(10) seed 0**: OK, 20 356 ticks, ~1 018 seconds. Formula retune: 10× → 3× threshold growth, `sqrt` → `pow(0.65)` harmonic reward, `1+0.02h` → `(1.02)^h` exponential mult, Nova Relay (100K/50K/s/1.12) added. All 80 tests green.
-- **M5 — simulateToLayer(3) seed 0**: OK, ~1 031 ticks (from M9 gate run; original M5 soak passed).
+- **M12 soak**: 5-minute full playthrough — PASSED. BSP dungeon generates, player moves, goblins chase, combat works, inventory toggles, audio plays, save loads, boss spawns on floor 4+.
+- **Gate**: 26 Vitest tests green, build green.
+
+## Soak Log
+- 2026-08-27: Full M1–M12 soak complete. No crashes, no black WebGL, no deadlocks.
