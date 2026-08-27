@@ -38,12 +38,17 @@ export function clampHarmonics(n: number): number {
 
 /**
  * Harmonics earned by ascending out of a layer with the given Signal total
- * (M8): floor(sqrt(signal / threshold)). 0 below the threshold, ≥ 1 at it.
+ * (M8 → M9): floor((signal / threshold)^0.65). 0 below the threshold, ≥ 1 at it.
+ *
+ * M9 retune: power raised from 0.5 (sqrt) to 0.65 to give faster harmonic
+ * growth through deeper layers, compensating for the steeper exponential
+ * threshold curve (3× per layer).  The old sqrt was too shallow —
+ * sim stalled at layer 4.
  */
 export function harmonicReward(signal: Decimal.Value, threshold: Decimal.Value): number {
   const ratio = new Decimal(signal).div(threshold)
   if (!ratio.isFinite() || ratio.lt(1)) return 0
-  return ratio.sqrt().floor().toNumber()
+  return ratio.pow(0.65).floor().toNumber()
 }
 
 export class LayerEngine {
@@ -83,8 +88,15 @@ export class LayerEngine {
     return true
   }
 
-  /** Permanent all-output multiplier from owned Harmonics (M8): 1 + 0.02 × h. */
+  /**
+   * Permanent all-output multiplier from owned Harmonics (M8 → M9):
+   * (1 + HARMONIC_BONUS)^h — exponential compounding.
+   *
+   * M9: switched from linear `1 + 0.02*h` to exponential `(1.02)^h`
+   * so higher harmonic counts scale faster, enabling multi-layer
+   * progression within the sim tick budget.
+   */
   harmonicMult(): Decimal {
-    return new Decimal(1).plus(new Decimal(this.state.harmonics).times(HARMONIC_BONUS))
+    return new Decimal(1).plus(HARMONIC_BONUS).pow(this.state.harmonics)
   }
 }
