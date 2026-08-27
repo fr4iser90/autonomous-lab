@@ -36,5 +36,11 @@ if (await chips.count() > 0) {
 await page.screenshot({ path: 'demo/pre-pr-layer-switch.png', fullPage: true })
 console.log('Layer switch captured')
 
+// Click Resonators tab to show upgrade list
+await page.click('#tab-upgrades')
+await page.waitForTimeout(300)
+await page.screenshot({ path: 'demo/pre-pr-resonators.png', fullPage: true })
+console.log('Resonators tab captured')
+
 await browser.close()
-console.log('PRE-PR VISUAL PASS — 3 screenshots saved')
+console.log('PRE-PR VISUAL PASS — 4 screenshots saved')
