@@ -1,7 +1,7 @@
 # Progress — Signal Ascent (run agent/celestial-inc-20260826)
 
 ## NOW
-- Phase: **Phase 4 — cycle 1 COMPLETE**, cycle 2 P4-1 FEATURE COMPLETE, CI running on PR #22
+- Phase: **Phase 4 — cycle 2 COMPLETE** (nova-cascade + echo-burst, 8 upgrades total)
 - Phase 3: DEMO.webm recorded, 10 storyboard frames PASS, 0 console errors
 - Milestone: M12 — gate green, 130 tests
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
@@ -14,7 +14,8 @@
 - Sim50: seed 0 → 1,050,004 ticks, seed 42 → 1,049,371 ticks — both ≤ 2M budget, 50 harmonics
 - Note: ports 5173–5176 held by foreign run; dev on 5179 for PRE-PR visuals
 - Balance note: threshold growth retuned 3× → 1.5× → 1.2× → 1.1×; HARMONIC_BONUS 2% → 3% → 5%; harmonicReward power 0.65 → 0.75
-- Next: CI green on PR #22 → handoff → cycle 2 P4-3 prove → cycle 3 planning
+- PR: #26 open → main (Phase 3–4: DEMO + M8–M12 + cycle 1 + cycle 2)
+- Next: CI green on PR #26 → automerge to main → cycle 3 planning
 
 ## Log
 - 2026-08-26: M11 built — Special layer 10 "Echo Layer" mechanics (`src/data/specialLayers.ts`): ascending from layer 10 grants +1 extra Harmonic (echoBonusFor(10) = 1). Auto-ascend toggle (`engine.state.autoAscend`, checkbox on Stats panel): when true, shell auto-calls `layers.ascend()` each tick once threshold met (safe mode: requires ≥1 Harmonic). Achievement system (10 achievements, `src/data/achievements.ts`): First Spark, First Relay, Pulse Starter, Beam Alignment, Nova Ignition, First Ascent, Stratum Climber, Echo Walker, Signal Architect (100 relays), Persistent Ascenter (1K clicks); flags persist in `state.upgrades`, checked each tick, toasts show unlocks. Stats panel in the side-panels: highest layer, total harmonics, relays bought, clicks, play time (ms → h:m:s). Save v5: `stats` field (`totalRelaysBought`, `totalClicks`, `playTime`); v4→v5 migration loads zeroes. +20 vitest specs (special layers, echo bonus, auto-ascend toggle, 12 achievement checks, 2 toggle tests). 104 vitest + UI smoke + build green.
