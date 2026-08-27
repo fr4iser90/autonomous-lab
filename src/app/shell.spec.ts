@@ -282,7 +282,7 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="2"]')?.classList.contains('active')).toBe(false)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Halo Hollow')
-    expect(nextLine?.textContent).toContain('1.50M')
+    expect(nextLine?.textContent).toContain('1.10M')
   })
 
   it('re-renders the strip for a restored stratum (layer 3)', () => {
@@ -306,8 +306,8 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="3"]')?.classList.contains('active')).toBe(true)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Veil Hollow')
-    // Layer 3 → layer 4: threshold 1e6 * 1.5^3 = 3.375M (M12: 1.5× growth)
-    expect(nextLine?.textContent).toContain('3.38M')
+    // Layer 3 → layer 4: threshold 1e6 * 1.1^3 = 1.331M (M12: 1.1× growth)
+    expect(nextLine?.textContent).toContain('1.33M')
   })
 })
 

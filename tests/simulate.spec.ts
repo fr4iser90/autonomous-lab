@@ -6,11 +6,11 @@ import { LAYER_CAP, layerDef } from '../src/data/layers'
 import { simulateToLayer } from './simulate'
 
 describe('layerDef', () => {
-  it('thresholds are 1e6 × 1.5^(N-1)', () => {
+  it('thresholds are 1e6 × 1.1^(N-1) (M12)', () => {
     expect(layerDef(1).threshold.toString()).toBe('1000000')
-    expect(layerDef(2).threshold.toString()).toBe('1500000') // 1e6 × 1.5
-    expect(layerDef(3).threshold.toString()).toBe('2250000') // 1e6 × 2.25
-    expect(layerDef(10).threshold.toString()).toBe('38443359.375') // 1e6 × 1.5^9
+    expect(layerDef(2).threshold.toString()).toBe('1100000') // 1e6 × 1.1
+    expect(layerDef(3).threshold.toString()).toBe('1210000') // 1e6 × 1.21
+    expect(layerDef(10).threshold.toString()).toBe('2357947.691') // 1e6 × 1.1^9
   })
 
   it('names are unique across 1..LAYER_CAP and ids/colors are stable', () => {
