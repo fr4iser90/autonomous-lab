@@ -1,9 +1,12 @@
 /**
  * Signal Ascent — view builders.
- * M2: the play view is live for the economy — all click math goes through
- * EconomyEngine (never DOM-only formulas); views only render engine state.
+ * M2: play view is live for the economy — all click math goes through
+ *     EconomyEngine (never DOM-only formulas); views only render engine state.
+ * M4: main PLAY UI — big click, live rate, relay list with buy buttons,
+ *     autosave stub wired in the shell (not in the view).
  */
 import { EconomyEngine } from '../economy/engine'
+import { RELAYS } from '../data/generators'
 import { format } from '../economy/format'
 
 export function buildTitleView(): HTMLElement {
@@ -19,7 +22,13 @@ export function buildTitleView(): HTMLElement {
   return section
 }
 
-export function buildPlayView(engine: EconomyEngine): HTMLElement {
+export interface PlayView {
+  readonly root: HTMLElement
+  /** Re-render every engine-owned number (called by the 20 Hz shell loop). */
+  render: () => void
+}
+
+export function buildPlayView(engine: EconomyEngine): PlayView {
   const section = document.createElement('section')
   section.id = 'play-view'
   section.className = 'view hidden'
@@ -35,11 +44,27 @@ export function buildPlayView(engine: EconomyEngine): HTMLElement {
         <p id="signal" class="stat">0</p>
         <p id="rate" class="muted">+0 / sec</p>
         <button id="click-signal" type="button">Harvest Signal (+1)</button>
-        <p id="economy-note" class="muted">Every click harvests Signal. Relays come next.</p>
+        <p id="economy-note" class="muted">Relays produce Signal every second. Progress autosaves.</p>
       </section>
       <aside id="side-panels" aria-label="Panels">
         <nav id="layer-strip" class="hidden" aria-label="Layer navigator"></nav>
-        <section id="generators-panel" class="panel hidden" aria-label="Relays"></section>
+        <section id="generators-panel" class="panel" aria-label="Relays">
+          <h2 class="panel-title">Relays</h2>
+          <ul id="relay-list" class="relay-list">
+            ${RELAYS.map((r) => `
+              <li class="relay-row" data-relay-id="${r.id}">
+                <div class="relay-main">
+                  <p class="relay-name">${r.name}</p>
+                  <p class="relay-flavor muted">${r.flavor}</p>
+                  <p class="relay-stat muted"><span class="relay-owned">0</span> owned · +${format(r.baseRate)}/s each</p>
+                </div>
+                <div class="relay-buy">
+                  <p class="relay-cost">${format(r.baseCost)}</p>
+                  <button id="buy-${r.id}" class="ghost" type="button" disabled>Buy</button>
+                </div>
+              </li>`).join('')}
+          </ul>
+        </section>
         <section id="upgrades-panel" class="panel hidden" aria-label="Upgrades"></section>
         <section id="prestige-panel" class="panel hidden" aria-label="Ascension"></section>
       </aside>
@@ -47,17 +72,37 @@ export function buildPlayView(engine: EconomyEngine): HTMLElement {
   `
 
   const signalEl = section.querySelector('#signal') as HTMLElement
+  const rateEl = section.querySelector('#rate') as HTMLElement
   const clickBtn = section.querySelector('#click-signal') as HTMLButtonElement
 
-  function renderSignal(): void {
+  function render(): void {
     signalEl.textContent = format(engine.state.signal)
+    rateEl.textContent = `+${format(engine.productionPerSec())} / sec`
+    for (const def of RELAYS) {
+      const row = section.querySelector(`.relay-row[data-relay-id="${def.id}"]`)
+      if (!row) continue
+      const owned = engine.state.relays[def.id] ?? 0
+      ;(row.querySelector('.relay-owned') as HTMLElement).textContent = String(owned)
+      const cost = engine.relayCost(def.id)
+      ;(row.querySelector('.relay-cost') as HTMLElement).textContent = format(cost)
+      ;(row.querySelector(`#buy-${def.id}`) as HTMLButtonElement).disabled = engine.state.signal.lt(cost)
+    }
   }
 
   clickBtn.addEventListener('click', () => {
     engine.click()
-    renderSignal()
+    render()
   })
-  renderSignal()
 
-  return section
+  for (const def of RELAYS) {
+    const buyBtn = section.querySelector(`#buy-${def.id}`) as HTMLButtonElement
+    buyBtn.addEventListener('click', () => {
+      engine.buyRelay(def.id)
+      render()
+    })
+  }
+
+  render()
+
+  return { root: section, render }
 }

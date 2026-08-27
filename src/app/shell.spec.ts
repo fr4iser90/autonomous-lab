@@ -1,5 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { createShell } from './shell'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createShell, type Shell } from './shell'
+import { SAVE_KEY } from '../economy/save'
+
+let shells: Shell[] = []
 
 function makeRoot(): HTMLElement {
   const root = document.createElement('main')
@@ -8,14 +11,21 @@ function makeRoot(): HTMLElement {
   return root
 }
 
+function makeShell(root: HTMLElement): Shell {
+  const shell = createShell(root)
+  shells.push(shell)
+  return shell
+}
+
 afterEach(() => {
+  for (const shell of shells.splice(0)) shell.destroy()
   document.body.replaceChildren()
 })
 
 describe('app shell (M1)', () => {
   it('starts on the title view', () => {
     const root = makeRoot()
-    const shell = createShell(root)
+    const shell = makeShell(root)
     expect(shell.current).toBe('title')
     expect(root.querySelector('#title-view')?.classList.contains('hidden')).toBe(false)
     expect(root.querySelector('#play-view')?.classList.contains('hidden')).toBe(true)
@@ -23,14 +33,14 @@ describe('app shell (M1)', () => {
 
   it('title shows game name and Play button', () => {
     const root = makeRoot()
-    createShell(root)
+    makeShell(root)
     expect(root.querySelector('.game-title')?.textContent).toBe('Signal Ascent')
     expect(root.querySelector('#play-btn')?.textContent).toBe('Play')
   })
 
   it('Play button switches to play view with economy panel visible', () => {
     const root = makeRoot()
-    const shell = createShell(root)
+    const shell = makeShell(root)
     root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(shell.current).toBe('play')
     expect(root.querySelector('#economy-panel')?.classList.contains('hidden')).toBe(false)
@@ -39,7 +49,7 @@ describe('app shell (M1)', () => {
 
   it('Title button returns to the title view', () => {
     const root = makeRoot()
-    const shell = createShell(root)
+    const shell = makeShell(root)
     shell.enterPlay()
     root.querySelector('#title-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(shell.current).toBe('title')
@@ -48,7 +58,7 @@ describe('app shell (M1)', () => {
 
 describe('economy wiring (M2)', () => {
   function enterPlay(root: HTMLElement) {
-    const shell = createShell(root)
+    const shell = makeShell(root)
     root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     return shell
   }
@@ -69,5 +79,82 @@ describe('economy wiring (M2)', () => {
     const btn = root.querySelector('#click-signal') as HTMLButtonElement
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true })) // 1234th click via DOM
     expect(root.querySelector('#signal')?.textContent).toBe('1.23K')
+  })
+})
+
+describe('relay list, live loop, autosave stub (M4)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  function clickHarvest(root: HTMLElement, times: number): void {
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+
+  it('lists all three relays with disabled buy buttons at Signal 0', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    const rows = root.querySelectorAll('#relay-list .relay-row')
+    expect(rows.length).toBe(3)
+    expect(rows[0].getAttribute('data-relay-id')).toBe('whisper')
+    for (const id of ['whisper', 'pulse', 'beam']) {
+      expect((root.querySelector(`#buy-${id}`) as HTMLButtonElement).disabled).toBe(true)
+    }
+  })
+
+  it('buying a relay deducts Signal and updates the owned count', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 15)
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect((root.querySelector('.relay-row[data-relay-id="whisper"] .relay-owned') as HTMLElement).textContent).toBe('1')
+    expect(root.querySelector('#signal')?.textContent).toBe('0')
+    expect(shell.engine.state.relays.whisper).toBe(1)
+    // next cost: 15 * 1.15 = 17.25 -> "17.3"
+    expect((root.querySelector('.relay-row[data-relay-id="whisper"] .relay-cost') as HTMLElement).textContent).toBe('17.3')
+  })
+
+  it('the 20 Hz loop adds production while a relay is owned', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 15)
+    ;(root.querySelector('#buy-whisper') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(root.querySelector('#rate')?.textContent).toBe('+0.5 / sec')
+    // 2 s of game time: 40 ticks x 50 ms -> +1.0 Signal
+    vi.advanceTimersByTime(2000)
+    expect(shell.engine.state.signal.toString()).toBe('1')
+    expect(root.querySelector('#signal')?.textContent).toBe('1')
+  })
+
+  it('autosave stub persists engine state every 15 s', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 5)
+    expect(localStorage.getItem(SAVE_KEY)).toBeNull()
+    vi.advanceTimersByTime(15000)
+    const raw = localStorage.getItem(SAVE_KEY)
+    expect(raw).not.toBeNull()
+    const saved = JSON.parse(raw as string)
+    expect(saved.version).toBe(1)
+    expect(saved.signal).toBe('5')
+    // a fresh shell restores the saved signal
+    shell.destroy()
+    shells.splice(shells.indexOf(shell), 1)
+    const again = makeShell(makeRoot())
+    expect(again.engine.state.signal.toString()).toBe('5')
   })
 })

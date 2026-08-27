@@ -163,18 +163,91 @@ body {
 
 #click-signal {
   margin-top: 14px;
-  font-size: 18px;
-  padding: 12px 28px;
-  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 600;
+  padding: 20px 48px;
+  border-radius: 14px;
   border: 1px solid var(--panel-border);
   color: #fff;
   background: linear-gradient(135deg, #1f6feb, #7c5cff);
   cursor: pointer;
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+
+#click-signal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 26px rgba(124, 92, 255, 0.4);
 }
 
 #click-signal:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ---- relay list (M4) ---- */
+.panel-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+
+.relay-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.relay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: rgba(10, 14, 34, 0.55);
+}
+
+.relay-main {
+  min-width: 0;
+}
+
+.relay-name {
+  margin: 0;
+  font-size: 15px;
+}
+
+.relay-flavor {
+  margin: 2px 0 4px;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.relay-stat {
+  margin: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.relay-buy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.relay-cost {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- layer strip (M7) ---- */

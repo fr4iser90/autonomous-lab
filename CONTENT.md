@@ -33,6 +33,12 @@ definitions in `src/data/generators.ts`. Cost of next unit: `baseCost × 1.15^ow
 - **Beam Relay** — "A needle of light through the dark." — 5,000 Signal, +80/sec
 (M5+ derives per-layer relay templates procedurally from `layerDef(N)`.)
 
+## Autosave (M4, stub)
+- Key: `signal-ascent-save-v1` (localStorage), payload `{ version: 1, signal, relays, meta.savedAt }`.
+- The shell autosaves every **15 s** and on a fresh load restores signal + relay counts
+  (`src/economy/save.ts`); corrupt/wrong-version payloads are ignored, never fatal.
+- M10 adds settings + offline progress (8 h cap, 25% check-back) on top of the same key.
+
 ## Names
 - Generators = **Relays** (≥3 tiers, rising cost — see above).
 - Upgrades = **Resonators** (M6: ≥5, multipliers).
