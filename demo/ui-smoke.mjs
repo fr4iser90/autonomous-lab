@@ -1,8 +1,9 @@
 /**
- * Signal Ascent — UI smoke (M1).
- * Pre-PR visual check: title loads, Play works, zero page/console errors.
- * Screenshots: demo/pre-pr/m1-title.png, demo/pre-pr/m1-play.png
- * Requires dev server on :5173 (`pnpm run dev`). Exits 1 on any failure.
+ * Signal Ascent — UI smoke (M2).
+ * Pre-PR visual check: title loads, Play works, Harvest click raises Signal,
+ * zero page/console errors.
+ * Screenshots: demo/pre-pr/m1-title.png, m1-play.png, m2-play.png
+ * Requires dev server on the port in .game.port (5173 fallback). Exits 1 on any failure.
  */
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -47,6 +48,15 @@ try {
   if (errors.length > 0) failures.push(`${errors.length} page errors: ${errors.join(' | ')}`)
 
   await page.screenshot({ path: path.join(outDir, 'm1-play.png'), fullPage: true })
+
+  // M2: live economy — Harvest click must raise Signal through the engine.
+  for (let i = 0; i < 5; i++) await page.click('#click-signal')
+  const clickedText = await page.locator('#signal').textContent()
+  if (clickedText !== '5') failures.push(`#signal is "${clickedText}" after 5 clicks, expected "5"`)
+
+  if (errors.length > 0) failures.push(`${errors.length} page errors after clicks: ${errors.join(' | ')}`)
+
+  await page.screenshot({ path: path.join(outDir, 'm2-play.png'), fullPage: true })
 } catch (err) {
   failures.push(`exception: ${err.message}`)
 } finally {
@@ -54,8 +64,8 @@ try {
 }
 
 if (failures.length > 0) {
-  console.error('UI SMOKE FAIL (M1)')
+  console.error('UI SMOKE FAIL (M2)')
   for (const f of failures) console.error(' -', f)
   process.exit(1)
 }
-console.log('UI SMOKE PASS (M1: title + play, zero pageerror)')
+console.log('UI SMOKE PASS (M2: title + play + 5 clicks -> Signal 5, zero pageerror)')

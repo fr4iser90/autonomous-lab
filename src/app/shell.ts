@@ -1,20 +1,23 @@
 /**
  * Signal Ascent — app shell (view state machine).
- * title <-> play. No economy math here (EconomyEngine lands M2).
+ * title <-> play. Owns the single EconomyEngine; views render its state.
  */
+import { EconomyEngine } from '../economy/engine'
 import { buildPlayView, buildTitleView } from './views'
 
 export type View = 'title' | 'play'
 
 export interface Shell {
   readonly current: View
+  readonly engine: EconomyEngine
   enterPlay: () => void
   returnToTitle: () => void
 }
 
 export function createShell(root: HTMLElement): Shell {
+  const engine = new EconomyEngine()
   const titleView = buildTitleView()
-  const playView = buildPlayView()
+  const playView = buildPlayView(engine)
   let current: View = 'title'
 
   function show(view: View): void {
@@ -33,6 +36,7 @@ export function createShell(root: HTMLElement): Shell {
     get current(): View {
       return current
     },
+    engine,
     enterPlay: () => show('play'),
     returnToTitle: () => show('title'),
   }

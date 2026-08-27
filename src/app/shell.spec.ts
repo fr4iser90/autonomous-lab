@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { createShell } from './shell'
 
 function makeRoot(): HTMLElement {
@@ -7,6 +7,10 @@ function makeRoot(): HTMLElement {
   document.body.appendChild(root)
   return root
 }
+
+afterEach(() => {
+  document.body.replaceChildren()
+})
 
 describe('app shell (M1)', () => {
   it('starts on the title view', () => {
@@ -39,5 +43,31 @@ describe('app shell (M1)', () => {
     shell.enterPlay()
     root.querySelector('#title-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(shell.current).toBe('title')
+  })
+})
+
+describe('economy wiring (M2)', () => {
+  function enterPlay(root: HTMLElement) {
+    const shell = createShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  it('clicking Harvest Signal raises Signal through the engine', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    for (let i = 0; i < 3; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(root.querySelector('#signal')?.textContent).toBe('3')
+    expect(shell.engine.state.signal.toString()).toBe('3')
+  })
+
+  it('big Signal renders with the formatter', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    for (let i = 0; i < 1233; i++) shell.engine.click()
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true })) // 1234th click via DOM
+    expect(root.querySelector('#signal')?.textContent).toBe('1.23K')
   })
 })
