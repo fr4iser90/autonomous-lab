@@ -63,8 +63,13 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
 - Vite + TypeScript client app; preview **5173** only — never bind **3080**
 - Prefer **`pnpm install`** over **`npm install`** when both work. One package manager per tree.
 - Vitest for pure logic; Playwright when the objective / prompt requires UI demos
-- `npm run gate` (= `test` + `build`) must pass before claiming a task done (`pnpm run gate` equivalent)
-- Engines (Canvas, Phaser, Three, DOM-only, …) are **chosen by the run objective** — pin the choice in `PROGRESS.md` or `FEATURES.md` / a run `DECISIONS` note when first adopted — do not thrash
+- `npm run gate` / `pnpm run gate` = **typecheck + lint + boundaries + test + build**
+  (runs may also add `test:ui`). Must pass before claiming a task done.
+- Engines (Canvas, Phaser, Three, DOM-only, …) — see **`MODEL_STACKS.md`**; pin in
+  `PROGRESS.md` / `shared/design.md` on first adopt — do not thrash
+- Generic overnight path: `example-prompts/roles/*` + IDEA slot + optional
+  `domains/game.md` or `domains/app.md`. Long genre packs may still live under
+  `example-prompts/games/*`.
 
 ## Definition of Done (every autonomy round)
 

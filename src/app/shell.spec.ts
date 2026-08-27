@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createShell, type Shell } from './shell'
 import { SAVE_KEY } from '../economy/save'
 
-let shells: Shell[] = []
+const shells: Shell[] = []
 
 function makeRoot(): HTMLElement {
   const root = document.createElement('main')

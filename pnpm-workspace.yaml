@@ -1,3 +1,6 @@
-# Run config: allow esbuild's postinstall (vite needs its native binary).
+packages:
+  - '.'
+
+# Allow esbuild's postinstall (vite needs its native binary).
 allowBuilds:
   esbuild: true

@@ -244,7 +244,7 @@ jobs:
             for f in "${conflicted[@]+"${conflicted[@]}"}"; do
               [[ -z "${f:-}" ]] && continue
               case "$f" in
-                .github/*|AGENTS.md|BOILERPLATE.md|scripts/new-run.sh|LICENSE|SETUP.md)
+                .github/*|AGENTS.md|BOILERPLATE.md|scripts/new-run.sh|LICENSE|SETUP.md|MODEL_STACKS.md|eslint.config.js|.dependency-cruiser.cjs)
                   echo "KEEP main (boilerplate): $f"
                   git checkout --ours -- "$f"
                   git add -- "$f"
