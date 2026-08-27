@@ -20,11 +20,16 @@ Original names/mechanics — inspired by multi-layer prestige idles, nothing imp
 - `layerDef(N)` factory (`src/data/layers.ts`) — procedural name (unique for N ≤ 50:
   20 celestial prefixes × Hollow/Reach/Spire by generation), golden-angle hue color,
   flavor line, ascend threshold.
-- Ascend threshold from layer N → N+1: `1e6 * 10^(N-1)` (1e6, 1e7, 1e8, …) —
-  verified by `simulateToLayer` (M5: through layer 3).
+- Ascend threshold from layer N → N+1: `1e6 * 1.1^(N-1)` (1e6, 1.1e6, 1.21e6, …) —
+  lowered from 3× in M9 → 1.5× → 1.2× → 1.1× (M12 final) so simulateToLayer(50)
+  reaches within 2M ticks (BALANCE: ≤1.1×).
+  Verified by `simulateToLayer` (M9: through layer 10; M12: layer 20 in ~1.45M ticks;
+  layer 50 in ~1.05M ticks at 1.1× growth / 5% harmonics / 0.75 power).
 - `LayerEngine` (`src/economy/layers.ts`) tracks the stratum; `ascend()` advances only
-  past the threshold. Prestige reward: `floor(sqrt(signal / threshold))` Harmonics —
-  the Ascend action (reward + wipe) lands in M8.
+  past the threshold. Prestige reward: `floor((signal / threshold)^0.75)` Harmonics
+  — power raised from 0.5 (sqrt) → 0.65 (M9) → 0.75 (M12) so deeper ascends grant
+  more harmonics per step. M8: linear harmonic mult `1 + 0.02*h` → M9: exponential
+  `(1.02)^h` → M12: `(1.05)^h` so higher counts scale faster.
 - Deeper layers keep their Signal (no per-layer prestige wipe of deeper layers).
 - Special layers (10/20/30/40/50) are flagged in the def; distinct names/mechanics in Phase 2.
 
@@ -38,6 +43,7 @@ definitions in `src/data/generators.ts`. Cost of next unit: `baseCost × 1.15^ow
 - **Whisper Relay** — "A faint echo, tapped into rhythm." — 15 Signal, +0.5/sec
 - **Pulse Relay** — "Beats like a slow stellar heart." — 250 Signal, +6/sec
 - **Beam Relay** — "A needle of light through the dark." — 5,000 Signal, +80/sec
+- **Nova Relay** — "A flash from a dying star." — 100,000 Signal, +5,000/sec (M9)
 (M5+ derives per-layer relay templates procedurally from `layerDef(N)`.)
 
 ## Resonators — Upgrades (M6, live)

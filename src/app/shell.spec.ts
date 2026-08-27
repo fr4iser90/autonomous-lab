@@ -103,13 +103,13 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
   }
 
-  it('lists all three relays with disabled buy buttons at Signal 0', () => {
+  it('lists all four relays with disabled buy buttons at Signal 0', () => {
     const root = makeRoot()
     enterPlay(root)
     const rows = root.querySelectorAll('#relay-list .relay-row')
-    expect(rows.length).toBe(3)
+    expect(rows.length).toBe(4) // M9: Nova Relay added
     expect(rows[0].getAttribute('data-relay-id')).toBe('whisper')
-    for (const id of ['whisper', 'pulse', 'beam']) {
+    for (const id of ['whisper', 'pulse', 'beam', 'nova']) {
       expect((root.querySelector(`#buy-${id}`) as HTMLButtonElement).disabled).toBe(true)
     }
   })
@@ -149,10 +149,11 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(4)
+    expect(saved.version).toBe(6)
     expect(saved.signal).toBe('5')
     expect(saved.layer).toBe(1)
-    expect(saved.upgrades).toEqual({})
+    // upgrades may contain achievement flags from the test actions
+    expect(Object.keys(saved.upgrades)).toContain('ach-first-click')
     expect(saved.harmonics).toBe(0)
     // a fresh shell restores the saved signal
     shell.destroy()
@@ -281,14 +282,14 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="2"]')?.classList.contains('active')).toBe(false)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Halo Hollow')
-    expect(nextLine?.textContent).toContain('1.00M')
+    expect(nextLine?.textContent).toContain('1.10M')
   })
 
   it('re-renders the strip for a restored stratum (layer 3)', () => {
     localStorage.setItem(
       SAVE_KEY,
       JSON.stringify({
-        version: 3,
+        version: 6,
         signal: '42',
         relays: {},
         layer: 3,
@@ -305,7 +306,8 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="3"]')?.classList.contains('active')).toBe(true)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Veil Hollow')
-    expect(nextLine?.textContent).toContain('100M')
+    // Layer 3 → layer 4: threshold 1e6 * 1.1^3 = 1.331M (M12: 1.1× growth)
+    expect(nextLine?.textContent).toContain('1.33M')
   })
 })
 
@@ -372,7 +374,7 @@ describe('Ascend / prestige (M8)', () => {
     expect(panel.classList.contains('hidden')).toBe(true)
     // The ascend saved the new state immediately.
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY)!)
-    expect(saved.version).toBe(4)
+    expect(saved.version).toBe(6)
     expect(saved.layer).toBe(2)
     expect(saved.harmonics).toBe(1)
     expect(saved.signal).toBe('0')
@@ -394,8 +396,93 @@ describe('Ascend / prestige (M8)', () => {
     const root = makeRoot()
     const shell = enterPlay(root)
     expect(shell.layers.state.harmonics).toBe(3)
-    expect(shell.engine.harmonicMult.toString()).toBe('1.06')
-    // 1 whisper = 0.5/s × 1.06 = 0.53
-    expect(shell.engine.productionPerSec().toString()).toBe('0.53')
+    // exponential: 1.02^3 ≈ 1.0612
+    expect(shell.engine.harmonicMult.gt(1.06)).toBe(true)
+    // 1 whisper = 0.5/s × 1.02^3 ≈ 0.5306
+    expect(shell.engine.productionPerSec().gt(0.53)).toBe(true)
+  })
+})
+
+describe('buy-max toggle (M10)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  function clickHarvest(root: HTMLElement, times: number): void {
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+
+  it('shows the Buy Max checkbox on the Relays tab', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    const checkbox = root.querySelector('#buy-max-toggle') as HTMLInputElement
+    expect(checkbox).not.toBeNull()
+    expect(checkbox.checked).toBe(false)
+  })
+
+  it('buy-max off: single purchase (default)', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 100)
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(shell.engine.state.relays.whisper).toBe(1)
+    expect(buyBtn.textContent).toBe('Buy')
+  })
+
+  it('buy-max on: buys max affordable in one click', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    // Whisper: baseCost=15, costGrowth=1.15
+    // 100 Signal → can afford: 15 + 17.25 + 19.84 + 22.81 = 74.9 → 4 units
+    // Remaining signal ≈ 25
+    clickHarvest(root, 100)
+    const checkbox = root.querySelector('#buy-max-toggle') as HTMLInputElement
+    checkbox.checked = true
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.textContent).toContain('Buy ')
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(shell.engine.state.relays.whisper).toBe(4)
+    // 100 - (15 + 17.25 + 19.8375 + 22.813125) ≈ 25.099...
+    const signal = Number(shell.engine.state.signal.toString())
+    expect(signal).toBeGreaterThanOrEqual(25)
+    expect(signal).toBeLessThanOrEqual(26)
+  })
+
+  it('buy-max off shows plain cost; buy-max on shows total + qty', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    clickHarvest(root, 100)
+
+    // Default: plain cost
+    const costEl = root.querySelector('.relay-row[data-relay-id="whisper"] .relay-cost') as HTMLElement
+    expect(costEl.textContent).toBe('15')
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.textContent).toBe('Buy')
+
+    // Toggle on
+    const checkbox = root.querySelector('#buy-max-toggle') as HTMLInputElement
+    checkbox.checked = true
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+
+    const costEl2 = root.querySelector('.relay-row[data-relay-id="whisper"] .relay-cost') as HTMLElement
+    expect(costEl2.innerHTML).toContain('×')
+    expect(buyBtn.textContent).toContain('Buy ')
   })
 })

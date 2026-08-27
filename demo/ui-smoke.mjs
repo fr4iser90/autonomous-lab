@@ -102,7 +102,7 @@ try {
   if (!(await page.locator('#layer-strip').isVisible())) failures.push('#layer-strip not visible in the play view')
   const stripText = await page.locator('#layer-strip').textContent()
   if (!stripText.includes('Echo Hollow')) failures.push(`layer strip missing current layer: "${stripText}"`)
-  if (!stripText.includes('1.00M')) failures.push(`layer strip missing next threshold: "${stripText}"`)
+  if (!stripText.includes('1.10M')) failures.push(`layer strip missing next threshold: "${stripText}"`)
 
   if (errors.length > 0) failures.push(`${errors.length} page errors: ${errors.join(' | ')}`)
 
@@ -130,7 +130,7 @@ try {
 
   // M4: relay list — buy a Whisper Relay (cost 15), then watch production.
   const rows = await page.locator('#relay-list .relay-row').count()
-  if (rows !== 3) failures.push(`relay list has ${rows} rows, expected 3`)
+  if (rows !== 4) failures.push(`relay list has ${rows} rows, expected 4`)
 
   for (let i = 0; i < 10; i++) await page.click('#click-signal') // 5 -> 15
   const buyBtn = page.locator('#buy-whisper')

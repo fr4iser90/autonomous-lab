@@ -44,6 +44,14 @@ export const RELAYS: readonly GeneratorDef[] = [
     baseRate: D(80),
     costGrowth: D(1.15),
   },
+  {
+    id: 'nova',
+    name: 'Nova Relay',
+    flavor: 'A flash from a dying star.',
+    baseCost: D(100000),
+    baseRate: D(50000),
+    costGrowth: D(1.12),
+  },
 ]
 
 export function getRelay(id: string): GeneratorDef | undefined {

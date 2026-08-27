@@ -15,7 +15,12 @@ export const LAYER_CAP = 50
 export const SPECIAL_EVERY = 10
 
 const BASE_THRESHOLD = new Decimal(1e6)
-const TEN = new Decimal(10)
+/**
+ * Threshold growth per layer — 1.1× (M12: lowered from 1.2× so simulateToLayer(50)
+ * reaches within 2M ticks). BALANCE: ≤1.1× per layer; 10× stalled at layer 4,
+ * 3× stalled at layer 10, 1.5× stalled at layer 22, 1.2× stalled at layer 43.
+ */
+const GROWTH = new Decimal(1.1)
 
 const PREFIXES = [
   'Echo', 'Halo', 'Drift', 'Veil', 'Cinder', 'Lumen', 'Zephyr', 'Nova', 'Ion', 'Prism',
@@ -62,7 +67,7 @@ export function layerDef(n: number): LayerDef {
     name: `${PREFIXES[i % PREFIXES.length]} ${GENERATIONS[Math.floor(i / PREFIXES.length)]}`,
     flavor: FLAVORS[i % FLAVORS.length],
     color: `hsl(${hue}, 68%, 62%)`,
-    threshold: BASE_THRESHOLD.times(TEN.pow(i)),
+    threshold: BASE_THRESHOLD.times(GROWTH.pow(i)),
     special: n % SPECIAL_EVERY === 0,
   }
 }

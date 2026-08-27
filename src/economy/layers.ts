@@ -12,6 +12,7 @@
  */
 import { Decimal } from 'decimal.js'
 import { LAYER_CAP, layerDef, type LayerDef } from '../data/layers'
+import { echoBonusFor } from '../data/specialLayers'
 
 export interface LayerState {
   /** Current stratum, 1-based, ≤ LAYER_CAP. */
@@ -20,8 +21,10 @@ export interface LayerState {
   harmonics: number
 }
 
-/** Permanent all-output bonus per Harmony (M8): +2%, stacking linearly. */
-export const HARMONIC_BONUS = new Decimal(0.02)
+/** Permanent all-output bonus per Harmony (M8 → M12): +5%, exponential stacking.
+ * M12: raised from 2% → 3% → 5% so simulateToLayer(50) reaches within 2M ticks.
+ * Stalled at layer 21 with 1.5× growth, layer 22 at 1.2×, layer 43 at 1.2×/3%. */
+export const HARMONIC_BONUS = new Decimal(0.05)
 
 export function clampLayer(n: number): number {
   // ±Infinity (corrupt save): +∞ → cap, −∞/NaN → layer 1.
@@ -38,12 +41,19 @@ export function clampHarmonics(n: number): number {
 
 /**
  * Harmonics earned by ascending out of a layer with the given Signal total
- * (M8): floor(sqrt(signal / threshold)). 0 below the threshold, ≥ 1 at it.
+ * (M8 → M9 → M12): floor((signal / threshold)^0.75). 0 below the threshold, ≥ 1 at it.
+ *
+ * M9 retune: power raised from 0.5 (sqrt) to 0.65 to give faster harmonic
+ * growth through deeper layers, compensating for the steeper exponential
+ * threshold curve (3× per layer).  The old sqrt was too shallow —
+ * sim stalled at layer 4.
+ * M12: power raised from 0.65 to 0.75 to give more harmonics per ascend,
+ * compensating for the 1.2× growth (deeper layer reach for sim50).
  */
 export function harmonicReward(signal: Decimal.Value, threshold: Decimal.Value): number {
   const ratio = new Decimal(signal).div(threshold)
   if (!ratio.isFinite() || ratio.lt(1)) return 0
-  return ratio.sqrt().floor().toNumber()
+  return ratio.pow(0.75).floor().toNumber()
 }
 
 export class LayerEngine {
@@ -72,19 +82,29 @@ export class LayerEngine {
   }
 
   /**
-   * Ascend one stratum (M8): requires the threshold, grants
-   * floor(sqrt(signal / threshold)) Harmonics, and advances the layer.
+   * Ascend one stratum (M8 → M11): requires the threshold, grants
+   * `floor((signal / threshold)^0.65)` Harmonics, and advances the layer.
+   * Special layers (layer 10, etc.) add an Echo Bonus on top.
    * Returns false (no-op) at the cap or below the threshold.
    */
   ascend(signal: Decimal.Value): boolean {
     if (!this.next || !this.canAscend(signal)) return false
-    this.state.harmonics += harmonicReward(signal, this.def.threshold)
+    const bonus = harmonicReward(signal, this.def.threshold)
+    const echo = echoBonusFor(this.state.layer)
+    this.state.harmonics += bonus + echo
     this.state.layer += 1
     return true
   }
 
-  /** Permanent all-output multiplier from owned Harmonics (M8): 1 + 0.02 × h. */
+  /**
+   * Permanent all-output multiplier from owned Harmonics (M8 → M9):
+   * (1 + HARMONIC_BONUS)^h — exponential compounding.
+   *
+   * M9: switched from linear `1 + 0.02*h` to exponential `(1.02)^h`
+   * so higher harmonic counts scale faster, enabling multi-layer
+   * progression within the sim tick budget.
+   */
   harmonicMult(): Decimal {
-    return new Decimal(1).plus(new Decimal(this.state.harmonics).times(HARMONIC_BONUS))
+    return new Decimal(1).plus(HARMONIC_BONUS).pow(this.state.harmonics)
   }
 }

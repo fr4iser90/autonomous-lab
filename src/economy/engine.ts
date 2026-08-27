@@ -11,6 +11,8 @@
  *     on ascend, and the permanent Harmonic multiplier (owned by the
  *     LayerEngine) is injected here via `setHarmonicMult()` so all output math
  *     stays in one engine.
+ * M9: harmonicMult is exponential `(1.02)^h` (was `1 + 0.02*h`), enabling
+ *     meaningful compounding through deeper layers.
  */
 import { Decimal } from 'decimal.js'
 import { RELAYS, getRelay } from '../data/generators'
@@ -23,10 +25,12 @@ export interface EconomyState {
   relays: Record<string, number>
   /** Owned Resonator upgrade ids (M6). */
   upgrades: Record<string, boolean>
+  /** Auto-ascend toggle (M11): when true, ascend immediately when threshold met. */
+  autoAscend?: boolean
 }
 
 export function initialState(): EconomyState {
-  return { signal: new Decimal(0), relays: {}, upgrades: {} }
+  return { signal: new Decimal(0), relays: {}, upgrades: {}, autoAscend: false }
 }
 
 export class EconomyEngine {
@@ -44,6 +48,7 @@ export class EconomyEngine {
       signal: new Decimal(state?.signal ?? 0),
       relays: { ...(state?.relays ?? {}) },
       upgrades: { ...(state?.upgrades ?? {}) },
+      autoAscend: state?.autoAscend ?? false,
     }
     this.harmonicMult = new Decimal(1)
     this.setHarmonicMult(harmonicMult ?? 1)
@@ -93,6 +98,22 @@ export class EconomyEngine {
     this.state.signal = this.state.signal.minus(cost)
     this.state.relays[id] = (this.state.relays[id] ?? 0) + 1
     return cost
+  }
+
+  /**
+   * Buy as many units of a relay as affordable in a single call (M10).
+   * Purchases greedily: each iteration buys one unit at the current cost.
+   * Returns the total Signal spent, or 0 if nothing was affordable.
+   */
+  buyMaxRelay(id: string): Decimal {
+    let total = new Decimal(0)
+    let spent: Decimal | null
+    do {
+      spent = this.buyRelay(id)
+      if (spent) total = total.plus(spent)
+      else break
+    } while (true)
+    return total
   }
 
   /** Output multiplier for one relay from its Resonator upgrades (M6). */
@@ -155,6 +176,14 @@ export class EconomyEngine {
     this.state.signal = new Decimal(0)
     this.state.relays = {}
     this.state.upgrades = {}
+  }
+
+  /**
+   * Toggle auto-ascend on/off (M11). When enabled, the shell should call
+   * `layers.ascend()` each tick once the threshold is met.
+   */
+  toggleAutoAscend(): void {
+    this.state.autoAscend = !this.state.autoAscend
   }
 
   /**
