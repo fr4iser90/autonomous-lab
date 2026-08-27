@@ -19,4 +19,8 @@ _(empty — nothing decided yet)_
   Beam 5000/+80; next-unit cost ×1.15^owned), `buyRelay()`/`relayCost()`/
   `productionPerSec()` in `EconomyEngine`, `step(dt)` now adds rate×dt. Definitions in
   `src/data/generators.ts` (M5+ derives per-layer templates from `layerDef`).
-  Generator list UI lands M4.
+- M4: **Main PLAY UI** — big Harvest click, live `+X / sec` rate, relay list with buy
+  buttons (disabled while unaffordable; cost refreshes after each purchase). The shell
+  runs the fixed **20 Hz loop** (`step(0.05)` + re-render) and an **autosave stub**:
+  every 15 s it persists `{ version, signal, relays }` to `signal-ascent-save-v1`
+  (localStorage, corrupt-safe) and a reload restores progress (`src/economy/save.ts`).

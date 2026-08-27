@@ -12,7 +12,7 @@
     "test:ui": "node demo/ui-smoke.mjs",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "gate": "npm test && npm run build"
+    "gate": "npm test && npm run test:ui && npm run build"
   },
   "engines": {
     "node": ">=22"

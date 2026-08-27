@@ -2,15 +2,16 @@
 
 ## NOW
 - Phase: Milestones M1–M12
-- Milestone: M3 (Relays: 3 tiers, rising costs, production/sec) — gate green, pre-PR visual PASS
+- Milestone: M4 (main PLAY UI: relay list + 20 Hz loop + autosave stub) — gate green, pre-PR visual PASS
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
 - LAYER_CAP: 50 (planned; LayerEngine lands M5)
 - deepest_soak_layer: n/a (simulateToLayer lands M5)
-- Last ACCEPT: M1 — merged to main as 24bccea (PR #16); M2 in PR #17 (CI pending)
-- Last SHA: a425b12 (SAFE SYNC merge over M3 469587f) — pending push/PR
-- Pre-PR visual: demo/pre-pr/m2-play.png — read_image PASS (UI unchanged by engine-only M3)
+- Last ACCEPT: M3 — merged to main as 74bd47c (PR #18); M4 in PR #19 (CI pending → automerge)
+- Last SHA: 3b5c309 (SAFE SYNC merge over M4 f4cae86) — pending push
+- Pre-PR visual: demo/pre-pr/m4-play.png — read_image PASS (relay list, owned 1, cost 17.3, +0.5/sec, Signal 0.8)
+- Gate: `npm test && npm run test:ui && npm run build` — 33 vitest + self-managed UI smoke + build
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
-- Next: M3 LIVE LOOP (commit→push→PR), then M4 main PLAY UI + wire test:ui into gate
+- Next: push SAFE SYNC (updates PR #19) → M5 LayerEngine (layers 1–3, layerDef(N), simulateToLayer(3))
 
 ## Log
 - 2026-08-26: Run started. Cloned boilerplate; branch agent/celestial-inc-20260826 from origin/baseline.
@@ -26,3 +27,9 @@
 - 2026-08-26: M3 pre-PR visual PASS (read_image): UI unchanged (engine-only) — demo/pre-pr/m2-play.png, zero pageerror.
 - 2026-08-26: M2 ACCEPT — PR #17 CI green + automerged squash to main @ ffa397a; Pages live.
 - 2026-08-26: SYNC: SAFE SYNC — merged origin/main (ffa397a = M2 squash) into M3; conflicts on engine.ts/engine.spec.ts/FEATURES/PROGRESS only, kept ours; backup/celestial-inc-20260826-469587f; tree byte-identical to M3 commit, gate green post-sync (a425b12).
+- 2026-08-26: M3 LIVE LOOP — pushed 614bfff..cdd479c (SAFE SYNC + docs fix) → PR #18 opened (M3: Relays, 3 tiers, rising cost, production/sec).
+- 2026-08-26: M4 — main PLAY UI: relay list with per-tier buy buttons (disabled while unaffordable, live cost), big Harvest click, `+X / sec` rate line; shell runs fixed 20 Hz loop (step + render) and autosave stub (`src/economy/save.ts`, key `signal-ascent-save-v1`, 15 s interval, corrupt-safe, restores on load). 33 vitest green (incl. fake-timer: 20 Hz production, buy → owned 1, autosave round-trip). UI smoke now self-manages: reuses `.game.port` if up else spawns vite on 5173, installs chromium if missing; asserts buy Whisper @15 → owned 1, rate +0.5/sec, production ticking. Gate = test + test:ui + build.
+- 2026-08-26: M4 pre-PR visual PASS (read_image): demo/pre-pr/m4-play.png — relay list (Whisper 1 owned / 17.3, Pulse 250, Beam 5.00K), +0.5/sec, Signal 0.8, zero pageerror.
+- 2026-08-26: M3 ACCEPT — PR #18 CI green + automerged squash to main @ 74bd47c; Pages live.
+- 2026-08-26: M4 LIVE LOOP — pushed f4cae86 → PR #19 opened (M4: relay list, 20 Hz loop, autosave stub; gate = test + test:ui + build).
+- 2026-08-26: SYNC: SAFE SYNC — merged origin/main (74bd47c = M3 squash) into M4; conflicts on CONTENT/FEATURES/PROGRESS only, kept ours; backup/celestial-inc-20260826-f4cae86; tree byte-identical to M4, gate green post-sync (3b5c309).
