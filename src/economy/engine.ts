@@ -11,6 +11,8 @@
  *     on ascend, and the permanent Harmonic multiplier (owned by the
  *     LayerEngine) is injected here via `setHarmonicMult()` so all output math
  *     stays in one engine.
+ * M9: harmonicMult is exponential `(1.02)^h` (was `1 + 0.02*h`), enabling
+ *     meaningful compounding through deeper layers.
  */
 import { Decimal } from 'decimal.js'
 import { RELAYS, getRelay } from '../data/generators'

@@ -2,18 +2,19 @@
 
 ## NOW
 - Phase: Milestones M1–M12
-- Milestone: M8 (Ascend/prestige — Harmonics mult, prestige panel, save v4) — gate green, pre-PR visual PASS all 4 shots
+- Milestone: M9 (Economy retune: 3× threshold growth, pow(0.65) harmonics, Nova Relay; simulateToLayer(10) green) — gate green, 80 tests
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
 - LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
-- deepest_soak_layer: 3 (simulateToLayer(3) green with ascend flow, seed 0)
-- Last ACCEPT: M5 — merged to main as ff39c88 (PR #20); M6+M7 on agent branch → PR #21 (M8 pending)
-- Last SHA: fe9ec1c (M8 code commit; PR #21 opened for review)
+- deepest_soak_layer: 10 (simulateToLayer(10) green with ascend flow, seed 0; 20K ticks)
+- Last ACCEPT: M5 — merged to main as ff39c88 (PR #20); M6+M7+M8 on agent branch → PR #21
+- Last SHA: fe9ec1c (M8 code commit; M9 retune applied on top)
 - Pre-PR visual: 4 shots read_image PASS (m8-title / m8-prestige-panel "Gain 1 Harmonic" / m8-post-ascend layer-2 Halo Hollow / m8-layer-strip)
-- Gate: `npm test && npm run test:ui && npm run build` — 79 vitest + UI smoke + build green
+- Gate: `npm test && npm run test:ui && npm run build` — 80 vitest + UI smoke + build green
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
-- Next: PR #21 merges → M9 (layers 4–10 procedural, simulateToLayer(10) green, buy-max toggle)
+- Next: M9 code complete → buy-max toggle UI → gate → commit + push → PR
 
 ## Log
+- 2026-08-26: M9 built — Economy retune: threshold growth 10× → 3× per layer (`1e6 × 3^(N-1)`), harmonicReward `floor(sqrt(ratio))` → `floor(ratio^0.65)`, harmonicMult linear `1+0.02h` → exponential `(1.02)^h`, Nova Relay added (100K cost, 50K/s, 1.12 cost growth), fix layer-next showing current vs next threshold in views.ts. simulateToLayer(10) green in ~20K ticks (seed 0), 80 tests all passing. CONTENT.md updated with new formulas.
 - 2026-08-26: M8 built — Ascend (prestige) panel: visible at threshold, shows Harmonic reward (`floor(sqrt(signal/threshold))`), Ascend button. Shell orchestrates: threshold check → LayerEngine.ascend → resetLayerSlice() → inject new harmonicMult → saveEngineState(v4). LayerEngine.harmonicMult() = 1 + 0.02 × h. EconomyEngine.productionPerSec() × harmonicMult, clickPower() × harmonicMult. Save v4 adds `harmonics` field; v3→v4 migration loads 0. SimulateToLayer tracks ascend flow with cumulative relays + harmonics. 79 vitest + UI smoke + build green → fe9ec1c; PR #21.
 - 2026-08-26: M7 built — layer strip always visible in the play view: `#layer-strip` un-hidden; 5-chip stratum window (current ±2, clamped to 1..LAYER_CAP, current chip `.active`), chip text "N · <layer name>" with flavor tooltip; "Next stratum: <name> at <threshold> Signal" line ("Apex of the Strata" at cap); header `#here` shows the live stratum name (was hardcoded "Stratum 1"). `buildPlayView(engine, layers)` now takes the LayerEngine; strip re-renders only on layer change (20 Hz render untouched otherwise). +2 shell specs (layer 1 → 3-chip window, "1.00M"; restored layer 3 → 5 chips, "100M") + UI smoke asserts strip visible + "Echo Hollow" + "1.00M". 62 vitest + UI smoke + build green → 2bd8193.
 - 2026-08-26: M7 pre-PR visual PASS (read_image): all 4 shots re-captured + PASS — m1-play/m2-play/m4-play show the layer strip ("You are here: Echo Hollow", chips 1/2/3 with 1 active, "Next stratum: Halo Hollow at 1.00M Signal"); m1-title unchanged.

@@ -103,13 +103,13 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
   }
 
-  it('lists all three relays with disabled buy buttons at Signal 0', () => {
+  it('lists all four relays with disabled buy buttons at Signal 0', () => {
     const root = makeRoot()
     enterPlay(root)
     const rows = root.querySelectorAll('#relay-list .relay-row')
-    expect(rows.length).toBe(3)
+    expect(rows.length).toBe(4) // M9: Nova Relay added
     expect(rows[0].getAttribute('data-relay-id')).toBe('whisper')
-    for (const id of ['whisper', 'pulse', 'beam']) {
+    for (const id of ['whisper', 'pulse', 'beam', 'nova']) {
       expect((root.querySelector(`#buy-${id}`) as HTMLButtonElement).disabled).toBe(true)
     }
   })
@@ -281,7 +281,7 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="2"]')?.classList.contains('active')).toBe(false)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Halo Hollow')
-    expect(nextLine?.textContent).toContain('1.00M')
+    expect(nextLine?.textContent).toContain('3.00M')
   })
 
   it('re-renders the strip for a restored stratum (layer 3)', () => {
@@ -305,7 +305,8 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="3"]')?.classList.contains('active')).toBe(true)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Veil Hollow')
-    expect(nextLine?.textContent).toContain('100M')
+    // Layer 3 → layer 4: threshold 1e6 * 3^3 = 27M (M9: 3× growth)
+    expect(nextLine?.textContent).toContain('27.0M')
   })
 })
 
@@ -394,8 +395,9 @@ describe('Ascend / prestige (M8)', () => {
     const root = makeRoot()
     const shell = enterPlay(root)
     expect(shell.layers.state.harmonics).toBe(3)
-    expect(shell.engine.harmonicMult.toString()).toBe('1.06')
-    // 1 whisper = 0.5/s × 1.06 = 0.53
-    expect(shell.engine.productionPerSec().toString()).toBe('0.53')
+    // exponential: 1.02^3 ≈ 1.0612
+    expect(shell.engine.harmonicMult.gt(1.06)).toBe(true)
+    // 1 whisper = 0.5/s × 1.02^3 ≈ 0.5306
+    expect(shell.engine.productionPerSec().gt(0.53)).toBe(true)
   })
 })

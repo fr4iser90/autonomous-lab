@@ -148,7 +148,7 @@ export function buildPlayView(
     }
     const next = layers.next
     const nextLine = next
-      ? `<p class="layer-next muted">Next stratum: ${next.name} at ${format(layers.def.threshold)} Signal</p>`
+      ? `<p class="layer-next muted">Next stratum: ${next.name} at ${format(next.threshold)} Signal</p>`
       : `<p class="layer-next muted">Apex of the Strata</p>`
     stripEl.innerHTML = chips.join('') + nextLine
   }
