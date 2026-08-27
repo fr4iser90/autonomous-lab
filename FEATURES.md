@@ -41,6 +41,7 @@ _(empty — nothing decided yet)_
   = Σ(base × owned × relayMult) × globalMult. The Harvest button label shows the
   live click value. Save bumped to **v3** (`upgrades` in payload; v1/v2 saves
   migrate to none owned).
+- M8: **Ascend (prestige)** — `#prestige-panel` visible when signal ≥ threshold; shows Harmonic reward (`floor(sqrt(signal/threshold))`), target layer name, Ascend button. Shell orchestrates: threshold check → LayerEngine.ascend (advances layer + grants Harmonics) → engine.resetLayerSlice() (wipes Signal/Relays/Resonators) → engine.setHarmonicMult(layers.harmonicMult()) (injects 1 + 0.02×h) → saveEngineState v4. Harmonics persist across ascends; each = +2% all-output. Save v4 adds `harmonics` field with v3 migration. simulateToLayer ascends with cumulative relay tracking.
 - M7: **Layer strip (live stratum navigator)** — the play view always renders
   `#layer-strip`: a 5-chip window (current ±2, clamped to 1..LAYER_CAP) with the
   current chip `.active` ("N · <name>", flavor tooltip), plus a
