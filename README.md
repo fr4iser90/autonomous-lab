@@ -28,7 +28,8 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 | Session | Paste | Model |
 |---|---|---|
 | Role path (concept→arch→feature/fix) | `roles/*.md` + IDEA + `domains/*` | **fast** (+ `read_image` when UI) |
-| Overnight / follow-up / idle nudge | genre `games/*.md` / follow-up (+ harness nudge) | **fast** + `read_image` (~50–60 tok/s) |
+| Idle nudge / resume | **`roles/followup.md`** (generic) | **fast** |
+| Overnight / follow-up (genre pack) | genre `games/*.md` (+ thin `*-followup` wrapper) | **fast** + `read_image` (~50–60 tok/s) |
 | VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** + `read_image` (~15–20 tok/s) |
 | Git / CI validation | `*-git-validation.md` (+ follow-up) | **fast** — PR / `gate` / Actions queue |
 
