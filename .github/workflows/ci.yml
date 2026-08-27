@@ -5,6 +5,9 @@ on:
     branches: [main]
   push:
     branches: [main, 'agent/**']
+    # Bot commit from ci-fail-bugs.yml is BUGS.md-only — skip CI to avoid a fail loop
+    paths-ignore:
+      - 'BUGS.md'
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
