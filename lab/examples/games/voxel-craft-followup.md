@@ -37,7 +37,7 @@ READ THE DATA FIRST (tracking surface — invent nothing)
    on `agent/voxel-craft-…` (or the run id recorded in PROGRESS).
 2. Read **PROGRESS.md NOW** — phase, next step, last ACCEPT, SHA, pre-PR visual.
 3. Read **BUGS.md ## Open** — drain blocker/playability (incl. merge/gate notes
-   from `voxel-craft-git-validation.md` / VL validator) before new content.
+   from BUGS / validate role) before new content.
 4. Read every other tracking doc that exists and is relevant:
    CONTENT.md, FEATURES.md, SOAK.md, DEMO.md, ASSETS.md,
    shared/design.md or shared/protocol.md, README.md.
@@ -82,9 +82,7 @@ PLAYABILITY TRIAGE (before more content cycles)
   CONTENT VISUAL (`demo/content/C<N>-<kind>-<id>.png` from `#game-canvas` while
   playing). HTML/NPC-stat tables / RGB swatch boards = FAIL — redo with rendered
   meshes. Title-screen PRE-PR is not enough.
-- Optional live E2E: `voxel-craft-VL-validation.md`. Full gametest matrix:
-  `voxel-craft-gametest.md` (+ follow-up). Git/CI watchdog:
-  `voxel-craft-git-validation.md`. Builder stays on local `:5173` for play.
+- Validation: `lab/roles/validate.md` via Followup cadence.
 
 INFINITY MODE (Phase 4 — re-arm on every follow-up)
 - If Phase 3 is truly done (demo artifact + DEMO.md visual PASS + frames when
@@ -118,3 +116,5 @@ PHASE GATE (before EVERY phase change — Pages must show the finished phase)
 Do **not** start the next phase until this gate PASSes (full text in
 `voxel-craft.md`): playable screenshot + **`read_image`** (no vision subagent) +
 LIVE LOOP so Pages shows the finished phase before the next phase begins.
+
+VALIDATION: obey `lab/roles/validate.md` on Followup cadence (`lab/roles/followup.md`); do not use separate *-VL-validation prompts.

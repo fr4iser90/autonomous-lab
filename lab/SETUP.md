@@ -18,18 +18,17 @@ Machine files live under **`lab/`**. Root = current experiment.
 
 | Job | Prompt | Model role |
 |---|---|---|
-| **Role path (generic)** | `lab/roles/{concept,arch,feature,fix}.md` + `lab/roles/IDEA.slot.md` + optional `lab/examples/domains/{game,app}.md` | **`fast`**; see [`MODEL_STACKS.md`](MODEL_STACKS.md) for STACK=auto |
-| Overnight build (genre pack) | `lab/examples/games/<game>.md` | **`fast`** — `read_image` on PNGs (no vision subagent) |
-| Resume / stuck run | `lab/examples/games/<game>-followup.md` (full resume law) | **`fast`** — ignore create_goal policy errors |
-| Idle **nudge** (same genre run) | same genre `*-followup.md` **or** `lab/roles/followup.md` | **`fast`** (same session) |
-| Hard code root-cause only | (spawned from overnight) meshing/lighting/AI | optional **`smart`** subagent — **not** for PNGs |
-| Playability / VL validation | `lab/examples/games/<game>-VL-validation.md` | **`smart`** — click Pages first → BUGS.md |
-| VL validation resume | `…-VL-validation-followup.md` | **`smart`** |
-| Git / CI validation | `lab/examples/games/<game>-git-validation.md` | **`fast`** — PR/`gate`/queue → BUGS.md (no game code) |
-| Git validation resume | `…-git-validation-followup.md` | **`fast`** |
+| **Greenfield (short)** | IDEA + [`template/TEMPLATE.md`](examples/template/TEMPLATE.md) law | **`fast`** |
+| **Genre Initial** | `lab/examples/games/<game>.md` only | **`fast`** + `read_image` |
+| **Forever resume / idle nudge** | `<game>-followup.md` **or** `lab/roles/followup.md` | **`fast`** |
+| Roles (machine, not separate pastes) | `lab/roles/{concept,arch,feature,fix,validate,followup}.md` | pulled by Followup |
+| Hard code root-cause only | optional **`smart`** subagent — **not** for PNGs | |
 
-Builder drains `BUGS.md` ## Open at every cycle; validators **document** (git may
-cancel stuck Actions queues only).
+**Per game under examples:** exactly **two** files when possible (`<game>.md` +
+`<game>-followup.md`). Play/Pages checks = **`lab/roles/validate.md`** inside
+the Followup cadence — no `*-VL-validation.md` / `*-git-validation.md`.
+
+Builder drains `BUGS.md` ## Open every cycle; validate role **documents** only.
 
 Set overnight **CAP** in the game prompt before a long run (`CAP = 20` short lab;
 raise for multi-day).
@@ -94,6 +93,6 @@ agent-presets:
   default: standard
 ```
 
-Overnight sessions use **`agent-default-model` → fast**. Start validation sessions
-with the **smart** model selected (or an equivalent preset) so the whole
-VL-validation job stays on smart without spawning helpers.
+Overnight / Followup sessions use **`agent-default-model` → fast** (with
+`read_image` for VALIDATE / PRE-PR). Optional **smart** only for hard
+root-cause subagents — not required for Pages play checks.
