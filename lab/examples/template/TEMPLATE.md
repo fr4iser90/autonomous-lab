@@ -6,8 +6,9 @@ Roles (`lab/roles/*`) are pulled by the agent — not pasted as five sessions.
 Copy to `lab/examples/games/<slug>.md` (optional archive) **or** paste directly
 into the harness with IDEA filled. Replace `{{…}}`.
 
-Companion resume: [`FOLLOWUP.md`](FOLLOWUP.md) → usually just use
-`lab/roles/followup.md` or a thin `<slug>-followup.md` that points here + ACCEPT.
+Companion resume / idle nudge: always **`lab/roles/followup.md`**.  
+Optional archive: thin `lab/examples/games/<slug>-followup.md` that only names
+the Initial for ACCEPT (not a second nudge body).
 
 ---
 
@@ -58,7 +59,7 @@ DSH RUNTIME
 1. Clone/checkout lab; cut or resume `agent/{{GAME_SLUG}}`.
 2. If no `shared/design.md` → **concept** then **arch** (write design + pin STACK).
 3. Implement playable vertical slice → PRE-PR `read_image` → gate → push.
-4. Hand off to **Followup** loop (`lab/roles/followup.md` / `<slug>-followup.md`).
+4. Hand off to **Followup** loop — paste / nudge **`lab/roles/followup.md`**.
 
 ACCEPT (Initial done enough to Followup): design pinned, something playable on
 Pages or proven local PRE-PR, PROGRESS NOW has next slice.
