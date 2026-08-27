@@ -61,7 +61,7 @@ Effect kinds: `click-mult` (Signal per click), `relay-mult` (one relay's output)
 - **Global Resonance** — "Everything hums at the same frequency." — 25,000 Signal — All output ×1.5
 (M9+ extends the list; effects compose multiplicatively: relay base × owned × relayMult × globalMult.)
 
-## Strata — Layer Strip (M7, live)
+## Strata — Layer Strip (M7, live; P4-1 switch)
 Always-visible navigator in the play view (`#layer-strip`): a 5-chip window of the
 strata (current ±2, clamped to 1..LAYER_CAP), the current chip highlighted
 (`.layer-chip.active`), chip text "N · <layer name>" with the layer's flavor line as
@@ -69,8 +69,9 @@ tooltip. Below the chips: "Next stratum: <name> at <threshold> Signal"
 ("Apex of the Strata" at the cap). The header line shows the live stratum name —
 "You are here: <name>" from `LayerEngine.def` (was hardcoded "Stratum 1").
 Rendered purely from engine state; the strip rebuilds only when the layer changes.
-Chips are informational at M7 (no click action); M8's Ascension panel performs the
-prestige.
+Chips are clickable at P4-1: clicking a chip calls `LayerEngine.switchLayer(N)` (check-back view,
+only allowed to previously reached layers < current). Hover effect: blue glow + background tint.
+M8's Ascension panel performs the prestige; switch-layer is a different action (navigation only).
 
 ## Autosave (M4 stub, v2 at M5, v3 at M6)
 - Key: `signal-ascent-save-v1` (localStorage), payload
