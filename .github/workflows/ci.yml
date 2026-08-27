@@ -33,20 +33,19 @@ jobs:
             BASE="$(git merge-base HEAD origin/main || echo origin/main)"
           fi
           echo "Diff base: $BASE"
-          # Paths agents must not change (see BOILERPLATE.md)
+          # Paths agents must not change (see lab/BOILERPLATE.md)
           mapfile -t bad < <(git diff --name-only "$BASE"...HEAD -- \
             '.github/workflows' \
+            'lab' \
             'AGENTS.md' \
             'BOILERPLATE.md' \
-            'SETUP.md' \
-            'MODEL_STACKS.md' \
             'scripts/new-run.sh' \
             'LICENSE' \
             || true)
           if [[ ${#bad[@]} -gt 0 && -n "${bad[0]-}" ]]; then
             echo "::error::Agent branch touched BOILERPLATE_OWNED paths:"
             printf ' - %s\n' "${bad[@]}"
-            echo "See BOILERPLATE.md — revert these files to main/baseline versions."
+            echo "See lab/BOILERPLATE.md — revert these files to main/baseline versions."
             exit 1
           fi
           # Vite base must stay project Pages path

@@ -2,7 +2,7 @@
   README has TWO parts:
   1) AUTONOMOUS LAB (below, until "Current run") — preserve on agent/*; human/baseline updates only.
   2) Current run — RUN_OWNED; overnight agent rewrites for the shipped game.
-  See BOILERPLATE.md
+  See lab/BOILERPLATE.md
 -->
 
 # Autonomous Lab
@@ -11,15 +11,18 @@ Public sandbox for **long unattended agent runs**. Most of what you see in `src/
 and on the live site is **AI-generated** — used to probe **local LLM** capability
 (coding, vision, overnight persistence), not as a hand-authored product.
 
+**`lab/`** = machine (agent laws, roles, example prompts). **Root** = current experiment.
+
 | | |
 |---|---|
 | **Live (last green automerge → Pages)** | https://fr4iser90.github.io/autonomous-lab/ |
-| **Objectives / example prompts** | [`example-prompts/`](example-prompts/) |
+| **Lab (machine)** | [`lab/`](lab/) — AGENTS, ownership, setup, roles, examples |
+| **Example prompts** | [`lab/examples/`](lab/examples/) |
+| **Role laws** | [`lab/roles/`](lab/roles/) |
 | **Agent harness** | [fr4iser90/deepseek-harness](https://github.com/fr4iser90/deepseek-harness) (fork; idle nudge; Docker) |
-| **This host’s setup** | [`SETUP.md`](SETUP.md) — Strix Halo 128 GB, fast/smart models, prompt routing |
-| **Model × stack** | [`MODEL_STACKS.md`](MODEL_STACKS.md) |
-| **Role prompts** | [`example-prompts/roles/`](example-prompts/roles/) |
-| **Ownership / branches** | [`AGENTS.md`](AGENTS.md) · [`BOILERPLATE.md`](BOILERPLATE.md) |
+| **Host setup** | [`lab/SETUP.md`](lab/SETUP.md) |
+| **Model × stack** | [`lab/MODEL_STACKS.md`](lab/MODEL_STACKS.md) |
+| **Ownership / branches** | [`lab/AGENTS.md`](lab/AGENTS.md) · [`lab/BOILERPLATE.md`](lab/BOILERPLATE.md) |
 
 Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomous-lab/
 
@@ -27,13 +30,13 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 
 | Session | Paste | Model |
 |---|---|---|
-| Role path (concept→arch→feature/fix) | `roles/*.md` + IDEA + `domains/*` | **fast** (+ `read_image` when UI) |
-| Idle nudge / resume | **`roles/followup.md`** (generic) | **fast** |
-| Overnight / follow-up (genre pack) | genre `games/*.md` (+ thin `*-followup` wrapper) | **fast** + `read_image` (~50–60 tok/s) |
-| VL / playability validation | `*-VL-validation.md` (+ follow-up) | **smart** + `read_image` (~15–20 tok/s) |
-| Git / CI validation | `*-git-validation.md` (+ follow-up) | **fast** — PR / `gate` / Actions queue |
+| Role path (concept→arch→feature/fix) | `lab/roles/*.md` + IDEA + optional domain | **fast** (+ `read_image` when UI) |
+| Genre Initial → forever Followup | `lab/examples/games/<game>.md` then `…-followup.md` | **fast** + `read_image` |
+| Generic resume / idle | `lab/roles/followup.md` | **fast** |
+| VL / playability validation | `…-VL-validation.md` (+ follow-up) | **smart** + `read_image` |
+| Git / CI validation | `…-git-validation.md` (+ follow-up) | **fast** |
 
-Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
+Full hardware, GGUF ids, and `settings.yaml`: **[`lab/SETUP.md`](lab/SETUP.md)**.
 
 ## Live loop & gates
 
@@ -47,7 +50,7 @@ Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fir
 | Check / surface | Role |
 |---|---|
 | `gate` | Required: typecheck + eslint + dependency-cruiser + Vitest + production build |
-| `protect-boilerplate` | Agent PRs must not edit workflows / `AGENTS.md` / `BOILERPLATE.md` / … |
+| `protect-boilerplate` | Agent PRs must not edit workflows / `lab/**` / … |
 | Automerge | Squash (or conflict-resolve) `agent/*` → `main` when tip gate is green; then reset that `agent/*` to `main` |
 | Pages | Deploys **only** from `main` (what outsiders play) |
 | PRE-PR / PHASE GATE | Prompt law: playable shot + vision when available before publish / phase change |
@@ -69,20 +72,20 @@ pnpm run dev
 ./scripts/new-run.sh <run-id>
 ```
 
-Paste an objective from `example-prompts/` (or your own) into the harness with
+Paste an objective from `lab/examples/` (or your own) into the harness with
 this checkout as the workspace. Set overnight **CAP** in the prompt (often `CAP = 20`
 for a short lab; raise for long runs).
 
 Optional second agent: playability/VL **validation only** on **smart** →
-`example-prompts/games/*-VL-validation.md` (writes `BUGS.md`; does not ship code).
+`lab/examples/games/*-VL-validation.md` (writes `BUGS.md`; does not ship code).
 
 ## Example DSH settings
 
-See **[`SETUP.md`](SETUP.md)** for the full yaml used on this Strix Halo box
+See **[`lab/SETUP.md`](lab/SETUP.md)** for the full yaml used on this Strix Halo box
 (`fast` = Qwen3.6 VL, `smart` = Qwen3.8 VL). Minimal shape:
 
 ```yaml
-# Example only — do not commit real tokens. Full copy in SETUP.md.
+# Example only — do not commit real tokens. Full copy in lab/SETUP.md.
 agent-default-model:
   provider: jarvis
   model: Qwen3.6-35B-A3B-MTP-UD-Q4_K_XL-VL   # name: fast
