@@ -6,13 +6,17 @@
  *     autosave stub wired in the shell (not in the view).
  * M6: shop tabs (Relays / Resonators) + Resonator upgrade list with buy.
  * M7: layer strip always visible — live stratum window (5 chips) + next-threshold.
+ * M8: Ascend (prestige) panel — visible once the layer threshold is met, shows
+ *     the Harmonic reward, ascends through the `onAscend` callback (the shell
+ *     orchestrates the slice wipe + multiplier update; the view only renders
+ *     and forwards clicks).
  */
 import { EconomyEngine } from '../economy/engine'
 import { RELAYS, getRelay } from '../data/generators'
 import { UPGRADES, type UpgradeEffect } from '../data/upgrades'
 import { format } from '../economy/format'
 import { LAYER_CAP, layerDef } from '../data/layers'
-import { LayerEngine } from '../economy/layers'
+import { harmonicReward, LayerEngine } from '../economy/layers'
 
 /** Short human description of an upgrade effect (render only — M6). */
 function upgradeEffectText(effect: UpgradeEffect): string {
@@ -45,7 +49,11 @@ export interface PlayView {
   render: () => void
 }
 
-export function buildPlayView(engine: EconomyEngine, layers: LayerEngine): PlayView {
+export function buildPlayView(
+  engine: EconomyEngine,
+  layers: LayerEngine,
+  onAscend: () => void,
+): PlayView {
   const section = document.createElement('section')
   section.id = 'play-view'
   section.className = 'view hidden'
@@ -103,7 +111,12 @@ export function buildPlayView(engine: EconomyEngine, layers: LayerEngine): PlayV
               </li>`).join('')}
           </ul>
         </section>
-        <section id="prestige-panel" class="panel hidden" aria-label="Ascension"></section>
+        <section id="prestige-panel" class="panel hidden" aria-label="Ascension">
+          <h2 class="panel-title">Ascend</h2>
+          <p id="prestige-reward" class="muted"></p>
+          <p id="prestige-note" class="muted">Resets this layer's Signal, Relays and Resonators. Each Harmony permanently boosts all output +2%.</p>
+          <button id="ascend-btn" type="button" disabled>Ascend</button>
+        </section>
       </aside>
     </div>
   `
@@ -113,6 +126,9 @@ export function buildPlayView(engine: EconomyEngine, layers: LayerEngine): PlayV
   const clickBtn = section.querySelector('#click-signal') as HTMLButtonElement
   const hereEl = section.querySelector('#here') as HTMLElement
   const stripEl = section.querySelector('#layer-strip') as HTMLElement
+  const prestigePanel = section.querySelector('#prestige-panel') as HTMLElement
+  const prestigeReward = section.querySelector('#prestige-reward') as HTMLElement
+  const ascendBtn = section.querySelector('#ascend-btn') as HTMLButtonElement
   let renderedLayer = -1
 
   // M7: stratum window around the current layer (rebuild only on layer change).
@@ -139,6 +155,17 @@ export function buildPlayView(engine: EconomyEngine, layers: LayerEngine): PlayV
 
   function render(): void {
     renderStrip()
+    // M8: prestige panel — visible only once the layer threshold is met.
+    const canAscend = layers.next !== null && layers.canAscend(engine.state.signal)
+    prestigePanel.classList.toggle('hidden', !canAscend)
+    if (canAscend) {
+      const reward = harmonicReward(engine.state.signal, layers.def.threshold)
+      const next = layers.next!
+      prestigeReward.textContent = `Gain ${format(reward)} Harmonic${reward === 1 ? '' : 's'} — ascend to ${next.name}.`
+      ascendBtn.disabled = false
+    } else {
+      ascendBtn.disabled = true
+    }
     signalEl.textContent = format(engine.state.signal)
     rateEl.textContent = `+${format(engine.productionPerSec())} / sec`
     clickBtn.textContent = `Harvest Signal (+${format(engine.clickPower())})`
@@ -186,6 +213,13 @@ export function buildPlayView(engine: EconomyEngine, layers: LayerEngine): PlayV
       render()
     })
   }
+
+  // M8: the view only forwards the click — the shell orchestrates the ascend
+  // (threshold check, harmonics grant, slice wipe, multiplier update, save).
+  ascendBtn.addEventListener('click', () => {
+    onAscend()
+    render()
+  })
 
   render()
 

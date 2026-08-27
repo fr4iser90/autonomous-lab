@@ -147,3 +147,47 @@ describe('EconomyEngine (M6: Resonator upgrades)', () => {
     expect(engine.productionPerSec().toString()).toBe('3')
   })
 })
+
+describe('EconomyEngine (M8: Ascend support)', () => {
+  it('resetLayerSlice wipes Signal, Relays and Resonator upgrades', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal('12345'),
+      relays: { whisper: 3, pulse: 2 },
+      upgrades: { amp: true },
+    })
+    expect(engine.productionPerSec().gt(0)).toBe(true)
+    engine.resetLayerSlice()
+    expect(engine.state.signal.toString()).toBe('0')
+    expect(Object.keys(engine.state.relays)).toHaveLength(0)
+    expect(engine.isUpgradeOwned('amp')).toBe(false)
+    expect(engine.productionPerSec().toString()).toBe('0')
+  })
+
+  it('the harmonic multiplier boosts click power and production (ACCEPT: mult > 1)', () => {
+    const engine = new EconomyEngine({ relays: { whisper: 2 } }, '1.02')
+    // 2 * 0.5 * 1.02 = 1.02
+    expect(engine.productionPerSec().toString()).toBe('1.02')
+    expect(engine.clickPower().toString()).toBe('1.02')
+    engine.click()
+    expect(engine.state.signal.toString()).toBe('1.02')
+  })
+
+  it('setHarmonicMult accepts finite values >= 1 and rejects corrupt input', () => {
+    const engine = new EconomyEngine()
+    expect(engine.harmonicMult.toString()).toBe('1')
+    engine.setHarmonicMult('1.02')
+    expect(engine.harmonicMult.toString()).toBe('1.02')
+    engine.setHarmonicMult(Number.NaN)
+    expect(engine.harmonicMult.toString()).toBe('1.02') // unchanged
+    engine.setHarmonicMult('0.5')
+    expect(engine.harmonicMult.toString()).toBe('1.02') // sub-1 rejected
+    engine.setHarmonicMult('not-a-number')
+    expect(engine.harmonicMult.toString()).toBe('1.02')
+  })
+
+  it('the harmonic multiplier is not wiped by resetLayerSlice (it persists)', () => {
+    const engine = new EconomyEngine({ relays: { whisper: 1 } }, '1.06')
+    engine.resetLayerSlice()
+    expect(engine.harmonicMult.toString()).toBe('1.06')
+  })
+})

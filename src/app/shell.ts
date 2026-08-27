@@ -5,6 +5,9 @@
  * 20 Hz economy loop (step + re-render), autosaves every 15 s.
  * M5: the stratum (LayerEngine) is restored/saved alongside the economy.
  * M7: the play view renders the layer strip (live stratum window) from it.
+ * M8: Ascend (prestige) orchestration — the ONLY place both engines meet:
+ *     check threshold → LayerEngine.ascend (grants Harmonics) →
+ *     engine.resetLayerSlice() → inject the new harmonic mult → save.
  */
 import { EconomyEngine } from '../economy/engine'
 import { LayerEngine } from '../economy/layers'
@@ -36,14 +39,29 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
   const tickMs = options.tickMs ?? TICK_MS
   const autosaveMs = options.autosaveMs ?? AUTOSAVE_MS
   const loaded = loadEngineState()
+  // M8: layers (with permanent Harmonics) are built first so the engine can
+  // start with the correct harmonic multiplier; the shell keeps them in sync.
+  const layers = new LayerEngine(
+    loaded ? { layer: loaded.layer, harmonics: loaded.harmonics } : {},
+  )
   const engine = new EconomyEngine(
     loaded
       ? { signal: loaded.signal, relays: loaded.relays, upgrades: loaded.upgrades }
       : {},
+    layers.harmonicMult(),
   )
-  const layers = new LayerEngine(loaded ? { layer: loaded.layer } : {})
   const titleView = buildTitleView()
-  const playView: PlayView = buildPlayView(engine, layers)
+
+  // M8: ascend orchestration — the only place both engines meet.
+  function ascend(): void {
+    if (!layers.canAscend(engine.state.signal)) return
+    if (!layers.ascend(engine.state.signal)) return
+    engine.resetLayerSlice()
+    engine.setHarmonicMult(layers.harmonicMult())
+    saveEngineState(engine.state, layers.state.layer, layers.state.harmonics)
+  }
+
+  const playView: PlayView = buildPlayView(engine, layers, ascend)
   let current: View = 'title'
 
   // M6: shop tabs — Relays (default) and Resonators panels, one visible.
@@ -69,9 +87,9 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     engine.step(tickMs / 1000)
     if (current === 'play') playView.render()
   }, tickMs)
-  // Autosave stub (M4/M5): persist engine state + stratum on an interval.
+  // Autosave (M4–M8): persist engine state + stratum + Harmonics on an interval.
   const saveTimer = setInterval(
-    () => saveEngineState(engine.state, layers.state.layer),
+    () => saveEngineState(engine.state, layers.state.layer, layers.state.harmonics),
     autosaveMs,
   )
 
