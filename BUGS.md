@@ -4,9 +4,19 @@ example-prompts/games/voxel-craft.md + voxel-craft-VL-validation.md -->
 
 # BUGS
 
-Last validation: (ci-fail-bugs bot) SHA=12684d9
+Last validation: (ci-fail-bugs bot) SHA=f0c1611
 
 ## Open
+
+### B-3: CI gate fail @ f0c1611
+- Status: open
+- Severity: blocker
+- Found: 2026-08-27T15:06:14Z
+- Target: git  branch=agent/celestial-inc-20260826  SHA=f0c1611  full=f0c1611ea9eb78dccf5f586b547fd33dc5102a07
+- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33085855009 2) see job `gate` failed 3) FIX-ONLY until tip gate green on GitHub
+- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33085855009/job/98565207649
+- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
+- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
 
 ### B-2: CI gate fail @ 12684d9
 - Status: open
