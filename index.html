@@ -1,25 +1,84 @@
 <!doctype html>
-<!-- BOILERPLATE_TOY: replace with the run's game shell. See BOILERPLATE.md -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Autonomous Lab</title>
+    <title>Ashen Delve</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <main id="app">
-      <header class="hero">
-        <p class="eyebrow">autonomous-lab</p>
-        <h1 id="title">Lab Boot</h1>
-        <p id="tagline">Boilerplate is live. Paste a run objective per agent run; ship via PRs to main → Pages.</p>
+      <header id="title-screen" class="screen" style="display:none">
+        <h1 id="game-title" class="title-text">Ashen Delve</h1>
+        <p class="tagline">Descend into the ash-stone catacombs</p>
+        <div class="menu-buttons">
+          <button id="btn-new" type="button">New Delve</button>
+          <button id="btn-continue" type="button" style="display:none">Continue</button>
+          <button id="btn-settings" type="button">Settings</button>
+        </div>
       </header>
-      <section class="panel" aria-label="Click counter">
-        <p class="label">Energy</p>
-        <p id="energy" class="stat">0</p>
-        <button id="harvest" type="button">Harvest</button>
-        <p id="rate" class="muted">+0 / tick</p>
-      </section>
+      <div id="game-screen" class="screen" style="display:none">
+        <canvas id="game-canvas"></canvas>
+        <div id="hud" class="hud" style="display:none">
+          <div class="hud-left">
+            <div class="hp-bar">
+              <span class="hp-label">HP</span>
+              <div class="hp-track"><div class="hp-fill" id="hp-fill"></div></div>
+              <span class="hp-text" id="hp-text">20/20</span>
+            </div>
+            <div class="floor-label" id="floor-label">Floor 1</div>
+          </div>
+          <div class="hud-right">
+            <div class="inventory-toggle" id="inv-toggle">[E] Inventory</div>
+            <div class="depth-label" id="depth-label">Depth: 0</div>
+          </div>
+        </div>
+        <div id="inventory-panel" class="inventory" style="display:none">
+          <h3>Inventory</h3>
+          <div id="inventory-grid" class="inventory-grid"></div>
+          <p class="close-hint">Press [E] to close</p>
+        </div>
+        <div id="death-screen" class="overlay" style="display:none">
+          <h2 class="death-title">You Have Fallen</h2>
+          <p class="death-stats" id="death-stats">Deepest Floor: 1</p>
+          <p class="death-scrap" id="death-scrap">Scrap Collected: 0</p>
+          <div class="menu-buttons">
+            <button id="btn-retry" type="button">Retry</button>
+            <button id="btn-title" type="button">Title</button>
+          </div>
+        </div>
+        <div id="pause-overlay" class="overlay" style="display:none">
+          <h2 class="pause-title">Paused</h2>
+          <div class="menu-buttons">
+            <button id="btn-resume" type="button">Resume</button>
+            <button id="btn-pause-settings" type="button">Settings</button>
+            <button id="btn-pause-title" type="button">Title</button>
+          </div>
+        </div>
+      </div>
+      <div id="settings-panel" class="screen" style="display:none">
+        <h2>Settings</h2>
+        <div class="settings-row">
+          <label for="vol-master">Master Volume</label>
+          <input type="range" id="vol-master" min="0" max="100" value="75" />
+          <span id="vol-master-val">75%</span>
+        </div>
+        <div class="settings-row">
+          <label for="vol-sfx">SFX Volume</label>
+          <input type="range" id="vol-sfx" min="0" max="100" value="80" />
+          <span id="vol-sfx-val">80%</span>
+        </div>
+        <div class="settings-row">
+          <label for="reduce-motion">Reduce Motion</label>
+          <input type="checkbox" id="reduce-motion" />
+        </div>
+        <div class="menu-buttons">
+          <button id="btn-settings-back" type="button">Back</button>
+        </div>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
