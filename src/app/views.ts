@@ -71,7 +71,7 @@ export function buildPlayView(
   engine: EconomyEngine,
   layers: LayerEngine,
   onAscend: () => void,
-  opts?: { onAchievementUnlock?: (ids: string[]) => void; onClick?: () => void },
+  opts?: { onAchievementUnlock?: (ids: string[]) => void; onClick?: () => void; onSwitchLayer?: (layer: number) => boolean },
 ): PlayView {
   const section = document.createElement('section')
   section.id = 'play-view'
@@ -197,6 +197,7 @@ export function buildPlayView(
   const clearSaveBtn = section.querySelector('#clear-save-btn') as HTMLButtonElement
   let buyMax = false
   let autoAscend = false
+  const onSwitchLayer = opts?.onSwitchLayer
   let renderedLayer = -1
   let renderedCheckBack: string | null = null
 
@@ -424,6 +425,18 @@ export function buildPlayView(
   ascendBtn.addEventListener('click', () => {
     onAscend()
     render()
+  })
+
+  // M7 (P4-1): click a layer-chip to switch to that layer (check-back view).
+  stripEl.addEventListener('click', (e) => {
+    const chip = (e.target as HTMLElement).closest('[data-layer-chip]')
+    if (chip && onSwitchLayer) {
+      const n = Number(chip.getAttribute('data-layer-chip'))
+      if (onSwitchLayer(n)) {
+        renderedLayer = -1 // force strip rebuild on next render
+        render()
+      }
+    }
   })
 
   render()
