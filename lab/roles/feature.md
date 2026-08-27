@@ -30,7 +30,10 @@ CYCLE (repeat):
   4. PROGRESS NOW; leave a next tool call
 
 REJECT slice if: second engine, cloud, >8 unrelated files, ignores lint/boundaries
-errors by deleting configs, black canvas claimed PASS.
+errors by deleting configs, black canvas claimed PASS, or grows a fat `main.ts`
+(architecture.spec: entry ≤500 lines — split into modules).
+
+Architecture gate red → FIX-ONLY split modules, not raise limits.
 
 Lie detector: "done" without playable surface / demo when claimed → FALSE.
 
