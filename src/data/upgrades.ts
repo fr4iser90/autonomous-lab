@@ -65,6 +65,21 @@ export const UPGRADES: readonly UpgradeDef[] = [
     cost: new Decimal(25_000),
     effect: { kind: 'global-mult', value: 1.5 },
   },
+  // Cycle 2 — P4-1 FEATURE: new upgrades with global + relay-burst
+  {
+    id: 'nova-cascade',
+    name: 'Nova Cascade',
+    flavor: 'The nova becomes a cascade of light.',
+    cost: new Decimal(1_000_000),
+    effect: { kind: 'relay-mult', relayId: 'nova', value: 3 },
+  },
+  {
+    id: 'echo-burst',
+    name: 'Echo Burst',
+    flavor: 'Every echo collapses into a single chord.',
+    cost: new Decimal(5_000_000),
+    effect: { kind: 'global-mult', value: 2 },
+  },
 ]
 
 export function getUpgrade(id: string): UpgradeDef | undefined {
