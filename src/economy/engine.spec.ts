@@ -231,7 +231,92 @@ describe('EconomyEngine (P4-1 cycle-2: nova-cascade + echo-burst)', () => {
     expect(engine.buyUpgrade('echo-burst')).toBeNull()
   })
 
-  it('upgrade count is 8', () => {
-    expect(UPGRADES.length).toBe(8)
+  it('upgrade count is 13 (cycle 1: 6, cycle 2: 2, cycle 3: 5)', () => {
+    expect(UPGRADES.length).toBe(13)
+  })
+})
+
+describe('EconomyEngine (P4-1 cycle-3: mid-to-high tier upgrades)', () => {
+  it('cascade-tap multiplies click ×10 (cost 100K)', () => {
+    const engine = new EconomyEngine({ signal: new Decimal(200_000) })
+    expect(engine.clickPower().toString()).toBe('1')
+    expect(engine.buyUpgrade('cascade-tap')).not.toBeNull() // -100K -> 100K
+    expect(engine.clickPower().toString()).toBe('10')
+  })
+
+  it('echo-harmonics ×5 whisper (cost 50K)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(100_000),
+      relays: { whisper: 4 },
+    })
+    // 4 * 0.5 = 2
+    expect(engine.productionPerSec().toString()).toBe('2')
+    expect(engine.buyUpgrade('echo-harmonics')).not.toBeNull() // -50K
+    // 4 * 0.5 * 5 = 10
+    expect(engine.productionPerSec().toString()).toBe('10')
+  })
+
+  it('pulse-chorus ×5 pulse (cost 250K)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(500_000),
+      relays: { pulse: 3 },
+    })
+    // 3 * 6 = 18
+    expect(engine.productionPerSec().toString()).toBe('18')
+    expect(engine.buyUpgrade('pulse-chorus')).not.toBeNull() // -250K
+    // 3 * 6 * 5 = 90
+    expect(engine.productionPerSec().toString()).toBe('90')
+  })
+
+  it('beam-coherence ×5 beam (cost 1M)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(5_000_000),
+      relays: { beam: 2 },
+    })
+    // 2 * 80 = 160
+    expect(engine.productionPerSec().toString()).toBe('160')
+    expect(engine.buyUpgrade('beam-coherence')).not.toBeNull() // -1M
+    // 2 * 80 * 5 = 800
+    expect(engine.productionPerSec().toString()).toBe('800')
+  })
+
+  it('symphony global ×3 (cost 500K)', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(1_000_000),
+      relays: { pulse: 10 },
+    })
+    // 10 * 6 = 60
+    expect(engine.productionPerSec().toString()).toBe('60')
+    expect(engine.buyUpgrade('symphony')).not.toBeNull() // -500K
+    // 10 * 6 * 3 = 180
+    expect(engine.productionPerSec().toString()).toBe('180')
+  })
+
+  it('all cycle-3 upgrades compose with existing upgrades', () => {
+    const engine = new EconomyEngine({
+      signal: new Decimal(10_000_000),
+      relays: { whisper: 2, nova: 1 },
+    })
+    // Base: 2*0.5 + 1*50000 = 50001
+    expect(engine.productionPerSec().toString()).toBe('50001')
+    // Buy whisper-harmonics ×2, echo-harmonics ×5, nova-cascade ×3, echo-burst ×2 global, symphony ×3 global
+    engine.buyUpgrade('whisper-harmonics') // whisper ×2
+    engine.buyUpgrade('echo-harmonics') // whisper ×5
+    engine.buyUpgrade('nova-cascade') // nova ×3
+    engine.buyUpgrade('echo-burst') // global ×2
+    engine.buyUpgrade('symphony') // global ×3
+    // whisper: 2 * 0.5 * 2 * 5 = 10
+    // nova: 1 * 50000 * 3 = 150000
+    // total: (10 + 150000) * 2 * 3 = 150010 * 6 = 900060
+    expect(engine.productionPerSec().toString()).toBe('900060')
+  })
+
+  it('refuses unaffordable cycle-3 upgrades', () => {
+    const engine = new EconomyEngine({ signal: new Decimal('1000') })
+    expect(engine.buyUpgrade('cascade-tap')).toBeNull()
+    expect(engine.buyUpgrade('echo-harmonics')).toBeNull()
+    expect(engine.buyUpgrade('pulse-chorus')).toBeNull()
+    expect(engine.buyUpgrade('beam-coherence')).toBeNull()
+    expect(engine.buyUpgrade('symphony')).toBeNull()
   })
 })

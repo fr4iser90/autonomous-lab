@@ -122,7 +122,7 @@ try {
   if (!(await page.locator('#upgrades-panel').isVisible())) failures.push('#upgrades-panel not visible on the Resonators tab')
   if (await page.locator('#generators-panel').isVisible()) failures.push('#generators-panel still visible on the Resonators tab')
   const upgRows = await page.locator('#upgrade-list .upgrade-row').count()
-  if (upgRows !== 8) failures.push(`upgrade list has ${upgRows} rows, expected 8`)
+  if (upgRows !== 13) failures.push(`upgrade list has ${upgRows} rows, expected 13`)
   if (!(await page.locator('#buy-amp').isDisabled())) failures.push('#buy-amp enabled at Signal 5 (cost 100)')
   await page.click('#tab-relays')
   if (!(await page.locator('#generators-panel').isVisible())) failures.push('#generators-panel not visible after switching back to the Relays tab')

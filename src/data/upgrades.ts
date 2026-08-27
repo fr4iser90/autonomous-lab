@@ -80,6 +80,42 @@ export const UPGRADES: readonly UpgradeDef[] = [
     cost: new Decimal(5_000_000),
     effect: { kind: 'global-mult', value: 2 },
   },
+  // Cycle 3 — P4-1 FEATURE: mid-to-high tier upgrades (fill gaps in 100K–1M range)
+  {
+    id: 'cascade-tap',
+    name: 'Cascade Tap',
+    flavor: 'Each tap spawns a cascade of harmonics.',
+    cost: new Decimal(100_000),
+    effect: { kind: 'click-mult', value: 10 },
+  },
+  {
+    id: 'echo-harmonics',
+    name: 'Echo Harmonics',
+    flavor: 'The whispers find their echo chamber.',
+    cost: new Decimal(50_000),
+    effect: { kind: 'relay-mult', relayId: 'whisper', value: 5 },
+  },
+  {
+    id: 'pulse-chorus',
+    name: 'Pulse Chorus',
+    flavor: 'Pulses synchronize into a grand chorus.',
+    cost: new Decimal(250_000),
+    effect: { kind: 'relay-mult', relayId: 'pulse', value: 5 },
+  },
+  {
+    id: 'beam-coherence',
+    name: 'Beam Coherence',
+    flavor: 'Beams lock phase, forming a coherent wavefront.',
+    cost: new Decimal(1_000_000),
+    effect: { kind: 'relay-mult', relayId: 'beam', value: 5 },
+  },
+  {
+    id: 'symphony',
+    name: 'Symphony',
+    flavor: 'All frequencies resolve into one symphony.',
+    cost: new Decimal(500_000),
+    effect: { kind: 'global-mult', value: 3 },
+  },
 ]
 
 export function getUpgrade(id: string): UpgradeDef | undefined {
