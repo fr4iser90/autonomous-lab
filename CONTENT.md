@@ -59,6 +59,8 @@ Effect kinds: `click-mult` (Signal per click), `relay-mult` (one relay's output)
 - **Pulse Resonance** — "Pulses stack into standing waves." — 5,000 Signal — Pulse Relay ×2
 - **Beam Alignment** — "The beams find the same crack in the sky." — 50,000 Signal — Beam Relay ×2
 - **Global Resonance** — "Everything hums at the same frequency." — 25,000 Signal — All output ×1.5
+- **Nova Cascade** — "The nova becomes a cascade of light." — 1,000,000 Signal — Nova Relay ×3 (P4-1 cycle 2)
+- **Echo Burst** — "Every echo collapses into a single chord." — 5,000,000 Signal — All output ×2 (P4-1 cycle 2)
 (M9+ extends the list; effects compose multiplicatively: relay base × owned × relayMult × globalMult.)
 
 ## Strata — Layer Strip (M7, live; P4-1 switch)
