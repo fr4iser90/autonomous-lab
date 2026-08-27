@@ -2,9 +2,19 @@
 
 # BUGS
 
-Last validation: (ci-fail-bugs bot) SHA=13f961f
+Last validation: (ci-fail-bugs bot) SHA=229745e
 
 ## Open
+
+### B-4: CI gate fail @ 229745e
+- Status: open
+- Severity: blocker
+- Found: 2026-08-27T21:39:51Z
+- Target: git  branch=agent/dungeon-crawl-20260827  SHA=229745e  full=229745e23d629569775ed5500e6cbfacc57b04c7
+- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33119123290 2) see job `gate` failed 3) FIX-ONLY until tip gate green on GitHub
+- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33119123290/job/98681363242
+- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
+- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
 
 ### B-3: CI gate fail @ 13f961f
 - Status: open
