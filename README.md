@@ -34,8 +34,8 @@ Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
 ## Live loop & gates
 
 ```
-agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash)
-  → main → Pages
+agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash
+  or conflict-resolve) → main → Pages → sync agent/* tip to main
 ```
 
 Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fire `push`).
@@ -44,7 +44,7 @@ Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fir
 |---|---|
 | `gate` | Required: Vitest + production build |
 | `protect-boilerplate` | Agent PRs must not edit workflows / `AGENTS.md` / `BOILERPLATE.md` / … |
-| Automerge | Squash `agent/*` → `main` when gate is green |
+| Automerge | Squash (or conflict-resolve) `agent/*` → `main` when tip gate is green; then reset that `agent/*` to `main` |
 | Pages | Deploys **only** from `main` (what outsiders play) |
 | PRE-PR / PHASE GATE | Prompt law: playable shot + vision when available before publish / phase change |
 
