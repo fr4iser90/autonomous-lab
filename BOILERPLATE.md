@@ -37,17 +37,21 @@ Replace when the overnight objective / game prompt starts:
 ## Conflict resolution cheat-sheet
 
 **Automerge (Actions)** when an `agent/*` PR is CONFLICTING but tip `gate` is
-green: merges **into `main`** (not a sync push to `agent/*`):
+green: merges **into `main`**, then **resets that `agent/*` tip to `main`**
+(force-with-lease against the merged tip SHA):
 
 1. **BOILERPLATE_OWNED** → keep **main**
 2. **RUN_OWNED** (`src/`, `tests/`, `demo/`, run docs, …) → keep **agent**
 3. `npm run gate` on the merged tree must pass before push to `main`
+4. Sync `agent/<run-id>` → `origin/main` so the next push is not forever CONFLICTING
 
-When a human/agent merges `origin/main` into `agent/*` locally:
+When a human/agent merges `origin/main` into `agent/*` locally (usually unnecessary
+after Actions sync):
 
 1. **BOILERPLATE_OWNED** → take main
 2. **RUN_OWNED** → keep agent
-3. Never `reset --hard` to main to “clear” conflicts.
+3. Prefer `git fetch && git reset --hard origin/agent/<run-id>` after a land+sync
+   rather than inventing a second `-rebased` branch.
 
 ## After the first game merge
 

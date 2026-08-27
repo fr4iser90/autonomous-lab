@@ -3,7 +3,8 @@ name: Automerge agent PRs
 # Land agent/* work on main (Pages). Normal path: squash-merge after green CI.
 # Conflict path: when PR is CONFLICTING but agent tip gate is green, merge
 # agent → main with path rules (run-owned from agent, boilerplate from main),
-# push main, close PR. Does NOT push sync commits to agent/*.
+# push main, close PR. Then sync that agent/* tip to origin/main (force-with-lease
+# against the merged tip SHA) so the next push does not conflict forever.
 #
 # Pages deploys via workflow_run (GITHUB_TOKEN merges/pushes may not retrigger push).
 
@@ -38,6 +39,7 @@ jobs:
       merged: ${{ steps.merge.outputs.merged }}
       pr: ${{ steps.merge.outputs.pr }}
       head: ${{ steps.merge.outputs.head }}
+      sha: ${{ steps.merge.outputs.sha }}
     steps:
       - name: Squash-merge agent PR
         id: merge
@@ -51,6 +53,7 @@ jobs:
             core.setOutput('merged', 'false')
             core.setOutput('pr', '')
             core.setOutput('head', headBranch || '')
+            core.setOutput('sha', run.head_sha || '')
             if (!headBranch || !headBranch.startsWith('agent/')) {
               core.info(`Skip: head_branch=${headBranch}`)
               return
@@ -72,7 +75,8 @@ jobs:
             }
 
             for (const pr of prs) {
-              core.info(`Squash-merge PR #${pr.number} (${pr.head.ref} → main)`)
+              const tipSha = pr.head.sha || run.head_sha || ''
+              core.info(`Squash-merge PR #${pr.number} (${pr.head.ref}@${tipSha.slice(0,7)} → main)`)
               try {
                 await github.rest.pulls.merge({
                   owner, repo, pull_number: pr.number,
@@ -84,11 +88,13 @@ jobs:
                 core.setOutput('merged', 'true')
                 core.setOutput('pr', String(pr.number))
                 core.setOutput('head', pr.head.ref)
+                core.setOutput('sha', tipSha)
                 return
               } catch (error) {
                 core.warning(`Squash failed #${pr.number}: ${error.message}`)
                 core.setOutput('pr', String(pr.number))
                 core.setOutput('head', pr.head.ref)
+                core.setOutput('sha', tipSha)
               }
             }
 
@@ -102,6 +108,11 @@ jobs:
         (github.event_name == 'workflow_run' && needs.squash.result != 'skipped' && needs.squash.outputs.merged != 'true')
       )
     runs-on: ubuntu-latest
+    outputs:
+      landed: ${{ steps.finalize.outputs.landed }}
+      head: ${{ steps.finalize.outputs.head }}
+      sha: ${{ steps.finalize.outputs.sha }}
+      pr: ${{ steps.finalize.outputs.pr }}
     steps:
       - name: Pick open agent PR needing land on main
         id: pick
@@ -110,13 +121,18 @@ jobs:
           script: |
             const owner = context.repo.owner
             const repo = context.repo.repo
+            core.setOutput('found', 'false')
+            core.setOutput('landed', 'false')
+            core.setOutput('pr', '')
+            core.setOutput('head', '')
+            core.setOutput('sha', '')
+
             const { data: prs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base: 'main', per_page: 50,
             })
             const agents = prs.filter((p) => p.head.ref.startsWith('agent/'))
             if (agents.length === 0) {
               core.info('No open agent PRs')
-              core.setOutput('found', 'false')
               return
             }
 
@@ -170,7 +186,6 @@ jobs:
 
             if (!gateOk && !statusOk) {
               core.info('Skip: agent tip has no green gate — will not push broken code to main')
-              core.setOutput('found', 'false')
               return
             }
 
@@ -184,6 +199,10 @@ jobs:
                   commit_message: 'Automerge after green CI gate; Pages deploys from main.',
                 })
                 core.info(`Squash-merged clean PR #${chosen.number}`)
+                core.setOutput('landed', 'true')
+                core.setOutput('pr', String(chosen.number))
+                core.setOutput('head', headRef)
+                core.setOutput('sha', headSha)
                 core.setOutput('found', 'false')
                 return
               } catch (e) {
@@ -197,6 +216,7 @@ jobs:
             core.setOutput('sha', headSha)
 
       - name: Merge agent → main (resolve conflicts, push main)
+        id: land
         if: steps.pick.outputs.found == 'true'
         env:
           HEAD_REF: ${{ steps.pick.outputs.head }}
@@ -262,9 +282,10 @@ jobs:
 
           git push origin main
           echo "Pushed main — Pages should rebuild"
+          echo "landed=true" >> "$GITHUB_OUTPUT"
 
       - name: Close PR after land on main
-        if: steps.pick.outputs.found == 'true'
+        if: steps.pick.outputs.found == 'true' && steps.land.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
@@ -274,8 +295,80 @@ jobs:
             const head = '${{ steps.pick.outputs.head }}'
             await github.rest.issues.createComment({
               owner, repo, issue_number: pr,
-              body: `Landed on \`main\` via conflict-resolved merge (run-owned from \`${head}\`, boilerplate from \`main\`). Pages will update. Agent branch left as-is.`,
+              body: `Landed on \`main\` via conflict-resolved merge (run-owned from \`${head}\`, boilerplate from \`main\`). Syncing \`${head}\` → \`main\` tip next so the run can continue without perpetual conflicts.`,
             })
             await github.rest.pulls.update({
               owner, repo, pull_number: pr, state: 'closed',
             })
+
+      - name: Finalize merge-to-main outputs
+        if: always()
+        id: finalize
+        run: |
+          set -euo pipefail
+          landed=false
+          if [[ "${{ steps.pick.outputs.landed }}" == "true" ]]; then
+            landed=true
+          elif [[ "${{ steps.land.outputs.landed }}" == "true" ]]; then
+            landed=true
+          fi
+          echo "landed=${landed}" >> "$GITHUB_OUTPUT"
+          echo "head=${{ steps.pick.outputs.head }}" >> "$GITHUB_OUTPUT"
+          echo "sha=${{ steps.pick.outputs.sha }}" >> "$GITHUB_OUTPUT"
+          echo "pr=${{ steps.pick.outputs.pr }}" >> "$GITHUB_OUTPUT"
+
+  # --- After land: point agent/* at main tip (stops squash-history conflict loops) ---
+  sync-agent:
+    needs: [squash, merge-to-main]
+    if: >
+      always() && (
+        needs.squash.outputs.merged == 'true' ||
+        needs.merge-to-main.outputs.landed == 'true'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve which agent branch to sync
+        id: which
+        run: |
+          set -euo pipefail
+          if [[ "${{ needs.squash.outputs.merged }}" == "true" ]]; then
+            echo "head=${{ needs.squash.outputs.head }}" >> "$GITHUB_OUTPUT"
+            echo "sha=${{ needs.squash.outputs.sha }}" >> "$GITHUB_OUTPUT"
+            echo "via=squash" >> "$GITHUB_OUTPUT"
+          else
+            echo "head=${{ needs.merge-to-main.outputs.head }}" >> "$GITHUB_OUTPUT"
+            echo "sha=${{ needs.merge-to-main.outputs.sha }}" >> "$GITHUB_OUTPUT"
+            echo "via=merge-to-main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Reset agent/* to origin/main (force-with-lease)
+        if: steps.which.outputs.head != '' && startsWith(steps.which.outputs.head, 'agent/')
+        env:
+          HEAD_REF: ${{ steps.which.outputs.head }}
+          TIP_SHA: ${{ steps.which.outputs.sha }}
+          VIA: ${{ steps.which.outputs.via }}
+        run: |
+          set -euo pipefail
+          echo "Sync ${HEAD_REF} → origin/main (via ${VIA}, lease against ${TIP_SHA:-unknown})"
+          git clone --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" repo
+          cd repo
+          git fetch origin main
+          MAIN_SHA="$(git rev-parse origin/main)"
+          echo "main tip=${MAIN_SHA}"
+
+          if [[ -z "${TIP_SHA}" ]]; then
+            echo "::warning::No tip SHA — using --force (not force-with-lease)"
+            git push --force origin "origin/main:refs/heads/${HEAD_REF}"
+          else
+            set +e
+            git push --force-with-lease="refs/heads/${HEAD_REF}:${TIP_SHA}" \
+              origin "origin/main:refs/heads/${HEAD_REF}"
+            rc=$?
+            set -e
+            if [[ "$rc" -ne 0 ]]; then
+              echo "::warning::force-with-lease failed — agent tip moved past ${TIP_SHA}; leaving ${HEAD_REF} alone"
+              exit 0
+            fi
+          fi
+          echo "Synced ${HEAD_REF} to main@${MAIN_SHA}"
+          echo "open-agent-pr will open a fresh PR on next / this push"
