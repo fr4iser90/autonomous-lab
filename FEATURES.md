@@ -15,3 +15,8 @@ _(empty — nothing decided yet)_
   (`src/economy/format.ts`): integers < 1000, short-scale suffixes K…Dc with 3
   significant figures (`format(1.5e6)` = "1.50M"), scientific beyond 1e33.
   Harvest button routes through `engine.click()` — no production formula in DOM handlers.
+- M3: **Relays** (generators) in the engine — 3 tiers (Whisper 15/+0.5, Pulse 250/+6,
+  Beam 5000/+80; next-unit cost ×1.15^owned), `buyRelay()`/`relayCost()`/
+  `productionPerSec()` in `EconomyEngine`, `step(dt)` now adds rate×dt. Definitions in
+  `src/data/generators.ts` (M5+ derives per-layer templates from `layerDef`).
+  Generator list UI lands M4.

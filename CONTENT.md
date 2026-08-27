@@ -25,8 +25,16 @@ Original names/mechanics — inspired by multi-layer prestige idles, nothing imp
 Dark nebula background, violet→cyan accents, big tabular-nums stats, layer strip always
 visible in play view. `prefers-reduced-motion` respected. See `src/styles.css`.
 
+## Generators — Relays (M3, live)
+Owned counts and all cost/production math live in `EconomyEngine` (`src/economy/engine.ts`);
+definitions in `src/data/generators.ts`. Cost of next unit: `baseCost × 1.15^owned`.
+- **Whisper Relay** — "A faint echo, tapped into rhythm." — 15 Signal, +0.5/sec
+- **Pulse Relay** — "Beats like a slow stellar heart." — 250 Signal, +6/sec
+- **Beam Relay** — "A needle of light through the dark." — 5,000 Signal, +80/sec
+(M5+ derives per-layer relay templates procedurally from `layerDef(N)`.)
+
 ## Names
-- Generators = **Relays** (M3: ≥3 tiers, rising cost).
+- Generators = **Relays** (≥3 tiers, rising cost — see above).
 - Upgrades = **Resonators** (M6: ≥5, multipliers).
 - Prestige action = **Ascend**; panel = **Ascension**.
 - Special layers (10/20/30/40/50) get distinct names/mechanics in Phase 2.
