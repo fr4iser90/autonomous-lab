@@ -20,9 +20,9 @@ Original names/mechanics — inspired by multi-layer prestige idles, nothing imp
 - `layerDef(N)` factory (`src/data/layers.ts`) — procedural name (unique for N ≤ 50:
   20 celestial prefixes × Hollow/Reach/Spire by generation), golden-angle hue color,
   flavor line, ascend threshold.
-- Ascend threshold from layer N → N+1: `1e6 * 3^(N-1)` (1e6, 3e6, 9e6, …) —
-  lowered from 10× per layer in M9 to prevent soft-locks (BALANCE: ≤3–5×).
-  Verified by `simulateToLayer` (M9: through layer 10).
+- Ascend threshold from layer N → N+1: `1e6 * 1.5^(N-1)` (1e6, 1.5e6, 2.25e6, …) —
+  lowered from 3× in M9 to 1.5× in M12 for deeper layer reach (BALANCE: ≤1.5×).
+  Verified by `simulateToLayer` (M9: through layer 10; M12: layer 20 in ~1.45M ticks).
 - `LayerEngine` (`src/economy/layers.ts`) tracks the stratum; `ascend()` advances only
   past the threshold. Prestige reward: `floor((signal / threshold)^0.65)` Harmonics
   — power raised from 0.5 (sqrt) to 0.65 in M9 for faster harmonic growth through
