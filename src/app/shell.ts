@@ -35,6 +35,7 @@ export interface Shell {
   readonly stats: { totalRelaysBought: number; totalClicks: number; playTime: number }
   enterPlay: () => void
   returnToTitle: () => void
+  ascend: () => void
   destroy: () => void
 }
 
@@ -231,6 +232,7 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     },
     enterPlay: () => show('play'),
     returnToTitle: () => show('title'),
+    ascend: () => ascend(),
     destroy: () => {
       clearInterval(tickTimer)
       clearInterval(saveTimer)
