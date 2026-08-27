@@ -1,6 +1,6 @@
 /**
  * Ashen Delve — Main entry point
- * M1-M12: Full game with Three.js, 3 mob kits + boss, combat, inventory, minimap, audio
+ * M1-M12 + P2: Full game with Three.js, 8 mob kits + boss, combat, inventory, minimap, audio
  */
 import { loadSave, saveSave } from './services/SaveService'
 import { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
@@ -13,6 +13,10 @@ import { getThemeForFloor } from './data/floors'
 import { Goblin } from './entities/Goblin'
 import { Shade } from './entities/Shade'
 import { Stalker } from './entities/Stalker'
+import { Skeleton } from './entities/Skeleton'
+import { Bat } from './entities/Bat'
+import { Ogre } from './entities/Ogre'
+import { Mummy } from './entities/Mummy'
 import { Boss } from './entities/Boss'
 import { ChaseAI } from './systems/ChaseAI'
 import { CombatEngine } from './systems/CombatEngine'
@@ -321,6 +325,10 @@ function initThreeScene(seed: number): void {
     () => new Goblin(renderer!),
     () => new Shade(renderer!),
     () => new Stalker(renderer!),
+    () => new Skeleton(renderer!),
+    () => new Bat(renderer!),
+    () => new Ogre(renderer!),
+    () => new Mummy(renderer!),
   ]
 
   for (let i = 1; i < dungeon.rooms.length; i++) {
@@ -455,6 +463,17 @@ function gameLoop(timestamp = 0): void {
         mob.update(dt, playerX, playerZ)
       } else if (decision.action === 'attack') {
         mob.update(dt, playerX, playerZ)
+      }
+
+      // Mob-specific AI behavior
+      if (mob.state.type === 'skeleton' && 'rangedAttack' in mob) {
+        ;(mob as any).rangedAttack(dt, playerX, playerZ)
+      } else if (mob.state.type === 'bat' && 'swarmAI' in mob) {
+        ;(mob as any).swarmAI(dt, playerX, playerZ)
+      } else if (mob.state.type === 'ogre' && 'chargeAI' in mob) {
+        ;(mob as any).chargeAI(dt, playerX, playerZ)
+      } else if (mob.state.type === 'mummy' && 'curseAura' in mob) {
+        ;(mob as any).curseAura(dt, playerX, playerZ)
       }
 
       // Mob growl when chasing

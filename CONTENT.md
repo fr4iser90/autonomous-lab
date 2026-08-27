@@ -15,7 +15,7 @@ Procedural dungeon crawler in Three.js. You descend the **Ashen Delve** — a pr
 ## Currencies / Stats
 - **HP** — hero health (20 base)
 - **Damage** — hero attack power (3 base, boosted by weapons)
-- **Floor** — current depth (1–4+), each with BSP-generated layout
+- **Floor** — current depth (1–10+), each with BSP-generated layout
 
 ## Items
 Defined in `src/data/items.ts`:
@@ -25,9 +25,13 @@ Defined in `src/data/items.ts`:
 | rusty-sword | Rusty Sword | weapon | +3 DMG | ⚔️ |
 | iron-axe | Iron Axe | weapon | +5 DMG | 🪓 |
 | flame-staff | Flame Staff | weapon | +7 DMG | 🔥 |
+| steel-club | Steel Club | weapon | +9 DMG | 🏏 |
 | health-potion | Health Potion | potion | +8 HP | 🧪 |
 | greater-potion | Greater Potion | potion | +16 HP | 🧪 |
+| mega-potion | Mega Elixir | potion | +32 HP | 💎 |
 | dungeon-key | Dungeon Key | key | 1 | 🔑 |
+| iron-shield | Iron Shield | armor | +2 DEF | 🛡️ |
+| rune-ring | Rune Ring | armor | +2 HP | 💍 |
 
 Items drop from defeated mobs (loot table seeded by Mulberry32 RNG).
 
@@ -37,19 +41,25 @@ Defined in `src/data/floors.ts`:
 | ID | Name | Floor Range | Prototypes |
 |----|------|-------------|------------|
 | ash | Ash Stone Catacombs | 1–3 | torch, rubble, bone |
-| crypt | Ancient Crypt | 4+ | torch, pillar, sarcophagus |
+| crypt | Ancient Crypt | 4–6 | torch, pillar, sarcophagus |
+| ruins | Elven Ruins | 7–9 | torch, column, fountain |
+| magma | Magma Caverns | 10+ | torch, lava-pool, crystal |
 
-`getThemeForFloor(floor)` switches theme at floor 4.
+`getThemeForFloor(floor)` switches themes at floors 4, 7, 10.
 
 ## Mobs
 All extend `MobKit` in `src/entities/`:
 
 | Entity | HP | Damage | Speed | Aggro Range | Chase Speed | Notes |
 |--------|----|--------|-------|-------------|-------------|-------|
-| Goblin | 6 | 2 | 2.5 | 8 | 2.0 | Standard melee, green/brown |
-| Shade | 4 | 1 | 3.0 | 12 | 2.5 | Fast, ghostly, translucent |
-| Stalker | 10 | 4 | 1.5 | 6 | 1.2 | Tanky, slow, red |
-| Boss | 60 | 8 | 1.8 | 10 | 1.5 | Floor 4+, crown glow, burning eyes |
+| Goblin | 10 | 3 | 0.5 | 8 | 2.5 | Standard melee, green/brown |
+| Shade | 8 | 5 | 0.3 | 10 | 1.8 | Fast ghost, translucent, fade |
+| Stalker | 14 | 4 | 0.6 | 6 | 3.5 | Fast, aggressive, tanky arms |
+| Skeleton | 8 | 3 | 0.4 | 12 | 1.5 | Ranged attacker, bows arrows |
+| Bat | 4 | 2 | 0.8 | 10 | 4.0 | Small swarm, erratic flight |
+| Ogre | 30 | 7 | 0.25 | 8 | 1.8 | Massive brute, devastating hits |
+| Mummy | 16 | 5 | 0.35 | 9 | 2.0 | Slow aura, green curse glow |
+| Boss | 60 | 8 | 0.4 | 12 | 2.0 | Floor 4+, crown glow, burning eyes |
 
 ## Dungeon PCG
 BSP room splitting → L-shaped corridors → BFS reachability → stairs in last room. Seed-based via Mulberry32 RNG.
