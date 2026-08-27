@@ -1,0 +1,160 @@
+name: CI fail → BUGS.md
+
+# When CI fails on an agent/* tip, append a blocker to BUGS.md on that branch
+# and push — builder drains ## Open on C-0 / P4-0 / resume.
+# Dedupes by tip SHA. ci.yml paths-ignore BUGS.md avoids a fail loop.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ci-fail-bugs-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  append-bugs:
+    if: >
+      github.event.workflow_run.conclusion == 'failure' &&
+      startsWith(github.event.workflow_run.head_branch, 'agent/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve tip SHA + failed job
+        id: meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const run = context.payload.workflow_run
+            const branch = run.head_branch
+            const sha = run.head_sha
+
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner, repo, run_id: run.id, per_page: 50,
+            })
+            const failed = (jobs.jobs || []).filter((j) => j.conclusion === 'failure')
+            const gate = failed.find((j) => j.name === 'gate') || failed[0]
+            if (!gate) {
+              core.info('No failed job — skip')
+              core.setOutput('do', 'false')
+              return
+            }
+
+            core.setOutput('do', 'true')
+            core.setOutput('branch', branch)
+            core.setOutput('sha', sha)
+            core.setOutput('short', sha.slice(0, 7))
+            core.setOutput('run_url', run.html_url)
+            core.setOutput('job_url', gate.html_url || run.html_url)
+            core.setOutput('job_name', gate.name)
+
+      - name: Checkout agent branch
+        if: steps.meta.outputs.do == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Append BUGS.md blocker (dedupe by SHA)
+        if: steps.meta.outputs.do == 'true'
+        env:
+          BRANCH: ${{ steps.meta.outputs.branch }}
+          SHA: ${{ steps.meta.outputs.sha }}
+          SHORT: ${{ steps.meta.outputs.short }}
+          RUN_URL: ${{ steps.meta.outputs.run_url }}
+          JOB_URL: ${{ steps.meta.outputs.job_url }}
+          JOB_NAME: ${{ steps.meta.outputs.job_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ -f BUGS.md ]] && grep -qF "CI gate fail @ ${SHORT}" BUGS.md; then
+            echo "Duplicate for ${SHORT} — skip"
+            exit 0
+          fi
+
+          if [[ ! -f BUGS.md ]]; then
+            printf '%s\n' '# BUGS' '' 'Last validation: (ci-fail-bugs bot)' '' '## Open' '' '## Fixed' '' > BUGS.md
+          fi
+
+          if ! grep -q '^## Open' BUGS.md; then
+            printf '\n## Open\n\n' >> BUGS.md
+          fi
+
+          n="$(grep -E '^### B-[0-9]+' BUGS.md | sed -E 's/^### B-([0-9]+).*/\1/' | sort -n | tail -1 || true)"
+          if [[ -z "${n:-}" ]]; then n=0; fi
+          n=$((n + 1))
+          stamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          tmp="$(mktemp)"
+          cat > "$tmp" <<EOF
+
+          ### B-${n}: CI gate fail @ ${SHORT}
+          - Status: open
+          - Severity: blocker
+          - Found: ${stamp}
+          - Target: git  branch=${BRANCH}  SHA=${SHORT}  full=${SHA}
+          - Repro: 1) open ${RUN_URL} 2) see job \`${JOB_NAME}\` failed 3) FIX-ONLY until tip gate green on GitHub
+          - Evidence: ${JOB_URL}
+          - Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
+          - Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
+          EOF
+
+          python3 - "$tmp" <<'PY'
+          import os, re, sys
+          path = "BUGS.md"
+          entry = open(sys.argv[1], encoding="utf-8").read()
+          lines = []
+          for line in entry.splitlines():
+              if line.startswith("          "):
+                  lines.append(line[10:])
+              else:
+                  lines.append(line)
+          entry = "\n".join(lines)
+          if not entry.startswith("\n"):
+              entry = "\n" + entry
+          text = open(path, encoding="utf-8").read()
+          # Real markdown heading only — skip "## Open" inside HTML comments
+          insert_at = None
+          start = 0
+          while True:
+              i = text.find("## Open", start)
+              if i < 0:
+                  break
+              if i > 0 and text[i - 1] not in "\n\r":
+                  start = i + 1
+                  continue
+              before = text[:i]
+              if before.rfind("<!--") > before.rfind("-->"):
+                  start = i + 1
+                  continue
+              insert_at = i
+              break
+          if insert_at is None:
+              text = text.rstrip() + "\n\n## Open\n" + entry + "\n"
+          else:
+              j = insert_at + len("## Open")
+              text = text[:j] + "\n" + entry + text[j:]
+          short = os.environ.get("SHORT", "")
+          stamp_line = f"Last validation: (ci-fail-bugs bot) SHA={short}"
+          if re.search(r"^Last validation:.*$", text, re.M):
+              text = re.sub(r"^Last validation:.*$", stamp_line, text, count=1, flags=re.M)
+          open(path, "w", encoding="utf-8").write(text)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add BUGS.md
+          if git diff --staged --quiet; then
+            echo "No change"
+            exit 0
+          fi
+          git commit -m "bugs: CI ${JOB_NAME} fail @ ${SHORT} [ci-fail-bugs]"
+          git push origin "HEAD:${BRANCH}"
+          echo "Pushed BUGS blocker to ${BRANCH}"

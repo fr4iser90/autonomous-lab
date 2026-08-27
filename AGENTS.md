@@ -18,7 +18,16 @@ Rules:
 
 1. **Never push to `main` or `baseline`.** Work only on `agent/<run-id>`.
 2. **One run = one branch**, cut from `baseline` for a clean experiment (preferred) or from `main` to continue a shipped line.
-3. **Live loop:** push `agent/*` → workflow opens/updates PR → CI `gate` → automerge squash into `main` → Pages rebuilds.
+3. **Live loop:** push `agent/*` → workflow opens/updates PR → CI `gate` on
+   agent tip → automerge into **`main`** → Pages rebuilds.
+   - Clean PR: squash-merge.
+   - **CONFLICTING PR:** Actions merges **agent → `main`** with path rules
+     (run-owned from agent, `BOILERPLATE_OWNED` from main), runs `gate` on the
+     result, pushes **`main`**, closes the PR. Does **not** require a human and
+     does **not** push sync commits to `agent/*`.
+   - **CI tip red (local green ≠ GitHub):** workflow `ci-fail-bugs` appends a
+     `blocker` to `BUGS.md` on that `agent/*` branch and pushes. Builder must
+     FIX-ONLY that entry before the next milestone. Local `gate` alone is not ACCEPT.
 4. **Pages URL:** `https://fr4iser90.github.io/autonomous-lab/`. WIP also on local `npm run dev` / `pnpm run dev` `:5173`.
 5. New run: agent runs `git fetch origin && git checkout -b agent/<run-id> origin/baseline` (human may use `./scripts/new-run.sh` as a local shortcut for the same git steps).
 
@@ -54,11 +63,14 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
 
 1. Implement **one** concrete task from the overnight prompt / `PROGRESS.md` NOW (not from leftover boilerplate prose).
 2. Update Vitest / UI smoke when applicable.
-3. `npm run gate` green locally.
-4. Update run docs (`PROGRESS` / `CONTENT` / …) to match what shipped.
-5. Commit + push on `agent/<run-id>` (PR via Actions or tools).
-6. After automerge: sync with `origin/main` (**merge preferred**; see overnight prompt SAFE SYNC) before the next chunk — **without** discarding agent work.
-7. Do **not** claim complete without gate-green evidence. Pages follows successful automerge into `main`.
+3. `npm run gate` green **locally**.
+4. Tip **GitHub** check `gate` green (or FIX-ONLY open CI `BUGS.md` blockers from
+   `ci-fail-bugs`). Local green alone is not enough to claim ACCEPT / next Mn.
+5. Update run docs (`PROGRESS` / `CONTENT` / …) to match what shipped.
+6. Commit + push on `agent/<run-id>` (PR via Actions or tools).
+7. After automerge into `main`: continue on `agent/*`; Actions conflict-fallback
+   lands on `main` without requiring a sync push to the agent branch.
+8. Do **not** claim complete without gate-green evidence **on GitHub**. Pages follows successful automerge into `main`.
 
 ## Out of scope unless the run objective says otherwise
 
