@@ -47,7 +47,8 @@ describe('simulateToLayer', () => {
     expect(r.reached).toBe(3)
     expect(r.ticks).toBeGreaterThan(0)
     expect(Number.isFinite(Number(r.signal))).toBe(true)
-    expect(Object.values(r.relays).reduce((a, b) => a + b, 0)).toBeGreaterThan(0)
+    expect(r.totalRelays).toBeGreaterThan(0)
+    expect(r.harmonics).toBeGreaterThan(0)
   }, 30000)
 
   it('is deterministic: same target + seed → identical report', () => {

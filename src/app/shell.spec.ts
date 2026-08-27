@@ -149,10 +149,11 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(3)
+    expect(saved.version).toBe(4)
     expect(saved.signal).toBe('5')
     expect(saved.layer).toBe(1)
     expect(saved.upgrades).toEqual({})
+    expect(saved.harmonics).toBe(0)
     // a fresh shell restores the saved signal
     shell.destroy()
     shells.splice(shells.indexOf(shell), 1)
@@ -305,5 +306,96 @@ describe('layer strip (M7)', () => {
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Veil Hollow')
     expect(nextLine?.textContent).toContain('100M')
+  })
+})
+
+describe('Ascend / prestige (M8)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  it('prestige panel is hidden below the threshold', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root) // fresh save: Signal 0
+    expect(shell.engine.state.signal.toString()).toBe('0')
+    expect(root.querySelector('#prestige-panel')?.classList.contains('hidden')).toBe(true)
+    expect((root.querySelector('#ascend-btn') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('panel appears at the threshold; ascend grants harmonics and wipes the slice (ACCEPT)', () => {
+    // Seed a save that has just met the layer-1 threshold.
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 4,
+        signal: '1000000',
+        relays: { whisper: 10 },
+        layer: 1,
+        upgrades: { amp: true },
+        harmonics: 0,
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    const panel = root.querySelector('#prestige-panel') as HTMLElement
+    expect(panel.classList.contains('hidden')).toBe(false)
+    const reward = root.querySelector('#prestige-reward') as HTMLElement
+    expect(reward.textContent).toContain('1 Harmonic')
+    expect(reward.textContent).toContain('Halo Hollow')
+    expect((root.querySelector('#ascend-btn') as HTMLButtonElement).disabled).toBe(false)
+
+    ;(root.querySelector('#ascend-btn') as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+
+    // Layer advances; harmonics granted; permanent mult > 1.
+    expect(shell.layers.state.layer).toBe(2)
+    expect(shell.layers.state.harmonics).toBe(1)
+    expect(shell.layers.harmonicMult().gt(1)).toBe(true)
+    // The layer slice is wiped.
+    expect(shell.engine.state.signal.toString()).toBe('0')
+    expect(Object.keys(shell.engine.state.relays)).toHaveLength(0)
+    expect(shell.engine.isUpgradeOwned('amp')).toBe(false)
+    // Panel hides again (layer-2 threshold 1e7 not met).
+    expect(panel.classList.contains('hidden')).toBe(true)
+    // The ascend saved the new state immediately.
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY)!)
+    expect(saved.version).toBe(4)
+    expect(saved.layer).toBe(2)
+    expect(saved.harmonics).toBe(1)
+    expect(saved.signal).toBe('0')
+  })
+
+  it('a fresh shell restores harmonics into the engine multiplier (save→load invariant)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 4,
+        signal: '10',
+        relays: { whisper: 1 },
+        layer: 2,
+        upgrades: {},
+        harmonics: 3,
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.layers.state.harmonics).toBe(3)
+    expect(shell.engine.harmonicMult.toString()).toBe('1.06')
+    // 1 whisper = 0.5/s × 1.06 = 0.53
+    expect(shell.engine.productionPerSec().toString()).toBe('0.53')
   })
 })
