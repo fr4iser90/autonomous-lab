@@ -4,10 +4,24 @@
  *     EconomyEngine (never DOM-only formulas); views only render engine state.
  * M4: main PLAY UI — big click, live rate, relay list with buy buttons,
  *     autosave stub wired in the shell (not in the view).
+ * M6: shop tabs (Relays / Resonators) + Resonator upgrade list with buy.
  */
 import { EconomyEngine } from '../economy/engine'
-import { RELAYS } from '../data/generators'
+import { RELAYS, getRelay } from '../data/generators'
+import { UPGRADES, type UpgradeEffect } from '../data/upgrades'
 import { format } from '../economy/format'
+
+/** Short human description of an upgrade effect (render only — M6). */
+function upgradeEffectText(effect: UpgradeEffect): string {
+  switch (effect.kind) {
+    case 'click-mult':
+      return `Click ×${effect.value}`
+    case 'relay-mult':
+      return `${getRelay(effect.relayId)?.name ?? effect.relayId} ×${effect.value}`
+    case 'global-mult':
+      return `All output ×${effect.value}`
+  }
+}
 
 export function buildTitleView(): HTMLElement {
   const section = document.createElement('section')
@@ -48,6 +62,10 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
       </section>
       <aside id="side-panels" aria-label="Panels">
         <nav id="layer-strip" class="hidden" aria-label="Layer navigator"></nav>
+        <nav id="shop-tabs" aria-label="Shop tabs">
+          <button id="tab-relays" type="button" class="shop-tab active">Relays</button>
+          <button id="tab-upgrades" type="button" class="shop-tab">Resonators</button>
+        </nav>
         <section id="generators-panel" class="panel" aria-label="Relays">
           <h2 class="panel-title">Relays</h2>
           <ul id="relay-list" class="relay-list">
@@ -65,7 +83,23 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
               </li>`).join('')}
           </ul>
         </section>
-        <section id="upgrades-panel" class="panel hidden" aria-label="Upgrades"></section>
+        <section id="upgrades-panel" class="panel hidden" aria-label="Resonators">
+          <h2 class="panel-title">Resonators</h2>
+          <ul id="upgrade-list" class="relay-list">
+            ${UPGRADES.map((u) => `
+              <li class="upgrade-row" data-upgrade-id="${u.id}">
+                <div class="relay-main">
+                  <p class="relay-name">${u.name}</p>
+                  <p class="relay-flavor muted">${u.flavor}</p>
+                  <p class="relay-stat muted">${upgradeEffectText(u.effect)}</p>
+                </div>
+                <div class="relay-buy">
+                  <p class="relay-cost">${format(u.cost)}</p>
+                  <button id="buy-${u.id}" class="ghost" type="button" disabled>Attune</button>
+                </div>
+              </li>`).join('')}
+          </ul>
+        </section>
         <section id="prestige-panel" class="panel hidden" aria-label="Ascension"></section>
       </aside>
     </div>
@@ -78,6 +112,7 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
   function render(): void {
     signalEl.textContent = format(engine.state.signal)
     rateEl.textContent = `+${format(engine.productionPerSec())} / sec`
+    clickBtn.textContent = `Harvest Signal (+${format(engine.clickPower())})`
     for (const def of RELAYS) {
       const row = section.querySelector(`.relay-row[data-relay-id="${def.id}"]`)
       if (!row) continue
@@ -86,6 +121,19 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
       const cost = engine.relayCost(def.id)
       ;(row.querySelector('.relay-cost') as HTMLElement).textContent = format(cost)
       ;(row.querySelector(`#buy-${def.id}`) as HTMLButtonElement).disabled = engine.state.signal.lt(cost)
+    }
+    for (const def of UPGRADES) {
+      const row = section.querySelector(`.upgrade-row[data-upgrade-id="${def.id}"]`)
+      if (!row) continue
+      const btn = row.querySelector(`#buy-${def.id}`) as HTMLButtonElement
+      if (engine.isUpgradeOwned(def.id)) {
+        btn.textContent = 'Attuned'
+        btn.disabled = true
+        row.classList.add('owned')
+      } else {
+        btn.textContent = 'Attune'
+        btn.disabled = engine.state.signal.lt(def.cost)
+      }
     }
   }
 
@@ -98,6 +146,14 @@ export function buildPlayView(engine: EconomyEngine): PlayView {
     const buyBtn = section.querySelector(`#buy-${def.id}`) as HTMLButtonElement
     buyBtn.addEventListener('click', () => {
       engine.buyRelay(def.id)
+      render()
+    })
+  }
+
+  for (const def of UPGRADES) {
+    const buyBtn = section.querySelector(`#buy-${def.id}`) as HTMLButtonElement
+    buyBtn.addEventListener('click', () => {
+      engine.buyUpgrade(def.id)
       render()
     })
   }

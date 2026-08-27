@@ -8,16 +8,17 @@ afterEach(() => {
   clearSave()
 })
 
-describe('save stub (M4, v2 in M5)', () => {
+describe('save stub (M4, v2 in M5, v3 in M6)', () => {
   it('returns null with empty storage', () => {
     expect(loadEngineState()).toBeNull()
   })
 
-  it('round-trips engine state + layer through localStorage', () => {
+  it('round-trips engine state + layer + upgrades through localStorage', () => {
     const engine = new EconomyEngine()
     engine.click()
     engine.click()
     engine.state.relays.whisper = 3
+    engine.state.upgrades.amp = true
     saveEngineState(engine.state, 2)
 
     const loaded = loadEngineState()
@@ -25,11 +26,46 @@ describe('save stub (M4, v2 in M5)', () => {
     expect(loaded?.signal?.toString()).toBe('2')
     expect(loaded?.relays).toEqual({ whisper: 3 })
     expect(loaded?.layer).toBe(2)
+    expect(loaded?.upgrades).toEqual({ amp: true })
 
-    // The engine can be rebuilt from a loaded state.
-    const next = new EconomyEngine(loaded ? { signal: loaded.signal, relays: loaded.relays } : {})
+    // The engine can be rebuilt from a loaded state (M6: upgrades too).
+    const next = new EconomyEngine(
+      loaded
+        ? { signal: loaded.signal, relays: loaded.relays, upgrades: loaded.upgrades }
+        : {},
+    )
     expect(next.state.signal.toString()).toBe('2')
     expect(next.state.relays.whisper).toBe(3)
+    expect(next.clickPower().toString()).toBe('2')
+  })
+
+  it('writes SAVE_VERSION 3 payloads', () => {
+    const engine = new EconomyEngine()
+    saveEngineState(engine.state, 1)
+    const parsed = JSON.parse(localStorage.getItem(SAVE_KEY)!) as {
+      version: number
+      upgrades: Record<string, boolean>
+    }
+    expect(parsed.version).toBe(3)
+    expect(parsed.upgrades).toEqual({})
+  })
+
+  it('migrates v2 payloads (no upgrades field) to none owned', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 2,
+        signal: '5',
+        relays: { whisper: 2 },
+        layer: 3,
+        meta: { savedAt: 1 },
+      }),
+    )
+    const loaded = loadEngineState()
+    expect(loaded).not.toBeNull()
+    expect(loaded?.signal?.toString()).toBe('5')
+    expect(loaded?.layer).toBe(3)
+    expect(loaded?.upgrades).toEqual({})
   })
 
   it('migrates v1 payloads (no layer field) to layer 1', () => {

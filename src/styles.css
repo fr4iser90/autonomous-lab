@@ -250,6 +250,35 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---- shop tabs (M6) ---- */
+#shop-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.shop-tab {
+  flex: 1;
+  background: rgba(10, 14, 34, 0.55);
+  border: 1px solid var(--panel-border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.shop-tab.active {
+  color: #fff;
+  border-color: var(--accent-2);
+  box-shadow: 0 0 12px rgba(56, 214, 255, 0.3);
+}
+
+.upgrade-row.owned {
+  opacity: 0.75;
+  border-color: rgba(87, 230, 168, 0.45);
+}
+
 /* ---- layer strip (M7) ---- */
 #layer-strip {
   display: flex;
