@@ -37,8 +37,6 @@ CYCLE (repeat until human kills)
 ================================================================
 
 0. **FIX-FIRST:** If BUGS ## Open has blocker/playability → `lab/roles/fix.md`.
-   Same if `pnpm run gate` fails architecture.spec (e.g. main.ts too fat) —
-   split modules, do not bump limits.
 1. **VALIDATE cadence:** Every **3** feature cycles (or every phase gate / before
    claiming PLAYABLE on Pages) → behave as `lab/roles/validate.md`:
    Playwright Pages (prefer) → screenshots → **`read_image`** → append BUGS.

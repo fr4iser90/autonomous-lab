@@ -21,8 +21,6 @@ Make the repo **ready to feature-loop**:
 1. Confirm STACK (auto → choose from MODEL_STACKS; else honor IDEA).
 2. Document layers (example for games):
    `ui/app → systems/services → data/kits/lib` — align with `.dependency-cruiser.cjs`.
-   Keep **`src/main.ts` thin** (gate ≤500 lines): behavior in systems/entities/services,
-   pure data in `data/`. Entry orchestrates — it does not own feature zoos.
 3. Add deps (three/phaser/etc.) only if pinned; keep `gate` / `dev` scripts.
 4. Replace toys when needed with a **shell** (title + empty canvas/DOM root).
 5. List ACCEPT gates Feature must obey (PCG reachability, save roundtrip, …).
