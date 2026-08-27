@@ -30,11 +30,10 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 
 | Session | Paste | Model |
 |---|---|---|
-| Role path (concept→arch→feature/fix) | `lab/roles/*.md` + IDEA + optional domain | **fast** (+ `read_image` when UI) |
+| Greenfield | IDEA + `lab/examples/template/TEMPLATE.md` | **fast** |
 | Genre Initial → forever Followup | `lab/examples/games/<game>.md` then `…-followup.md` | **fast** + `read_image` |
-| Generic resume / idle | `lab/roles/followup.md` | **fast** |
-| VL / playability validation | `…-VL-validation.md` (+ follow-up) | **smart** + `read_image` |
-| Git / CI validation | `…-git-validation.md` (+ follow-up) | **fast** |
+| Idle nudge | same `*-followup.md` **or** `lab/roles/followup.md` | **fast** |
+| Validate (inside Followup) | `lab/roles/validate.md` behavior every ~3 features | **fast** + `read_image` (Pages) |
 
 Full hardware, GGUF ids, and `settings.yaml`: **[`lab/SETUP.md`](lab/SETUP.md)**.
 
@@ -76,8 +75,8 @@ Paste an objective from `lab/examples/` (or your own) into the harness with
 this checkout as the workspace. Set overnight **CAP** in the prompt (often `CAP = 20`
 for a short lab; raise for long runs).
 
-Optional second agent: playability/VL **validation only** on **smart** →
-`lab/examples/games/*-VL-validation.md` (writes `BUGS.md`; does not ship code).
+Optional: Followup runs **`lab/roles/validate.md`** on Pages (writes `BUGS.md`;
+does not ship code). No separate `*-VL-validation.md` files.
 
 ## Example DSH settings
 

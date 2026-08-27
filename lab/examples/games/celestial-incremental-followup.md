@@ -71,3 +71,5 @@ Do **not** start the next phase until gate PASSes (M12→2, 2→2b, 2b→3, 3→
 4. LIVE LOOP → Pages shows finished phase before next phase.
 
 FORBIDDEN: phase jumps without PHASE GATE + LIVE LOOP.
+
+VALIDATION: obey `lab/roles/validate.md` on Followup cadence (`lab/roles/followup.md`); do not use separate *-VL-validation prompts.

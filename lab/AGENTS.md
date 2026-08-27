@@ -67,9 +67,10 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
   (runs may also add `test:ui`). Must pass before claiming a task done.
 - Engines (Canvas, Phaser, Three, DOM-only, …) — see **`lab/MODEL_STACKS.md`**; pin in
   `PROGRESS.md` / `shared/design.md` on first adopt — do not thrash
-- Role laws: `lab/roles/*` (+ IDEA). Example genre packs: `lab/examples/games/*`.
-  Typical loop: **one Initial** then **one Followup** forever (Followup cycles
-  fix→feature; do not require pasting multiple role files each nudge).
+- Role laws: `lab/roles/*` (+ IDEA). Example genre packs: `lab/examples/games/*`
+  (**two files per game**: Initial + Followup). Typical loop: one Initial then
+  one Followup forever (fix → validate cadence → feature). No separate
+  `*-VL-validation` prompt files — use `lab/roles/validate.md`.
 
 ## Definition of Done (every autonomy round)
 

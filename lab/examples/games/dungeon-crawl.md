@@ -7,7 +7,7 @@ DSH RUNTIME
   done. Idle nudge / an existing goal already owns the loop — continue the next
   concrete cycle with tools immediately. Never mark create_goal **complete**;
   a human kills the process.
-- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). Separate agents may append: VL → `dungeon-crawl-VL-validation.md`; Git/CI → `dungeon-crawl-git-validation.md`.
+- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). Play/Pages validation = `lab/roles/validate.md` via Followup cadence (no separate VL/git prompt files).
 - **Live Pages** (end-user): https://fr4iser90.github.io/autonomous-lab/ — proof after automerge / PHASE GATE. Dev loop stays local `:5173`. Optional live E2E is the **VL-validator** job; Git/CI health is the **git-validator** job — not your primary loop, but you must FIX-ONLY if ## Open has merge/gate blockers.
 - **Lie detector (every resume):** If PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but any of these are missing → treat the claim as FALSE, append BUGS.md "false complete", resume the real next step:
     - no `demo/demo.webm` (or empty) → Phase 3
@@ -180,8 +180,8 @@ On context loss: PROGRESS NOW → BUGS ## Open → CONTENT CAPS → design.md �
 BUGS.md QUEUE (builder + validators)
 ================================================================
 
-- **VL validator** (`dungeon-crawl-VL-validation.md`): playability → ## Open.
-- **Git/CI validator** (`dungeon-crawl-git-validation.md`): PR/gate/queue → ## Open.
+- **Validate** (`lab/roles/validate.md`, via Followup): playability/Pages → ## Open.
+- **Fix** (`lab/roles/fix.md`): gate/PR/playability blockers in ## Open.
 - **Builder (you):** at every **C-0** and **P4-0** (and on follow-up resume):
   1. Read BUGS.md ## Open — also catch bugs via UI smoke + PLAY CHECK.
   2. Fix all `blocker` + `playability` before new content.

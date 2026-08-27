@@ -91,3 +91,4 @@ Do **not** start the next phase until this gate PASSes. Applies to:
 FORBIDDEN: jumping M12→Phase2 / 2→2b / 2b→3 / 3→4 (or template equivalents)
 without PHASE_GATE PASS + LIVE LOOP publish toward main/Pages.
 
+VALIDATION: obey `lab/roles/validate.md` on Followup cadence (`lab/roles/followup.md`); do not use separate *-VL-validation prompts.

@@ -7,7 +7,7 @@ DSH RUNTIME
   done. Idle nudge / an existing goal already owns the loop — continue the next
   concrete cycle with tools immediately. Never mark create_goal **complete**;
   a human kills the process.
-- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). Separate agents may append: VL → `voxel-craft-VL-validation.md`; full gametest matrix → `voxel-craft-gametest.md`; Git/CI → `voxel-craft-git-validation.md`.
+- **BUGS queue:** Before every content / Phase 4 cycle (C-0 / P4-0), read `BUGS.md` ## Open. Fix **blocker** and **playability** bugs first (FIX-ONLY). Play/Pages validation = `lab/roles/validate.md` via Followup cadence (no separate VL/git/gametest prompt files).
 - **Live Pages** (end-user): https://fr4iser90.github.io/autonomous-lab/ — proof after automerge / PHASE GATE. Dev loop stays local `:5173`. Optional live E2E is the **VL-validator** job; Git/CI health is the **git-validator** job — not your primary loop, but you must FIX-ONLY if ## Open has merge/gate blockers.
 - **Lie detector (every resume):** If PROGRESS claims PHASE3-DONE / ALL COMPLETE / "demo done" but any of these are missing → treat the claim as FALSE, append BUGS.md "false complete", resume the real next step:
     - no `demo/demo.webm` (or empty) → Phase 3
@@ -243,29 +243,24 @@ DOCUMENTATION (same turn as the code that makes them stale)
 On context loss: PROGRESS NOW → BUGS.md ## Open → CONTENT.md CAPS → resume.
 
 ================================================================
-BUGS.md QUEUE (builder + VL-validation agent)
+BUGS.md QUEUE (builder + validate role)
 ================================================================
 
-- **Validator** (`voxel-craft-VL-validation.md`): playability/VL → ## Open.
-- **Gametest validator** (`voxel-craft-gametest.md`): full feature matrix
-  (movement, mine, place, craft, combat, mobs, saves) → `GAMETEST.md` + ## Open.
-- **Git/CI validator** (`voxel-craft-git-validation.md`): PR conflicts, missing
-  `gate`, stuck Actions queue → ## Open (`blocker` / merge health).
+- **Validate** (`lab/roles/validate.md`, via Followup cadence): playability/Pages → ## Open.
+- **Fix** (`lab/roles/fix.md`): PR/gate/playability blockers in ## Open.
 - **Builder (you):** at every **C-0** and **P4-0** (and on follow-up resume):
-  1. Read BUGS.md ## Open (external validators may append — **do not rely on them**;
-     you must catch play bugs via UI smoke + PLAY CHECK below).
-  2. Fix all `blocker` + `playability` (incl. merge conflicts / red or missing
-     `gate` when noted) before new content. `visual` / `polish` may wait one
+  1. Read BUGS.md ## Open.
+  2. Fix all `blocker` + `playability` before new content. `visual` / `polish` may wait one
      cycle if PLAYABILITY is green.
   3. After fix: move entry to ## Fixed with SHA + one-line cause; re-run repro /
      re-check PR checks.
   4. When **you** find a bug (UI smoke, PLAY CHECK, soak): append ## Open **and
      commit `BUGS.md` on `agent/*` in the same cycle — uncommitted BUGS does not
-     count; external validator notes are hints only until merged onto your branch.
-- Do not clear ## Open without a fix. Deduplicate with validator entries.
+     count.
+- Do not clear ## Open without a fix. Deduplicate entries.
 
 ================================================================
-PLAY CHECK (builder-owned — do not skip for external validators)
+PLAY CHECK (builder-owned — also covered by validate role cadence)
 ================================================================
 
 Light UI smoke runs every LIVE LOOP. **PLAY CHECK** is a deeper in-game pass on
