@@ -6,7 +6,7 @@
 
 - Phase: **Phase 2 — content expansion** — M1–M12 complete, expanding toward CAP
 - Milestone: 8 mob kits (8/16), 10 items (10/16), 4 floor themes (4/16)
-- Branch: `agent/dungeon-crawl-20260827`
+- Branch: `agent/dungeon-crawl-20260827` → PR #40 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **22 tests green, build green, ~510 KB bundle**
 - BUGS: all cleared
