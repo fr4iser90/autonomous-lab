@@ -35,11 +35,27 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
   const tickMs = options.tickMs ?? TICK_MS
   const autosaveMs = options.autosaveMs ?? AUTOSAVE_MS
   const loaded = loadEngineState()
-  const engine = new EconomyEngine(loaded ? { signal: loaded.signal, relays: loaded.relays } : {})
+  const engine = new EconomyEngine(
+    loaded
+      ? { signal: loaded.signal, relays: loaded.relays, upgrades: loaded.upgrades }
+      : {},
+  )
   const layers = new LayerEngine(loaded ? { layer: loaded.layer } : {})
   const titleView = buildTitleView()
   const playView: PlayView = buildPlayView(engine)
   let current: View = 'title'
+
+  // M6: shop tabs — Relays (default) and Resonators panels, one visible.
+  const generatorsPanel = playView.root.querySelector('#generators-panel') as HTMLElement
+  const upgradesPanel = playView.root.querySelector('#upgrades-panel') as HTMLElement
+  const tabRelays = playView.root.querySelector('#tab-relays') as HTMLButtonElement
+  const tabUpgrades = playView.root.querySelector('#tab-upgrades') as HTMLButtonElement
+  function setShopTab(tab: 'relays' | 'upgrades'): void {
+    generatorsPanel.classList.toggle('hidden', tab !== 'relays')
+    upgradesPanel.classList.toggle('hidden', tab !== 'upgrades')
+    tabRelays.classList.toggle('active', tab === 'relays')
+    tabUpgrades.classList.toggle('active', tab === 'upgrades')
+  }
 
   function show(view: View): void {
     current = view
@@ -60,6 +76,8 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
 
   titleView.querySelector('#play-btn')?.addEventListener('click', () => show('play'))
   playView.root.querySelector('#title-btn')?.addEventListener('click', () => show('title'))
+  tabRelays.addEventListener('click', () => setShopTab('relays'))
+  tabUpgrades.addEventListener('click', () => setShopTab('upgrades'))
 
   root.replaceChildren(titleView, playView.root)
   show('title')

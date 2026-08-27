@@ -6,20 +6,24 @@
  *
  * M2: Signal currency + click (+1).
  * M3: Relays (generators) — rising costs, production/sec via step(dt) at 20 Hz.
- * Upgrades (M6) and layers (M5) extend this without changing the click/buy path.
+ * M6: Resonator upgrades — one-time multipliers for click / relay / global output.
+ * Layers (M5) extend this without changing the click/buy path.
  */
 import { Decimal } from 'decimal.js'
 import { RELAYS, getRelay } from '../data/generators'
+import { UPGRADES, getUpgrade } from '../data/upgrades'
 
 export interface EconomyState {
   /** Cosmic Signal — the base currency (harvested by clicking, produced by Relays). */
   signal: Decimal
   /** Owned relay counts by relay id. */
   relays: Record<string, number>
+  /** Owned Resonator upgrade ids (M6). */
+  upgrades: Record<string, boolean>
 }
 
 export function initialState(): EconomyState {
-  return { signal: new Decimal(0), relays: {} }
+  return { signal: new Decimal(0), relays: {}, upgrades: {} }
 }
 
 export class EconomyEngine {
@@ -29,12 +33,23 @@ export class EconomyEngine {
     this.state = {
       signal: new Decimal(state?.signal ?? 0),
       relays: { ...(state?.relays ?? {}) },
+      upgrades: { ...(state?.upgrades ?? {}) },
     }
   }
 
-  /** Harvest Signal by clicking. Default +1 per click (M2). */
+  /** Signal gained per click (M2 base +1, amplified by click upgrades — M6). */
+  clickPower(): Decimal {
+    let power = new Decimal(1)
+    for (const def of UPGRADES) {
+      if (!this.state.upgrades[def.id]) continue
+      if (def.effect.kind === 'click-mult') power = power.times(def.effect.value)
+    }
+    return power
+  }
+
+  /** Harvest Signal by clicking. Base amount amplified by click upgrades (M6). */
   click(amount: Decimal.Value = 1): Decimal {
-    const gained = new Decimal(amount)
+    const gained = new Decimal(amount).times(this.clickPower())
     this.state.signal = this.state.signal.plus(gained)
     return gained
   }
@@ -57,14 +72,52 @@ export class EconomyEngine {
     return cost
   }
 
-  /** Total Signal production per second (M3). */
+  /** Output multiplier for one relay from its Resonator upgrades (M6). */
+  relayMult(relayId: string): Decimal {
+    let mult = new Decimal(1)
+    for (const def of UPGRADES) {
+      const eff = def.effect
+      if (this.state.upgrades[def.id] && eff.kind === 'relay-mult' && eff.relayId === relayId) {
+        mult = mult.times(eff.value)
+      }
+    }
+    return mult
+  }
+
+  /** Multiplier applied to ALL relay output from global upgrades (M6). */
+  globalMult(): Decimal {
+    let mult = new Decimal(1)
+    for (const def of UPGRADES) {
+      if (this.state.upgrades[def.id] && def.effect.kind === 'global-mult') {
+        mult = mult.times(def.effect.value)
+      }
+    }
+    return mult
+  }
+
+  /** Whether a Resonator upgrade is already owned (M6). */
+  isUpgradeOwned(id: string): boolean {
+    return this.state.upgrades[id] === true
+  }
+
+  /** Buy a one-time Resonator upgrade if affordable. Returns cost spent, or null (M6). */
+  buyUpgrade(id: string): Decimal | null {
+    const def = getUpgrade(id)
+    if (!def || this.isUpgradeOwned(id)) return null
+    if (this.state.signal.lt(def.cost)) return null
+    this.state.signal = this.state.signal.minus(def.cost)
+    this.state.upgrades[id] = true
+    return def.cost
+  }
+
+  /** Total Signal production per second (M3), amplified by Resonator upgrades (M6). */
   productionPerSec(): Decimal {
     let total = new Decimal(0)
     for (const def of RELAYS) {
       const owned = this.state.relays[def.id] ?? 0
-      if (owned > 0) total = total.plus(def.baseRate.times(owned))
+      if (owned > 0) total = total.plus(def.baseRate.times(owned).times(this.relayMult(def.id)))
     }
-    return total
+    return total.times(this.globalMult())
   }
 
   /**

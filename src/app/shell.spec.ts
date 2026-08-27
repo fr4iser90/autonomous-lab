@@ -149,9 +149,10 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(2)
+    expect(saved.version).toBe(3)
     expect(saved.signal).toBe('5')
     expect(saved.layer).toBe(1)
+    expect(saved.upgrades).toEqual({})
     // a fresh shell restores the saved signal
     shell.destroy()
     shells.splice(shells.indexOf(shell), 1)
@@ -170,5 +171,83 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     expect(shell.layers.state.layer).toBe(3)
     expect(shell.layers.def.id).toBe(3)
     expect(root.querySelector('#signal')?.textContent).toBe('42')
+  })
+})
+
+describe('shop tabs + Resonators (M6)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  function clickHarvest(root: HTMLElement, times: number): void {
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+
+  it('defaults to the Relays tab; Resonators tab reveals the upgrade list', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    expect((root.querySelector('#tab-relays') as HTMLButtonElement).classList.contains('active')).toBe(true)
+    expect((root.querySelector('#tab-upgrades') as HTMLButtonElement).classList.contains('active')).toBe(false)
+    expect(root.querySelector('#generators-panel')?.classList.contains('hidden')).toBe(false)
+    expect(root.querySelector('#upgrades-panel')?.classList.contains('hidden')).toBe(true)
+    ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(root.querySelector('#upgrades-panel')?.classList.contains('hidden')).toBe(false)
+    expect(root.querySelector('#generators-panel')?.classList.contains('hidden')).toBe(true)
+    expect(root.querySelectorAll('#upgrade-list .upgrade-row').length).toBe(6)
+    // nothing affordable at Signal 0
+    for (const id of ['amp', 'overdrive', 'whisper-harmonics', 'pulse-resonance', 'beam-alignment', 'global-resonance']) {
+      expect((root.querySelector(`#buy-${id}`) as HTMLButtonElement).disabled).toBe(true)
+    }
+  })
+
+  it('buying an upgrade from the DOM deducts Signal and marks it Attuned', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 100)
+    ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const buyBtn = root.querySelector('#buy-amp') as HTMLButtonElement
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(root.querySelector('#signal')?.textContent).toBe('0')
+    expect(buyBtn.textContent).toBe('Attuned')
+    expect(buyBtn.disabled).toBe(true)
+    expect(shell.engine.isUpgradeOwned('amp')).toBe(true)
+    // click power is now ×2
+    clickHarvest(root, 1)
+    expect(root.querySelector('#signal')?.textContent).toBe('2')
+    expect((root.querySelector('#click-signal') as HTMLButtonElement).textContent).toBe('Harvest Signal (+2)')
+  })
+
+  it('restores saved upgrades (M6)', () => {
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 3,
+        signal: '5',
+        relays: {},
+        layer: 1,
+        upgrades: { amp: true },
+        meta: { savedAt: 1 },
+      }),
+    )
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    expect(shell.engine.clickPower().toString()).toBe('2')
+    ;(root.querySelector('#tab-upgrades') as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const buyBtn = root.querySelector('#buy-amp') as HTMLButtonElement
+    expect(buyBtn.textContent).toBe('Attuned')
+    expect(buyBtn.disabled).toBe(true)
   })
 })
