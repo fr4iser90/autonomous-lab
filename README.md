@@ -34,8 +34,8 @@ Full hardware, GGUF ids, and `settings.yaml`: **[`SETUP.md`](SETUP.md)**.
 ## Live loop & gates
 
 ```
-agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash)
-  → main → Pages
+agent/* commit → Open agent PR → CI `gate` (test + build) → Automerge (squash
+  or conflict-resolve) → main → Pages → sync agent/* tip to main
 ```
 
 Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fire `push`).
@@ -44,7 +44,7 @@ Pages also chains on Automerge `workflow_run` (GITHUB_TOKEN merges do not re-fir
 |---|---|
 | `gate` | Required: Vitest + production build |
 | `protect-boilerplate` | Agent PRs must not edit workflows / `AGENTS.md` / `BOILERPLATE.md` / … |
-| Automerge | Squash `agent/*` → `main` when gate is green |
+| Automerge | Squash (or conflict-resolve) `agent/*` → `main` when tip gate is green; then reset that `agent/*` to `main` |
 | Pages | Deploys **only** from `main` (what outsiders play) |
 | PRE-PR / PHASE GATE | Prompt law: playable shot + vision when available before publish / phase change |
 
@@ -108,5 +108,11 @@ agent-default-model:
 <!-- RUN_OWNED: agent replaces this section for the shipped game. Keep the
      Autonomous Lab header above intact. -->
 
-**No game shipped on this branch yet** — scaffold toys under `src/` only.
-After an overnight run automerges, `main` shows the live game here (and on Pages).
+**Signal Ascent** — a Celestial-inspired layered prestige incremental (DOM UI).
+Harvest cosmic **Signal**, build **Relays**, buy **Resonators**, and **Ascend**
+through the Strata for permanent **Harmonics** multipliers.
+
+- Live: https://fr4iser90.github.io/autonomous-lab/
+- Run branch: `agent/celestial-inc-20260826` · tracking: `PROGRESS.md`
+- Stack: Vite + TypeScript + DOM-only UI · 20 Hz engine · decimal big numbers
+- Status: M1 — title + play shell (economy lands M2, layers M5, prestige M8, Phase 2 specials at layers 10/20/30/40/50)
