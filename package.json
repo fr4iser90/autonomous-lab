@@ -13,7 +13,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "boundaries": "depcruise --config .dependency-cruiser.cjs src",
-    "gate": "npm run typecheck && npm run lint && npm run boundaries && npm test && npm run build"
+    "gate": "npm run typecheck && npm run lint && npm run boundaries && npm test && npm run build",
+    "prepare": "node ./node_modules/simple-git-hooks/cli.js || true"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "./node_modules/.bin/tsc -p tsconfig.json --noEmit"
   },
   "engines": {
     "node": ">=22"
@@ -27,6 +31,7 @@
     "globals": "^16.3.0",
     "jsdom": "^26.1.0",
     "playwright": "^1.62.1",
+    "simple-git-hooks": "^2.13.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.39.1",
     "vite": "7.3.6",
