@@ -1,22 +1,46 @@
 name: Automerge agent PRs
 
-# After CI succeeds on a pull_request, squash-merge agent/* → main.
-# Pages then deploys via workflow_run (GITHUB_TOKEN merges do not retrigger push).
+# Land agent/* work on main (Pages). Normal path: squash-merge after green CI.
+# Conflict path: when PR is CONFLICTING but agent tip gate is green, merge
+# agent → main with path rules (run-owned from agent, boilerplate from main),
+# push main, close PR. Does NOT push sync commits to agent/*.
+#
+# Pages deploys via workflow_run (GITHUB_TOKEN merges/pushes may not retrigger push).
+
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
+  schedule:
+    # Catch stuck CONFLICTING PRs even when gate-on-merge-ref is red
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
+  checks: read
+  statuses: read
+
+concurrency:
+  group: automerge-main
+  cancel-in-progress: false
 
 jobs:
-  merge:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+  # --- Happy path: green PR CI → squash into main ---
+  squash:
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
+    outputs:
+      merged: ${{ steps.merge.outputs.merged }}
+      pr: ${{ steps.merge.outputs.pr }}
+      head: ${{ steps.merge.outputs.head }}
     steps:
       - name: Squash-merge agent PR
+        id: merge
         uses: actions/github-script@v7
         with:
           script: |
@@ -24,6 +48,9 @@ jobs:
             const repo = context.repo.repo
             const run = context.payload.workflow_run
             const headBranch = run.head_branch
+            core.setOutput('merged', 'false')
+            core.setOutput('pr', '')
+            core.setOutput('head', headBranch || '')
             if (!headBranch || !headBranch.startsWith('agent/')) {
               core.info(`Skip: head_branch=${headBranch}`)
               return
@@ -32,36 +59,223 @@ jobs:
             let prs = (run.pull_requests || []).filter(
               (pr) => pr.base.ref === 'main' && pr.head.ref.startsWith('agent/'),
             )
-
             if (prs.length === 0) {
               const { data } = await github.rest.pulls.list({
-                owner,
-                repo,
-                state: 'open',
-                base: 'main',
+                owner, repo, state: 'open', base: 'main',
                 head: `${owner}:${headBranch}`,
               })
               prs = data
             }
-
             if (prs.length === 0) {
               core.info(`No open PR for ${headBranch}`)
               return
             }
 
             for (const pr of prs) {
-              core.info(`Merging PR #${pr.number} (${pr.head.ref} → main)`)
+              core.info(`Squash-merge PR #${pr.number} (${pr.head.ref} → main)`)
               try {
                 await github.rest.pulls.merge({
-                  owner,
-                  repo,
-                  pull_number: pr.number,
+                  owner, repo, pull_number: pr.number,
                   merge_method: 'squash',
                   commit_title: `Live ${pr.head.ref} (#${pr.number})`,
                   commit_message: 'Automerge after green CI gate; Pages deploys from main.',
                 })
                 core.info(`Merged #${pr.number}`)
+                core.setOutput('merged', 'true')
+                core.setOutput('pr', String(pr.number))
+                core.setOutput('head', pr.head.ref)
+                return
               } catch (error) {
-                core.warning(`Could not merge #${pr.number}: ${error.message}`)
+                core.warning(`Squash failed #${pr.number}: ${error.message}`)
+                core.setOutput('pr', String(pr.number))
+                core.setOutput('head', pr.head.ref)
               }
             }
+
+  # --- Conflict / stuck path: merge agent tip → main with resolve rules ---
+  merge-to-main:
+    needs: [squash]
+    if: >
+      always() && (
+        github.event_name == 'schedule' ||
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'workflow_run' && needs.squash.result != 'skipped' && needs.squash.outputs.merged != 'true')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pick open agent PR needing land on main
+        id: pick
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const { data: prs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', base: 'main', per_page: 50,
+            })
+            const agents = prs.filter((p) => p.head.ref.startsWith('agent/'))
+            if (agents.length === 0) {
+              core.info('No open agent PRs')
+              core.setOutput('found', 'false')
+              return
+            }
+
+            // Prefer explicit PR from squash job, else first dirty/conflicting, else first
+            const prefer = '${{ needs.squash.outputs.pr }}'
+            let chosen = prefer
+              ? agents.find((p) => String(p.number) === prefer)
+              : null
+
+            async function refresh(pr) {
+              const { data } = await github.rest.pulls.get({
+                owner, repo, pull_number: pr.number,
+              })
+              return data
+            }
+
+            if (!chosen) {
+              for (const p of agents) {
+                const full = await refresh(p)
+                if (full.mergeable === false || full.mergeable_state === 'dirty' ||
+                    full.mergeable_state === 'conflicting') {
+                  chosen = full
+                  break
+                }
+              }
+            }
+            if (!chosen) chosen = await refresh(agents[0])
+            else if (!chosen.mergeable_state) chosen = await refresh(chosen)
+
+            const headSha = chosen.head.sha
+            const headRef = chosen.head.ref
+
+            // Require successful gate check on the agent tip (not merge commit)
+            const checks = await github.rest.checks.listForRef({
+              owner, repo, ref: headSha, per_page: 100,
+            })
+            const gate = (checks.data.check_runs || []).filter((c) => c.name === 'gate')
+            const gateOk = gate.some((c) => c.conclusion === 'success')
+            // Also accept combined status if checks API empty
+            let statusOk = gateOk
+            if (!gateOk) {
+              try {
+                const { data: st } = await github.rest.repos.getCombinedStatusForRef({
+                  owner, repo, ref: headSha,
+                })
+                statusOk = st.state === 'success'
+              } catch (_) { /* ignore */ }
+            }
+
+            core.info(`PR #${chosen.number} ${headRef}@${headSha.slice(0,7)} mergeable=${chosen.mergeable} state=${chosen.mergeable_state} gateOk=${gateOk} statusOk=${statusOk}`)
+
+            if (!gateOk && !statusOk) {
+              core.info('Skip: agent tip has no green gate — will not push broken code to main')
+              core.setOutput('found', 'false')
+              return
+            }
+
+            // If already cleanly mergeable, squash via API instead of local merge
+            if (chosen.mergeable === true && chosen.mergeable_state === 'clean') {
+              try {
+                await github.rest.pulls.merge({
+                  owner, repo, pull_number: chosen.number,
+                  merge_method: 'squash',
+                  commit_title: `Live ${headRef} (#${chosen.number})`,
+                  commit_message: 'Automerge after green CI gate; Pages deploys from main.',
+                })
+                core.info(`Squash-merged clean PR #${chosen.number}`)
+                core.setOutput('found', 'false')
+                return
+              } catch (e) {
+                core.warning(`Clean squash failed, falling back to local merge: ${e.message}`)
+              }
+            }
+
+            core.setOutput('found', 'true')
+            core.setOutput('pr', String(chosen.number))
+            core.setOutput('head', headRef)
+            core.setOutput('sha', headSha)
+
+      - name: Merge agent → main (resolve conflicts, push main)
+        if: steps.pick.outputs.found == 'true'
+        env:
+          HEAD_REF: ${{ steps.pick.outputs.head }}
+          PR_NUM: ${{ steps.pick.outputs.pr }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Checkout main (default branch workflow context)
+          git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" repo
+          cd repo
+          git fetch origin main "$HEAD_REF"
+          git checkout -B main origin/main
+
+          set +e
+          git merge --no-ff "origin/$HEAD_REF" -m "Live ${HEAD_REF} (#${PR_NUM}) — conflict-resolved merge to main"
+          merge_rc=$?
+          set -e
+
+          if [[ "$merge_rc" -ne 0 ]]; then
+            echo "Conflicts — applying ownership rules (agent = run game, main = boilerplate)"
+            # While merging into main: --ours = main, --theirs = agent
+            mapfile -t conflicted < <(git diff --name-only --diff-filter=U || true)
+            for f in "${conflicted[@]+"${conflicted[@]}"}"; do
+              [[ -z "${f:-}" ]] && continue
+              case "$f" in
+                .github/*|AGENTS.md|BOILERPLATE.md|scripts/new-run.sh|LICENSE|SETUP.md)
+                  echo "KEEP main (boilerplate): $f"
+                  git checkout --ours -- "$f"
+                  git add -- "$f"
+                  ;;
+                src/*|tests/*|demo/*|PROGRESS.md|CONTENT.md|FEATURES.md|SOAK.md|BUGS.md|DEMO.md|ASSETS.md|index.html|package.json|package-lock.json|pnpm-lock.yaml|shared/*)
+                  echo "KEEP agent (run): $f"
+                  git checkout --theirs -- "$f"
+                  git add -- "$f"
+                  ;;
+                README.md)
+                  # Prefer agent Current run + keep file from agent; Lab header is agent responsibility on run
+                  echo "KEEP agent (README Current run): $f"
+                  git checkout --theirs -- "$f"
+                  git add -- "$f"
+                  ;;
+                *)
+                  echo "KEEP agent (default run): $f"
+                  git checkout --theirs -- "$f"
+                  git add -- "$f"
+                  ;;
+              esac
+            done
+            if ! git diff --name-only --diff-filter=U | grep -q .; then
+              git commit -m "Live ${HEAD_REF} (#${PR_NUM}) — conflict-resolved merge to main"
+            else
+              echo "::error::Unresolved conflicts remain:"
+              git diff --name-only --diff-filter=U
+              exit 1
+            fi
+          fi
+
+          echo "Running gate on merged main tree before push"
+          npm ci
+          npm run gate
+
+          git push origin main
+          echo "Pushed main — Pages should rebuild"
+
+      - name: Close PR after land on main
+        if: steps.pick.outputs.found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const pr = Number('${{ steps.pick.outputs.pr }}')
+            const head = '${{ steps.pick.outputs.head }}'
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: pr,
+              body: `Landed on \`main\` via conflict-resolved merge (run-owned from \`${head}\`, boilerplate from \`main\`). Pages will update. Agent branch left as-is.`,
+            })
+            await github.rest.pulls.update({
+              owner, repo, pull_number: pr, state: 'closed',
+            })

@@ -24,20 +24,34 @@ jobs:
         run: |
           set -euo pipefail
           branch="${GITHUB_REF_NAME}"
-          open_count="$(gh pr list --base main --head "$branch" --state open --json number --jq 'length')"
+          owner="${GITHUB_REPOSITORY_OWNER}"
+          # head must be owner:branch for gh
+          open_count="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "${owner}:${branch}" --state open --json number --jq 'length')"
           if [[ "$open_count" != "0" ]]; then
             echo "Open PR already exists for $branch"
             exit 0
           fi
-          gh pr create \
+          if gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
             --base main \
             --head "$branch" \
             --title "Live: ${branch}" \
             --body "$(cat <<EOF
           Automerge candidate from \`${branch}\`.
 
-          - CI \`gate\` must pass
-          - Automerge workflow squash-merges into \`main\` → Pages updates
+          - CI \`gate\` must pass on the agent tip
+          - Automerge lands on \`main\` (squash, or conflict-resolved merge → main)
           - Do not push \`main\`/\`baseline\` from the agent
           EOF
-          )"
+          )"; then
+            echo "Created PR"
+            exit 0
+          fi
+          # Race: PR opened between list and create — treat as success
+          open_count="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "${owner}:${branch}" --state open --json number --jq 'length')"
+          if [[ "$open_count" != "0" ]]; then
+            echo "PR exists after create race — OK"
+            exit 0
+          fi
+          echo "::error::gh pr create failed and no open PR found"
+          exit 1
