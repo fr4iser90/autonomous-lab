@@ -6,6 +6,7 @@ Decide here BEFORE implementing each Phase 2 C cycle / Phase 4 P4 cycle. One fea
 _(empty — nothing decided yet)_
 
 ## Shipped
+- M10: **Buy-max toggle** — checkbox `#buy-max-toggle` in the Relays panel header; when checked, clicking a relay buy button purchases as many affordable units as possible in one go (greedy, highest-tier-first via engine `buyMaxRelay(id)`). The cost cell shows total cost + qty in parentheses; the buy button shows "Buy N" where N is the max count. Default is single-unit buy (unchanged behavior).
 - M1: DOM-only app shell (title ↔ play state machine), dark nebula theme, future panel
   slots (#economy-panel, #generators-panel, #upgrades-panel, #prestige-panel, #layer-strip),
   `window.__SIGNAL_ASCENT__` debug handle. Engines (20 Hz tick) planned in shared/design.md.

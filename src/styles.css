@@ -185,13 +185,40 @@ body {
 }
 
 /* ---- relay list (M4) ---- */
+.panel-title-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .panel-title {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--muted);
+}
+
+.buy-max-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  user-select: none;
+}
+
+.buy-max-label input {
+  accent-color: var(--accent-2);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
 
 .relay-list {

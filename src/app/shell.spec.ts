@@ -401,3 +401,87 @@ describe('Ascend / prestige (M8)', () => {
     expect(shell.engine.productionPerSec().gt(0.53)).toBe(true)
   })
 })
+
+describe('buy-max toggle (M10)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function enterPlay(root: HTMLElement): Shell {
+    const shell = makeShell(root)
+    root.querySelector('#play-btn')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return shell
+  }
+
+  function clickHarvest(root: HTMLElement, times: number): void {
+    const btn = root.querySelector('#click-signal') as HTMLButtonElement
+    for (let i = 0; i < times; i++) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+
+  it('shows the Buy Max checkbox on the Relays tab', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    const checkbox = root.querySelector('#buy-max-toggle') as HTMLInputElement
+    expect(checkbox).not.toBeNull()
+    expect(checkbox.checked).toBe(false)
+  })
+
+  it('buy-max off: single purchase (default)', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    clickHarvest(root, 100)
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(shell.engine.state.relays.whisper).toBe(1)
+    expect(buyBtn.textContent).toBe('Buy')
+  })
+
+  it('buy-max on: buys max affordable in one click', () => {
+    const root = makeRoot()
+    const shell = enterPlay(root)
+    // Whisper: baseCost=15, costGrowth=1.15
+    // 100 Signal → can afford: 15 + 17.25 + 19.84 + 22.81 = 74.9 → 4 units
+    // Remaining signal ≈ 25
+    clickHarvest(root, 100)
+    const checkbox = root.querySelector('#buy-max-toggle') as HTMLInputElement
+    checkbox.checked = true
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.textContent).toContain('Buy ')
+    expect(buyBtn.disabled).toBe(false)
+    buyBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(shell.engine.state.relays.whisper).toBe(4)
+    // 100 - (15 + 17.25 + 19.8375 + 22.813125) ≈ 25.099...
+    const signal = Number(shell.engine.state.signal.toString())
+    expect(signal).toBeGreaterThanOrEqual(25)
+    expect(signal).toBeLessThanOrEqual(26)
+  })
+
+  it('buy-max off shows plain cost; buy-max on shows total + qty', () => {
+    const root = makeRoot()
+    enterPlay(root)
+    clickHarvest(root, 100)
+
+    // Default: plain cost
+    const costEl = root.querySelector('.relay-row[data-relay-id="whisper"] .relay-cost') as HTMLElement
+    expect(costEl.textContent).toBe('15')
+    const buyBtn = root.querySelector('#buy-whisper') as HTMLButtonElement
+    expect(buyBtn.textContent).toBe('Buy')
+
+    // Toggle on
+    const checkbox = root.querySelector('#buy-max-toggle') as HTMLInputElement
+    checkbox.checked = true
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+
+    const costEl2 = root.querySelector('.relay-row[data-relay-id="whisper"] .relay-cost') as HTMLElement
+    expect(costEl2.innerHTML).toContain('×')
+    expect(buyBtn.textContent).toContain('Buy ')
+  })
+})

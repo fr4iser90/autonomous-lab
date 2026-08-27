@@ -97,6 +97,22 @@ export class EconomyEngine {
     return cost
   }
 
+  /**
+   * Buy as many units of a relay as affordable in a single call (M10).
+   * Purchases greedily: each iteration buys one unit at the current cost.
+   * Returns the total Signal spent, or 0 if nothing was affordable.
+   */
+  buyMaxRelay(id: string): Decimal {
+    let total = new Decimal(0)
+    let spent: Decimal | null
+    do {
+      spent = this.buyRelay(id)
+      if (spent) total = total.plus(spent)
+      else break
+    } while (true)
+    return total
+  }
+
   /** Output multiplier for one relay from its Resonator upgrades (M6). */
   relayMult(relayId: string): Decimal {
     let mult = new Decimal(1)
