@@ -2,18 +2,19 @@
 
 ## NOW
 - Phase: Milestones M1–M12
-- Milestone: M7 (layer strip: always-visible stratum window + live #here + next-threshold line) — gate green, pre-PR visual PASS
+- Milestone: M8 (Ascend/prestige — Harmonics mult, prestige panel, save v4) — gate green, pre-PR visual PASS all 4 shots
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
 - LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
-- deepest_soak_layer: 3 (simulateToLayer(3) green, seed 0)
-- Last ACCEPT: M5 — merged to main as ff39c88 (PR #20, pre-M6 head); M6+M7 on agent branch pending new PR
-- Last SHA: 2bd8193 (M7 code commit; SAFE SYNC merge 27723ba over ff39c88)
-- Pre-PR visual: all 4 shots read_image PASS (title / play-0 / play-5 / post-buy Whisper 1/17.3, +0.5/sec, Signal 0.8; layer strip: Echo Hollow active, "Next stratum: Halo Hollow at 1.00M Signal")
-- Gate: `npm test && npm run test:ui && npm run build` — 62 vitest + self-managed UI smoke + build
+- deepest_soak_layer: 3 (simulateToLayer(3) green with ascend flow, seed 0)
+- Last ACCEPT: M5 — merged to main as ff39c88 (PR #20); M6+M7 on agent branch → PR #21 (M8 pending)
+- Last SHA: fe9ec1c (M8 code commit; PR #21 opened for review)
+- Pre-PR visual: 4 shots read_image PASS (m8-title / m8-prestige-panel "Gain 1 Harmonic" / m8-post-ascend layer-2 Halo Hollow / m8-layer-strip)
+- Gate: `npm test && npm run test:ui && npm run build` — 79 vitest + UI smoke + build green
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
-- Next: push M6+M7 → new PR (CI gate) → M8 (Ascend: `floor(sqrt(signal/threshold))` Harmonics reward + Signal wipe + prestige panel)
+- Next: PR #21 merges → M9 (layers 4–10 procedural, simulateToLayer(10) green, buy-max toggle)
 
 ## Log
+- 2026-08-26: M8 built — Ascend (prestige) panel: visible at threshold, shows Harmonic reward (`floor(sqrt(signal/threshold))`), Ascend button. Shell orchestrates: threshold check → LayerEngine.ascend → resetLayerSlice() → inject new harmonicMult → saveEngineState(v4). LayerEngine.harmonicMult() = 1 + 0.02 × h. EconomyEngine.productionPerSec() × harmonicMult, clickPower() × harmonicMult. Save v4 adds `harmonics` field; v3→v4 migration loads 0. SimulateToLayer tracks ascend flow with cumulative relays + harmonics. 79 vitest + UI smoke + build green → fe9ec1c; PR #21.
 - 2026-08-26: M7 built — layer strip always visible in the play view: `#layer-strip` un-hidden; 5-chip stratum window (current ±2, clamped to 1..LAYER_CAP, current chip `.active`), chip text "N · <layer name>" with flavor tooltip; "Next stratum: <name> at <threshold> Signal" line ("Apex of the Strata" at cap); header `#here` shows the live stratum name (was hardcoded "Stratum 1"). `buildPlayView(engine, layers)` now takes the LayerEngine; strip re-renders only on layer change (20 Hz render untouched otherwise). +2 shell specs (layer 1 → 3-chip window, "1.00M"; restored layer 3 → 5 chips, "100M") + UI smoke asserts strip visible + "Echo Hollow" + "1.00M". 62 vitest + UI smoke + build green → 2bd8193.
 - 2026-08-26: M7 pre-PR visual PASS (read_image): all 4 shots re-captured + PASS — m1-play/m2-play/m4-play show the layer strip ("You are here: Echo Hollow", chips 1/2/3 with 1 active, "Next stratum: Halo Hollow at 1.00M Signal"); m1-title unchanged.
 - 2026-08-26: SYNC: SAFE SYNC — merged origin/main (ff39c88 = PR #20 squash; automerge landed on the pre-M6 head 2ad93aa, so main had M5 while the branch carried M5+M6+M7); 8 add/add conflicts (docs + shell/save M6-M7 deltas + m2-play.png), all taken --ours; tree byte-identical to 2bd8193 (0-line diff); gate green post-sync → 27723ba.
