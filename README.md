@@ -31,8 +31,8 @@ Local preview: `pnpm install && pnpm run dev` → http://127.0.0.1:5173/autonomo
 | Session | Paste | Model |
 |---|---|---|
 | Greenfield | IDEA + `lab/examples/template/TEMPLATE.md` | **fast** |
-| Genre Initial → forever Followup | `lab/examples/games/<game>.md` then `…-followup.md` | **fast** + `read_image` |
-| Idle nudge | same `*-followup.md` **or** `lab/roles/followup.md` | **fast** |
+| Genre Initial → forever Followup | `lab/examples/games/<game>.md` then **`lab/roles/followup.md`** | **fast** + `read_image` |
+| Idle nudge | **`lab/roles/followup.md`** (not thin `*-followup` stubs) | **fast** |
 | Validate (inside Followup) | `lab/roles/validate.md` behavior every ~3 features | **fast** + `read_image` (Pages) |
 
 Full hardware, GGUF ids, and `settings.yaml`: **[`lab/SETUP.md`](lab/SETUP.md)**.

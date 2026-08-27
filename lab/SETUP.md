@@ -20,7 +20,8 @@ Machine files live under **`lab/`**. Root = current experiment.
 |---|---|---|
 | **Greenfield (short)** | IDEA + [`template/TEMPLATE.md`](examples/template/TEMPLATE.md) law | **`fast`** |
 | **Genre Initial** | `lab/examples/games/<game>.md` only | **`fast`** + `read_image` |
-| **Forever resume / idle nudge** | `<game>-followup.md` **or** `lab/roles/followup.md` | **`fast`** |
+| **Forever resume / idle nudge** | **`lab/roles/followup.md` only** | **`fast`** |
+| Thin per-game `*-followup.md` | optional ACCEPT pointer — not the nudge body | — |
 | Roles (machine, not separate pastes) | `lab/roles/{concept,arch,feature,fix,validate,followup}.md` | pulled by Followup |
 | Hard code root-cause only | optional **`smart`** subagent — **not** for PNGs | |
 

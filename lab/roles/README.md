@@ -5,7 +5,10 @@ Part of **`lab/`**. Human pastes **as few prompts as possible**:
 | Human pastes | When |
 |--------------|------|
 | **Initial** once | Short IDEA, or filled `lab/examples/template/TEMPLATE.md`, or `lab/examples/games/<game>.md` |
-| **Followup** forever | That game’s `*-followup.md` **or** this pack’s `followup.md` |
+| **Followup forever (nudge)** | Always **`lab/roles/followup.md`** |
+
+Optional: thin `lab/examples/games/<game>-followup.md` only names the Initial for
+ACCEPT — **not** a substitute nudge body.
 
 Roles below are **laws the agent reads and cycles** — not five separate overnight sessions.
 
@@ -21,13 +24,13 @@ lab/roles/IDEA.slot.md → short IDEA for greenfield
 
 ## Per-game examples (target shape)
 
-Under `lab/examples/games/` keep **exactly two** files when possible:
+Under `lab/examples/games/` keep **two** files when archiving a pack:
 
 1. `<game>.md` — Initial overnight law  
-2. `<game>-followup.md` — Resume (may point at `lab/roles/followup.md` + ACCEPT from Initial)
+2. `<game>-followup.md` — **thin pointer** (Initial path + “obey lab/roles/followup.md”)
 
-**No** separate `*-VL-validation.md` / `*-git-validation.md` — validation + gate
-hygiene live in **roles** (`validate` + `fix` + Followup cadence).
+**Nudge / idle = always `lab/roles/followup.md`.**  
+**No** separate `*-VL-validation.md` / `*-git-validation.md`.
 
 ## Rules
 
