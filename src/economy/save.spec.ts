@@ -48,7 +48,7 @@ describe('save stub (M4, v2 in M5, v3 in M6, v4 in M8)', () => {
       upgrades: Record<string, boolean>
       harmonics: number
     }
-    expect(parsed.version).toBe(5)
+    expect(parsed.version).toBe(6)
     expect(parsed.upgrades).toEqual({})
     expect(parsed.harmonics).toBe(0)
   })

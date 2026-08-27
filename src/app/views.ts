@@ -56,6 +56,10 @@ export interface PlayView {
     autoAscend?: boolean
     stats?: { totalRelaysBought: number; totalClicks: number; playTime: number }
     achievementNotifs?: string[]
+    /** M12: offline check-back signal delta (seconds elapsed, signal gained). */
+    checkBack?: { signalDelta: number; elapsedSecs: number }
+    /** M12: callback for clearing save (returns void on cancel). */
+    onClearSave?: () => boolean | void
   }) => void
   /** Called by the shell when new achievements unlock (M11). */
   onAchievementUnlock?: (ids: string[]) => void
@@ -165,6 +169,10 @@ export function buildPlayView(
       </aside>
     </div>
     <div id="ach-notif" class="ach-notif hidden"></div>
+    <div id="check-back" class="check-back hidden"></div>
+    <div id="settings-row" class="panel panel-title-wrap">
+      <button id="clear-save-btn" class="ghost" type="button">Clear Save</button>
+    </div>
   `
 
   const signalEl = section.querySelector('#signal') as HTMLElement
@@ -185,9 +193,12 @@ export function buildPlayView(
   const statTime = section.querySelector('#stat-time') as HTMLElement
   const autoAscendCheckbox = section.querySelector('#auto-ascend-toggle') as HTMLInputElement
   const achNotif = section.querySelector('#ach-notif') as HTMLElement
+  const checkBackEl = section.querySelector('#check-back') as HTMLElement
+  const clearSaveBtn = section.querySelector('#clear-save-btn') as HTMLButtonElement
   let buyMax = false
   let autoAscend = false
   let renderedLayer = -1
+  let renderedCheckBack: string | null = null
 
   // M7: stratum window around the current layer (rebuild only on layer change).
   function renderStrip(): void {
@@ -240,6 +251,8 @@ export function buildPlayView(
     autoAscend?: boolean
     stats?: { totalRelaysBought: number; totalClicks: number; playTime: number }
     achievementNotifs?: string[]
+    checkBack?: { signalDelta: number; elapsedSecs: number }
+    onClearSave?: () => boolean | void
   } = {}): void {
     buyMax = buyMaxCheckbox.checked
     autoAscend = autoAscendCheckbox.checked
@@ -339,6 +352,32 @@ export function buildPlayView(
     } else {
       achNotif.classList.add('hidden')
     }
+
+    // M12: check-back notification (offline progress).
+    const cb = renderOpts.checkBack
+    if (cb && cb.elapsedSecs > 0) {
+      const key = `${cb.signalDelta.toFixed(1)}|${cb.elapsedSecs}`
+      if (key !== renderedCheckBack) {
+        const mins = Math.floor(cb.elapsedSecs / 60)
+        const hrs = Math.floor(mins / 60)
+        const timeStr = hrs > 0 ? `${hrs}h ${mins % 60}m` : `${mins}m`
+        checkBackEl.innerHTML = `⏳ <strong>Check-back:</strong> +${format(new Decimal(cb.signalDelta))} Signal (${timeStr} offline)`
+        renderedCheckBack = key
+        checkBackEl.classList.remove('hidden')
+      }
+    } else {
+      checkBackEl.classList.add('hidden')
+      renderedCheckBack = null
+    }
+
+    // M12: clear save button.
+    clearSaveBtn.addEventListener('click', () => {
+      if (renderOpts.onClearSave === undefined || renderOpts.onClearSave()) {
+        localStorage.removeItem('signal-ascent-save-v1')
+        // Reload page to restart fresh.
+        location.reload()
+      }
+    }, { once: true })
   }
 
   clickBtn.addEventListener('click', () => {

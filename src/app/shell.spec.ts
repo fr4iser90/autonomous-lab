@@ -149,7 +149,7 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(5)
+    expect(saved.version).toBe(6)
     expect(saved.signal).toBe('5')
     expect(saved.layer).toBe(1)
     // upgrades may contain achievement flags from the test actions
@@ -282,14 +282,14 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="2"]')?.classList.contains('active')).toBe(false)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Halo Hollow')
-    expect(nextLine?.textContent).toContain('3.00M')
+    expect(nextLine?.textContent).toContain('1.50M')
   })
 
   it('re-renders the strip for a restored stratum (layer 3)', () => {
     localStorage.setItem(
       SAVE_KEY,
       JSON.stringify({
-        version: 3,
+        version: 6,
         signal: '42',
         relays: {},
         layer: 3,
@@ -306,8 +306,8 @@ describe('layer strip (M7)', () => {
     expect(root.querySelector('.layer-chip[data-layer-chip="3"]')?.classList.contains('active')).toBe(true)
     const nextLine = root.querySelector('.layer-next')
     expect(nextLine?.textContent).toContain('Veil Hollow')
-    // Layer 3 → layer 4: threshold 1e6 * 3^3 = 27M (M9: 3× growth)
-    expect(nextLine?.textContent).toContain('27.0M')
+    // Layer 3 → layer 4: threshold 1e6 * 1.5^3 = 3.375M (M12: 1.5× growth)
+    expect(nextLine?.textContent).toContain('3.38M')
   })
 })
 
@@ -374,7 +374,7 @@ describe('Ascend / prestige (M8)', () => {
     expect(panel.classList.contains('hidden')).toBe(true)
     // The ascend saved the new state immediately.
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY)!)
-    expect(saved.version).toBe(5)
+    expect(saved.version).toBe(6)
     expect(saved.layer).toBe(2)
     expect(saved.harmonics).toBe(1)
     expect(saved.signal).toBe('0')

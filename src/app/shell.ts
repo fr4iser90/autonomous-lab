@@ -11,10 +11,17 @@
  * M11: Stats tracking (totalRelaysBought, totalClicks, playTime) persisted
  *       in save v5. Auto-ascend toggle (engine autoAscend flag).
  *       Achievement checks each tick; unlock notifications rendered.
+ * M12: Offline check-back (25 % of up to 8 h at saved production rate);
+ *       settings persistence (autoAscend); mobile CSS wired in.
  */
 import { EconomyEngine } from '../economy/engine'
 import { LayerEngine } from '../economy/layers'
-import { loadEngineState, saveEngineState } from '../economy/save'
+import {
+  loadEngineState,
+  saveEngineState,
+  computeCheckBack,
+  clearSave,
+} from '../economy/save'
 import { checkAchievements, ACHIEVEMENTS } from '../data/achievements'
 import { buildPlayView, buildTitleView, type PlayView } from './views'
 
@@ -57,6 +64,9 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     : undefined
   const engine = new EconomyEngine(engineState, layers.harmonicMult())
 
+  // M12: auto-ascend from settings.
+  engine.state.autoAscend = loaded?.settings?.autoAscend ?? false
+
   // M11: achievement tracking.
   let lastRelayCount = 0
   let totalRelaysBought = loaded ? loaded.stats.totalRelaysBought : 0
@@ -65,6 +75,19 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
   let lastTime = Date.now()
   let achievementNotifs: string[] = []
   let notifTimer = 0
+
+  // M12: compute offline check-back delta.
+  let checkBackData: { signalDelta: number; elapsedSecs: number } | null = null
+  if (loaded) {
+    const result = computeCheckBack(loaded.savedAt, Date.now(), engine.productionPerSec())
+    if (result.applied) {
+      engine.state.signal = engine.state.signal.plus(result.signalDelta)
+      checkBackData = {
+        signalDelta: result.signalDelta.toNumber(),
+        elapsedSecs: result.elapsedSeconds,
+      }
+    }
+  }
 
   const titleView = buildTitleView()
 
@@ -80,7 +103,7 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
       totalRelaysBought,
       totalClicks,
       playTime: playTimeMs,
-    })
+    }, engine.state.autoAscend)
   }
 
   // M11: handle auto-ascend.
@@ -164,6 +187,8 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
         autoAscend: engine.state.autoAscend ?? false,
         stats: { totalRelaysBought, totalClicks, playTime: playTimeMs },
         achievementNotifs,
+        checkBack: checkBackData ?? undefined,
+        onClearSave: clearSave,
       })
 
       // Decrement achievement notification timer.
@@ -174,14 +199,16 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
     }
   }, tickMs)
 
-  // Autosave (M4–M11): persist engine state + stratum + Harmonics + stats on an interval.
+  // Autosave (M4–M12): persist engine state + stratum + Harmonics + stats + settings.
   const saveTimer = setInterval(
     () =>
-      saveEngineState(engine.state, layers.state.layer, layers.state.harmonics, {
-        totalRelaysBought,
-        totalClicks,
-        playTime: playTimeMs,
-      }),
+      saveEngineState(
+        engine.state,
+        layers.state.layer,
+        layers.state.harmonics,
+        { totalRelaysBought, totalClicks, playTime: playTimeMs },
+        engine.state.autoAscend,
+      ),
     autosaveMs,
   )
 
