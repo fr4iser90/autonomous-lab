@@ -1,6 +1,6 @@
 /**
  * Ashen Delve — Main entry point
- * M1-M9: Visual Spec + Shell + Three.js + DungeonPCG + Mobs + Combat + Loot
+ * M1-M12: Full game with Three.js, 3 mob kits + boss, combat, inventory, minimap, audio
  */
 import { loadSave, saveSave } from './services/SaveService'
 import { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
@@ -13,9 +13,12 @@ import { getThemeForFloor } from './data/floors'
 import { Goblin } from './entities/Goblin'
 import { Shade } from './entities/Shade'
 import { Stalker } from './entities/Stalker'
+import { Boss } from './entities/Boss'
 import { ChaseAI } from './systems/ChaseAI'
 import { CombatEngine } from './systems/CombatEngine'
 import { Inventory } from './systems/Inventory'
+import { AudioEngine } from './systems/AudioEngine'
+import { Minimap } from './render/Minimap'
 import type { MobKit } from './entities/MobKit'
 
 // DOM refs
@@ -40,6 +43,7 @@ let camera: FollowCamera | null = null
 let input: InputManager | null = null
 let animFrame: number = 0
 let playerYaw = 0
+let minimap: Minimap | null = null
 
 // Game state
 let playerHP = 20
@@ -55,6 +59,10 @@ let combatLogEntries: string[] = []
 let combatEngine: CombatEngine | null = null
 let inventory: Inventory | null = null
 let chaseAI: ChaseAI | null = null
+let audio: AudioEngine | null = null
+
+// Audio timing
+let lastGrowlTime = 0
 
 // --- Screen Management ---
 function showScreen(screen: 'title' | 'game' | 'settings') {
@@ -73,6 +81,7 @@ function showScreen(screen: 'title' | 'game' | 'settings') {
     combatLog.style.display = 'none'
     if (animFrame) cancelAnimationFrame(animFrame)
     animFrame = 0
+    if (audio) audio.stopAmbient()
   }
 }
 
@@ -112,6 +121,11 @@ function applySettingsFromUI(): void {
   if (vs) save.settings.sfxVolume = parseInt(vs.value, 10)
   if (rm) save.settings.reduceMotion = rm.checked
   saveSave(save)
+  if (audio) audio.updateSettings({
+    masterVolume: save.settings.masterVolume,
+    sfxVolume: save.settings.sfxVolume,
+    reduceMotion: save.settings.reduceMotion,
+  })
 }
 
 // --- Keyboard Input ---
@@ -149,6 +163,8 @@ document.addEventListener('keyup', (e: KeyboardEvent) => {
 canvas.addEventListener('mousedown', (e) => {
   if (input) input.onMouseDown()
   if (camera) camera.onPointerDown(e.clientX)
+  // Init audio on first click
+  if (audio && !audio['enabled']) audio.init()
 })
 canvas.addEventListener('mouseup', () => { if (input) input.onMouseUp() })
 let mouseDownPos = { x: 0, y: 0 }
@@ -218,7 +234,6 @@ function addCombatLog(message: string): void {
   if (combatLogEntries.length > 10) combatLogEntries.shift()
   combatLog.innerHTML = combatLogEntries.map(e => `<div class="log-entry">${e}</div>`).join('')
   combatLog.style.display = 'block'
-  // Auto-hide after 5 seconds
   clearTimeout((combatLog as any)._hideTimer)
   ;(combatLog as any)._hideTimer = setTimeout(() => { combatLog.style.display = 'none' }, 5000)
 }
@@ -246,6 +261,10 @@ function startGame(seed: number): void {
   updateHP(playerHP, playerMaxHP)
   updateFloor(1)
   updateDepth(0)
+
+  // Init audio
+  const save = loadSave()
+  audio = new AudioEngine(save.settings)
 
   // Init systems
   combatEngine = new CombatEngine()
@@ -312,12 +331,29 @@ function initThreeScene(seed: number): void {
     mobs.push(mob)
   }
 
+  // Boss room — last room on floors >= 4, or last room if floor == 1 for demo
+  if (playerFloor >= 4 && dungeon.rooms.length > 2) {
+    const bossRoom = dungeon.rooms[dungeon.rooms.length - 1]
+    const boss = new Boss(renderer!)
+    boss.setPosition(bossRoom.cx - dungeon.width / 2, 0, bossRoom.cy - dungeon.height / 2)
+    mobs.push(boss)
+  }
+
   // Player
-  player = new PlayerKit(renderer)
+  player = new PlayerKit(renderer!)
   playerX = dungeon.spawnX - dungeon.width / 2
   playerZ = dungeon.spawnY - dungeon.height / 2
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
+
+  // Minimap
+  minimap = new Minimap(dungeon)
+
+  // Ambient audio
+  if (audio && !audio['enabled']) {
+    audio.init()
+    audio.startAmbient()
+  }
 
   // Resize handler
   window.addEventListener('resize', () => {
@@ -332,6 +368,7 @@ function initThreeScene(seed: number): void {
 
 let lastTime = 0
 let attackCooldown = 0
+let stepCooldown = 0
 
 function gameLoop(timestamp = 0): void {
   if (currentScreen !== 'game' || gameState !== 'playing') return
@@ -355,16 +392,28 @@ function gameLoop(timestamp = 0): void {
     playerZ += moveZ
     player.setPosition(playerX, 0, playerZ)
 
+    // Footstep sounds
+    if ((inp.forward !== 0 || inp.right !== 0) && audio) {
+      stepCooldown -= dt
+      if (stepCooldown <= 0) {
+        audio.step()
+        stepCooldown = 0.4
+      }
+    }
+
     // Attack (left-click)
     attackCooldown -= dt
-    if (inp.attack && attackCooldown <= 0 && combatEngine) {
+    if (inp.attack && attackCooldown <= 0) {
       attackCooldown = 0.5
+      if (audio) audio.attack()
+
       // Attack nearby mobs
       mobs.forEach(mob => {
         const dist = mob.distanceTo(playerX, playerZ)
         if (dist <= 2.0 && mob.state.alive) {
-          const dmg = 2 + Math.floor(Math.random() * 3) // base player damage
+          const dmg = 2 + Math.floor(Math.random() * 3)
           mob.takeDamage(dmg)
+          if (audio) audio.hit()
           addCombatLog(`You hit ${mob.state.type} for ${dmg} damage!`)
         }
       })
@@ -393,6 +442,12 @@ function gameLoop(timestamp = 0): void {
     mobs.forEach(mob => {
       if (!mob.state.alive) return
 
+      // Boss special behavior
+      if (mob.state.type === 'stalker' && mob.state.stats.maxHp === 60 && 'bossAttack' in mob) {
+        ;(mob as any).bossAttack(dt, playerX, playerZ)
+        return
+      }
+
       // Update AI
       const decision = ai.decide(mob, playerX, playerZ, dt)
       if (decision.action === 'chase') {
@@ -402,19 +457,32 @@ function gameLoop(timestamp = 0): void {
         mob.update(dt, playerX, playerZ)
       }
 
+      // Mob growl when chasing
+      if (decision.action === 'chase' && audio && time - lastGrowlTime > 3) {
+        audio.growl()
+        lastGrowlTime = time
+      }
+
       // Check if mob attacks player
       const dist = mob.distanceTo(playerX, playerZ)
       if (dist <= 1.2 && mob.state.stats.damage > 0) {
-        mob.state.stats.damage = 0 // One-shot per frame
+        mob.state.stats.damage = 0
         playerHP = Math.max(0, playerHP - mob.state.stats.damage)
+        if (audio) audio.hit()
         updateHP(playerHP, playerMaxHP)
         if (playerHP <= 0) {
           gameState = 'dead'
           deathScreen.style.display = 'flex'
+          if (audio) audio.stopAmbient()
           addCombatLog('💀 You have fallen!')
         }
       }
     })
+  }
+
+  // Update minimap
+  if (minimap && player) {
+    minimap.setPlayerPos(playerX, playerZ)
   }
 
   // Update camera
@@ -442,3 +510,4 @@ export { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
 export { playerHP, playerMaxHP, playerFloor }
 export { combatLogEntries, mobs }
 export { combatEngine, inventory, chaseAI }
+export { audio }
