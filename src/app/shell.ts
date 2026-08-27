@@ -4,6 +4,7 @@
  * render engine state. M4: restores from the save stub, runs the fixed
  * 20 Hz economy loop (step + re-render), autosaves every 15 s.
  * M5: the stratum (LayerEngine) is restored/saved alongside the economy.
+ * M7: the play view renders the layer strip (live stratum window) from it.
  */
 import { EconomyEngine } from '../economy/engine'
 import { LayerEngine } from '../economy/layers'
@@ -42,7 +43,7 @@ export function createShell(root: HTMLElement, options: ShellOptions = {}): Shel
   )
   const layers = new LayerEngine(loaded ? { layer: loaded.layer } : {})
   const titleView = buildTitleView()
-  const playView: PlayView = buildPlayView(engine)
+  const playView: PlayView = buildPlayView(engine, layers)
   let current: View = 'title'
 
   // M6: shop tabs — Relays (default) and Resonators panels, one visible.

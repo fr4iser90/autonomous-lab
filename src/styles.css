@@ -303,6 +303,11 @@ body {
   box-shadow: 0 0 12px rgba(56, 214, 255, 0.35);
 }
 
+.layer-next {
+  margin: 2px 2px 0;
+  font-size: 12px;
+}
+
 /* ---- responsive / motion ---- */
 @media (max-width: 760px) {
   #play-body {

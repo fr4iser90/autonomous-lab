@@ -1,6 +1,7 @@
 /**
- * Signal Ascent — UI smoke (M4, M6 shop tabs).
- * Title loads, Play works, Harvest click raises Signal, the Resonators tab
+ * Signal Ascent — UI smoke (M4, M6 shop tabs, M7 layer strip).
+ * Title loads, Play works, Harvest click raises Signal, the layer strip shows
+ * the live stratum, the Resonators tab
  * reveals the upgrade list (6 upgrades) and back, relay list renders,
  * a Whisper Relay purchase deducts Signal + updates the count, the 20 Hz loop
  * then produces Signal, zero page/console errors.
@@ -97,6 +98,12 @@ try {
   const signalText = await page.locator('#signal').textContent()
   if (signalText !== '0') failures.push(`#signal is "${signalText}", expected "0"`)
 
+  // M7: layer strip is visible with the live stratum + next threshold.
+  if (!(await page.locator('#layer-strip').isVisible())) failures.push('#layer-strip not visible in the play view')
+  const stripText = await page.locator('#layer-strip').textContent()
+  if (!stripText.includes('Echo Hollow')) failures.push(`layer strip missing current layer: "${stripText}"`)
+  if (!stripText.includes('1.00M')) failures.push(`layer strip missing next threshold: "${stripText}"`)
+
   if (errors.length > 0) failures.push(`${errors.length} page errors: ${errors.join(' | ')}`)
 
   await page.screenshot({ path: path.join(outDir, 'm1-play.png'), fullPage: true })
@@ -157,4 +164,4 @@ if (failures.length > 0) {
   for (const f of failures) console.error(' -', f)
   process.exit(1)
 }
-console.log('UI SMOKE PASS (M4+M6: title + play + 5 clicks -> Signal 5, Resonators tab shows 6 upgrades / back, buy Whisper @15 -> owned 1, rate +0.5/sec, production ticking, zero pageerror)')
+console.log('UI SMOKE PASS (M4+M6+M7: title + play + layer strip shows Echo Hollow + 1.00M, 5 clicks -> Signal 5, Resonators tab shows 6 upgrades / back, buy Whisper @15 -> owned 1, rate +0.5/sec, production ticking, zero pageerror)')
