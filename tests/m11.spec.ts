@@ -80,7 +80,7 @@ describe('echo bonus on ascend (M11)', () => {
     layers.ascend(bigSignal)
 
     // Base reward for signal/threshold ratio
-    const ratio = bigSignal.div(threshold).pow(new Decimal(0.75))
+    const ratio = bigSignal.div(threshold).pow(new Decimal(0.65))
     const baseReward = Math.floor(ratio.toNumber())
     const expected = baseReward + 1 // +1 echo bonus
 
@@ -97,7 +97,7 @@ describe('echo bonus on ascend (M11)', () => {
 
     layers.ascend(bigSignal)
 
-    const ratio = bigSignal.div(threshold).pow(new Decimal(0.75))
+    const ratio = bigSignal.div(threshold).pow(new Decimal(0.65))
     const baseReward = Math.floor(ratio.toNumber())
 
     expect(layers.state.harmonics).toBe(before + baseReward)

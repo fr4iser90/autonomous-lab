@@ -12,6 +12,7 @@
  */
 import { Decimal } from 'decimal.js'
 import { LAYER_CAP, layerDef, type LayerDef } from '../data/layers'
+import { echoBonusFor } from '../data/specialLayers'
 
 export interface LayerState {
   /** Current stratum, 1-based, ≤ LAYER_CAP. */
@@ -77,13 +78,16 @@ export class LayerEngine {
   }
 
   /**
-   * Ascend one stratum (M8): requires the threshold, grants
-   * floor(sqrt(signal / threshold)) Harmonics, and advances the layer.
+   * Ascend one stratum (M8 → M11): requires the threshold, grants
+   * `floor((signal / threshold)^0.65)` Harmonics, and advances the layer.
+   * Special layers (layer 10, etc.) add an Echo Bonus on top.
    * Returns false (no-op) at the cap or below the threshold.
    */
   ascend(signal: Decimal.Value): boolean {
     if (!this.next || !this.canAscend(signal)) return false
-    this.state.harmonics += harmonicReward(signal, this.def.threshold)
+    const bonus = harmonicReward(signal, this.def.threshold)
+    const echo = echoBonusFor(this.state.layer)
+    this.state.harmonics += bonus + echo
     this.state.layer += 1
     return true
   }

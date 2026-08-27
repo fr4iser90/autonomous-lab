@@ -2,18 +2,19 @@
 
 ## NOW
 - Phase: Milestones M1–M12
-- Milestone: M10 (Buy-max toggle on generators panel) — gate green, 84 tests
+- Milestone: M11 (Special layer 10 + auto-ascend toggle + ≥8 achievements + stats panel) — gate green, 104 tests
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
 - LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
 - deepest_soak_layer: 10 (simulateToLayer(10) green with ascend flow, seed 0; 20K ticks)
-- Last ACCEPT: M5 — merged to main as ff39c88 (PR #20); M6+M7+M8+M9 on agent branch → PR #22
-- Last SHA: bf9e7a3 (M9 code commit; M10 buy-max toggle applied on top)
-- Pre-PR visual: 4 shots read_image PASS (m8-title / m8-prestige-panel "Gain 1 Harmonic" / m8-post-ascend layer-2 Halo Hollow / m8-layer-strip)
-- Gate: `npm test && npm run test:ui && npm run build` — 84 vitest + UI smoke + build green
+- Last ACCEPT: M10 — on agent branch → PR #22 (pending)
+- Last SHA: current (M11 code commit)
+- Pre-PR visual: 4 shots read_image PASS (m10-play / m11-achievements / m11-stats / m11-auto-ascend)
+- Gate: `npm test && npm run test:ui && npm run build` — 104 vitest + UI smoke + build green
 - Note: ports 5173–5176 held by foreign run; our dev server on 5177 (.game.port drives Playwright)
-- Next: M10 code complete → gate → commit + push → PR
+- Next: M12 (check-back lite + full SaveService + simulateToLayer(20) ≤ 2M ticks + mobile layout)
 
 ## Log
+- 2026-08-26: M11 built — Special layer 10 "Echo Layer" mechanics (`src/data/specialLayers.ts`): ascending from layer 10 grants +1 extra Harmonic (echoBonusFor(10) = 1). Auto-ascend toggle (`engine.state.autoAscend`, checkbox on Stats panel): when true, shell auto-calls `layers.ascend()` each tick once threshold met (safe mode: requires ≥1 Harmonic). Achievement system (10 achievements, `src/data/achievements.ts`): First Spark, First Relay, Pulse Starter, Beam Alignment, Nova Ignition, First Ascent, Stratum Climber, Echo Walker, Signal Architect (100 relays), Persistent Ascenter (1K clicks); flags persist in `state.upgrades`, checked each tick, toasts show unlocks. Stats panel in the side-panels: highest layer, total harmonics, relays bought, clicks, play time (ms → h:m:s). Save v5: `stats` field (`totalRelaysBought`, `totalClicks`, `playTime`); v4→v5 migration loads zeroes. +20 vitest specs (special layers, echo bonus, auto-ascend toggle, 12 achievement checks, 2 toggle tests). 104 vitest + UI smoke + build green.
 - 2026-08-26: M10 built — Buy-max toggle on generators panel: `#buy-max-toggle` checkbox in the Relays tab header; when checked, buy buttons purchase as many affordable units as possible in one click. Engine gains `buyMaxRelay(id)` method; views render total cost + quantity; UI shows "Buy N" button text and cost display with qty. +4 shell specs (toggle visible, single buy default, max buy works, cost display toggle). 84 vitest + UI smoke + build green.
 - 2026-08-26: M9 built — Economy retune: threshold growth 10× → 3× per layer (`1e6 × 3^(N-1)`), harmonicReward `floor(sqrt(ratio))` → `floor(ratio^0.65)`, harmonicMult linear `1+0.02h` → exponential `(1.02)^h`, Nova Relay added (100K cost, 50K/s, 1.12 cost growth), fix layer-next showing current vs next threshold in views.ts. simulateToLayer(10) green in ~20K ticks (seed 0), 80 tests all passing. CONTENT.md updated with new formulas.
 - 2026-08-26: M8 built — Ascend (prestige) panel: visible at threshold, shows Harmonic reward (`floor(sqrt(signal/threshold))`), Ascend button. Shell orchestrates: threshold check → LayerEngine.ascend → resetLayerSlice() → inject new harmonicMult → saveEngineState(v4). LayerEngine.harmonicMult() = 1 + 0.02 × h. EconomyEngine.productionPerSec() × harmonicMult, clickPower() × harmonicMult. Save v4 adds `harmonics` field; v3→v4 migration loads 0. SimulateToLayer tracks ascend flow with cumulative relays + harmonics. 79 vitest + UI smoke + build green → fe9ec1c; PR #21.

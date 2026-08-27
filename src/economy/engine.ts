@@ -25,10 +25,12 @@ export interface EconomyState {
   relays: Record<string, number>
   /** Owned Resonator upgrade ids (M6). */
   upgrades: Record<string, boolean>
+  /** Auto-ascend toggle (M11): when true, ascend immediately when threshold met. */
+  autoAscend?: boolean
 }
 
 export function initialState(): EconomyState {
-  return { signal: new Decimal(0), relays: {}, upgrades: {} }
+  return { signal: new Decimal(0), relays: {}, upgrades: {}, autoAscend: false }
 }
 
 export class EconomyEngine {
@@ -46,6 +48,7 @@ export class EconomyEngine {
       signal: new Decimal(state?.signal ?? 0),
       relays: { ...(state?.relays ?? {}) },
       upgrades: { ...(state?.upgrades ?? {}) },
+      autoAscend: state?.autoAscend ?? false,
     }
     this.harmonicMult = new Decimal(1)
     this.setHarmonicMult(harmonicMult ?? 1)
@@ -173,6 +176,14 @@ export class EconomyEngine {
     this.state.signal = new Decimal(0)
     this.state.relays = {}
     this.state.upgrades = {}
+  }
+
+  /**
+   * Toggle auto-ascend on/off (M11). When enabled, the shell should call
+   * `layers.ascend()` each tick once the threshold is met.
+   */
+  toggleAutoAscend(): void {
+    this.state.autoAscend = !this.state.autoAscend
   }
 
   /**
