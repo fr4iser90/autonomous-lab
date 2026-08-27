@@ -149,10 +149,11 @@ describe('relay list, live loop, autosave stub (M4)', () => {
     const raw = localStorage.getItem(SAVE_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw as string)
-    expect(saved.version).toBe(4)
+    expect(saved.version).toBe(5)
     expect(saved.signal).toBe('5')
     expect(saved.layer).toBe(1)
-    expect(saved.upgrades).toEqual({})
+    // upgrades may contain achievement flags from the test actions
+    expect(Object.keys(saved.upgrades)).toContain('ach-first-click')
     expect(saved.harmonics).toBe(0)
     // a fresh shell restores the saved signal
     shell.destroy()
@@ -373,7 +374,7 @@ describe('Ascend / prestige (M8)', () => {
     expect(panel.classList.contains('hidden')).toBe(true)
     // The ascend saved the new state immediately.
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY)!)
-    expect(saved.version).toBe(4)
+    expect(saved.version).toBe(5)
     expect(saved.layer).toBe(2)
     expect(saved.harmonics).toBe(1)
     expect(saved.signal).toBe('0')

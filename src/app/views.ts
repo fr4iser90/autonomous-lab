@@ -12,6 +12,8 @@
  *     and forwards clicks).
  * M10: buy-max toggle on generators panel — checkbox switches between buying
  *     single units (default) and buying as many as affordable in one click.
+ * M11: auto-ascend toggle, achievements panel, stats panel, achievement
+ *       notification toasts.
  */
 import { Decimal } from 'decimal.js'
 import { EconomyEngine } from '../economy/engine'
@@ -20,6 +22,7 @@ import { UPGRADES, type UpgradeEffect } from '../data/upgrades'
 import { format } from '../economy/format'
 import { LAYER_CAP, layerDef } from '../data/layers'
 import { harmonicReward, LayerEngine } from '../economy/layers'
+import { ACHIEVEMENTS, isAchievementUnlocked, ACHIEVEMENT_COUNT } from '../data/achievements'
 
 /** Short human description of an upgrade effect (render only — M6). */
 function upgradeEffectText(effect: UpgradeEffect): string {
@@ -49,13 +52,22 @@ export function buildTitleView(): HTMLElement {
 export interface PlayView {
   readonly root: HTMLElement
   /** Re-render every engine-owned number (called by the 20 Hz shell loop). */
-  render: () => void
+  render: (opts?: {
+    autoAscend?: boolean
+    stats?: { totalRelaysBought: number; totalClicks: number; playTime: number }
+    achievementNotifs?: string[]
+  }) => void
+  /** Called by the shell when new achievements unlock (M11). */
+  onAchievementUnlock?: (ids: string[]) => void
+  /** Called by the view when the user harvests signal by clicking (M11). */
+  onClick?: () => void
 }
 
 export function buildPlayView(
   engine: EconomyEngine,
   layers: LayerEngine,
   onAscend: () => void,
+  opts?: { onAchievementUnlock?: (ids: string[]) => void; onClick?: () => void },
 ): PlayView {
   const section = document.createElement('section')
   section.id = 'play-view'
@@ -83,10 +95,12 @@ export function buildPlayView(
         <section id="generators-panel" class="panel" aria-label="Relays">
           <div class="panel-title-wrap">
             <h2 class="panel-title">Relays</h2>
-            <label class="buy-max-label">
-              <input type="checkbox" id="buy-max-toggle" />
-              <span>Buy Max</span>
-            </label>
+            <div class="panel-toggles">
+              <label class="buy-max-label">
+                <input type="checkbox" id="buy-max-toggle" />
+                <span>Buy Max</span>
+              </label>
+            </div>
           </div>
           <ul id="relay-list" class="relay-list">
             ${RELAYS.map((r) => `
@@ -126,8 +140,31 @@ export function buildPlayView(
           <p id="prestige-note" class="muted">Resets this layer's Signal, Relays and Resonators. Each Harmony permanently boosts all output +2%.</p>
           <button id="ascend-btn" type="button" disabled>Ascend</button>
         </section>
+        <section id="achievements-panel" class="panel hidden" aria-label="Achievements">
+          <h2 class="panel-title">Achievements</h2>
+          <p id="ach-progress" class="muted">0 / ${ACHIEVEMENT_COUNT}</p>
+          <ul id="ach-list" class="relay-list"></ul>
+        </section>
+        <section id="stats-panel" class="panel hidden" aria-label="Statistics">
+          <h2 class="panel-title">Statistics</h2>
+          <ul id="stats-list" class="stats-list">
+            <li><span class="stats-label">Highest Layer</span><span id="stat-layer" class="stats-value">1</span></li>
+            <li><span class="stats-label">Total Harmonics</span><span id="stat-harmonics" class="stats-value">0</span></li>
+            <li><span class="stats-label">Relays Bought</span><span id="stat-relays" class="stats-value">0</span></li>
+            <li><span class="stats-label">Total Clicks</span><span id="stat-clicks" class="stats-value">0</span></li>
+            <li><span class="stats-label">Play Time</span><span id="stat-time" class="stats-value">0:00</span></li>
+          </ul>
+          <div class="panel-title-wrap" style="margin-top:12px;">
+            <label class="auto-ascend-label">
+              <input type="checkbox" id="auto-ascend-toggle" />
+              <span>Auto-Ascend</span>
+            </label>
+          </div>
+          <p id="auto-ascend-note" class="muted">Requires ≥1 Harmonic owned. Safe mode prevents accidental layer-1 ascends.</p>
+        </section>
       </aside>
     </div>
+    <div id="ach-notif" class="ach-notif hidden"></div>
   `
 
   const signalEl = section.querySelector('#signal') as HTMLElement
@@ -139,7 +176,17 @@ export function buildPlayView(
   const prestigeReward = section.querySelector('#prestige-reward') as HTMLElement
   const ascendBtn = section.querySelector('#ascend-btn') as HTMLButtonElement
   const buyMaxCheckbox = section.querySelector('#buy-max-toggle') as HTMLInputElement
+  const achProgress = section.querySelector('#ach-progress') as HTMLElement
+  const achList = section.querySelector('#ach-list') as HTMLElement
+  const statLayer = section.querySelector('#stat-layer') as HTMLElement
+  const statHarmonics = section.querySelector('#stat-harmonics') as HTMLElement
+  const statRelays = section.querySelector('#stat-relays') as HTMLElement
+  const statClicks = section.querySelector('#stat-clicks') as HTMLElement
+  const statTime = section.querySelector('#stat-time') as HTMLElement
+  const autoAscendCheckbox = section.querySelector('#auto-ascend-toggle') as HTMLInputElement
+  const achNotif = section.querySelector('#ach-notif') as HTMLElement
   let buyMax = false
+  let autoAscend = false
   let renderedLayer = -1
 
   // M7: stratum window around the current layer (rebuild only on layer change).
@@ -164,23 +211,60 @@ export function buildPlayView(
     stripEl.innerHTML = chips.join('') + nextLine
   }
 
-  function render(): void {
+  function formatTime(ms: number): string {
+    const s = Math.floor(ms / 1000)
+    const h = Math.floor(s / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    const sec = s % 60
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+    return `${m}:${String(sec).padStart(2, '0')}`
+  }
+
+  function renderAchievements(unlocked: number): void {
+    achProgress.textContent = `${unlocked} / ${ACHIEVEMENT_COUNT}`
+    const html = ACHIEVEMENTS.map((a) => {
+      const isUnlocked = isAchievementUnlocked(engine.state, a.id)
+      return `<li class="ach-row ${isUnlocked ? 'ach-unlocked' : 'ach-locked'}">
+        <span class="ach-icon">${isUnlocked ? '✦' : '·'}</span>
+        <div class="ach-info">
+          <p class="ach-name">${a.name}</p>
+          <p class="ach-desc muted">${a.description}</p>
+          <p class="ach-hint muted">${a.progressHint}</p>
+        </div>
+      </li>`
+    }).join('')
+    achList.innerHTML = html
+  }
+
+  function render(renderOpts: {
+    autoAscend?: boolean
+    stats?: { totalRelaysBought: number; totalClicks: number; playTime: number }
+    achievementNotifs?: string[]
+  } = {}): void {
     buyMax = buyMaxCheckbox.checked
+    autoAscend = autoAscendCheckbox.checked
+    engine.state.autoAscend = autoAscend
+
     renderStrip()
+
     // M8: prestige panel — visible only once the layer threshold is met.
     const canAscend = layers.next !== null && layers.canAscend(engine.state.signal)
     prestigePanel.classList.toggle('hidden', !canAscend)
     if (canAscend) {
       const reward = harmonicReward(engine.state.signal, layers.def.threshold)
+      const echo = 0 // echo bonus handled in LayerEngine.ascend
       const next = layers.next!
-      prestigeReward.textContent = `Gain ${format(reward)} Harmonic${reward === 1 ? '' : 's'} — ascend to ${next.name}.`
+      prestigeReward.textContent = `Gain ${format(reward)} Harmonic${reward === 1 ? '' : 's'}${echo > 0 ? ` + ${echo} Echo Bonus` : ''} — ascend to ${next.name}.`
       ascendBtn.disabled = false
     } else {
       ascendBtn.disabled = true
     }
+
     signalEl.textContent = format(engine.state.signal)
     rateEl.textContent = `+${format(engine.productionPerSec())} / sec`
     clickBtn.textContent = `Harvest Signal (+${format(engine.clickPower())})`
+
+    // Relays.
     for (const def of RELAYS) {
       const row = section.querySelector(`.relay-row[data-relay-id="${def.id}"]`)
       if (!row) continue
@@ -190,7 +274,6 @@ export function buildPlayView(
       const costEl = row.querySelector('.relay-cost') as HTMLElement
       const buyBtn = row.querySelector(`#buy-${def.id}`) as HTMLButtonElement
       if (buyMax) {
-        // Count max affordable units
         let qty = 0
         let totalCost = new Decimal(0)
         const signal = engine.state.signal
@@ -215,6 +298,8 @@ export function buildPlayView(
         buyBtn.disabled = engine.state.signal.lt(cost)
       }
     }
+
+    // Upgrades.
     for (const def of UPGRADES) {
       const row = section.querySelector(`.upgrade-row[data-upgrade-id="${def.id}"]`)
       if (!row) continue
@@ -228,10 +313,38 @@ export function buildPlayView(
         btn.disabled = engine.state.signal.lt(def.cost)
       }
     }
+
+    // Achievements.
+    const unlockedCount = ACHIEVEMENTS.filter((a) => isAchievementUnlocked(engine.state, a.id)).length
+    renderAchievements(unlockedCount)
+
+    // Stats.
+    if (renderOpts) {
+      const s = renderOpts.stats
+      if (s) {
+        statLayer.textContent = String(layers.state.layer)
+        statHarmonics.textContent = String(layers.state.harmonics)
+        statRelays.textContent = String(s.totalRelaysBought)
+        statClicks.textContent = String(s.totalClicks)
+        statTime.textContent = formatTime(s.playTime)
+      }
+      // Auto-ascend toggle state.
+      autoAscendCheckbox.checked = autoAscend
+    }
+
+    // Achievement notification toasts.
+    if (renderOpts?.achievementNotifs && renderOpts.achievementNotifs.length > 0) {
+      achNotif.textContent = `✦ ${renderOpts.achievementNotifs.join(' · ')}`
+      achNotif.classList.remove('hidden')
+    } else {
+      achNotif.classList.add('hidden')
+    }
   }
 
   clickBtn.addEventListener('click', () => {
     engine.click()
+    // M11: signal click to the shell for stats tracking.
+    opts?.onClick?.()
     render()
   })
 
@@ -255,14 +368,20 @@ export function buildPlayView(
     })
   }
 
-  // M10: buy-max toggle on the generators panel
+  // M10: buy-max toggle on the generators panel.
   buyMaxCheckbox.addEventListener('change', () => {
     buyMax = buyMaxCheckbox.checked
     render()
   })
 
-  // M8: the view only forwards the click — the shell orchestrates the ascend
-  // (threshold check, harmonics grant, slice wipe, multiplier update, save).
+  // M11: auto-ascend toggle on the stats panel.
+  autoAscendCheckbox.addEventListener('change', () => {
+    autoAscend = autoAscendCheckbox.checked
+    engine.state.autoAscend = autoAscend
+    render()
+  })
+
+  // M8: the view only forwards the click — the shell orchestrates the ascend.
   ascendBtn.addEventListener('click', () => {
     onAscend()
     render()
@@ -270,5 +389,5 @@ export function buildPlayView(
 
   render()
 
-  return { root: section, render }
+  return { root: section, render, onAchievementUnlock: opts?.onAchievementUnlock, onClick: opts?.onClick }
 }
