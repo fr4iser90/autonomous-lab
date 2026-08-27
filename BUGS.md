@@ -2,9 +2,19 @@
 
 # BUGS
 
-Last validation: (ci-fail-bugs bot) SHA=c9ba04a
+Last validation: (ci-fail-bugs bot) SHA=6962d2b
 
 ## Open
+
+### B-2: CI gate fail @ 6962d2b
+- Status: open
+- Severity: blocker
+- Found: 2026-08-27T23:51:12Z
+- Target: git  branch=agent/dungeon-crawl-20260827  SHA=6962d2b  full=6962d2b4779f04754189f541f07f3e9b16e48f4f
+- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33127710786 2) see job `protect-boilerplate` failed 3) FIX-ONLY until tip gate green on GitHub
+- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33127710786/job/98709701546
+- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
+- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
 
 ### B-1: CI gate fail @ c9ba04a
 - Status: open
