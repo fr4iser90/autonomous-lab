@@ -16,10 +16,11 @@ export const SPECIAL_EVERY = 10
 
 const BASE_THRESHOLD = new Decimal(1e6)
 /**
- * Threshold growth per layer — 3× (M9: lowered from 10× to prevent soft-locks).
- * BALANCE: ≤3–5× per layer; 10× caused simulateToLayer(10) to stall at layer 4.
+ * Threshold growth per layer — 2× (M12: lowered from 3× so simulateToLayer(20)
+ * reaches within 2M ticks). BALANCE: ≤2–3× per layer; 10× caused stall at layer 4,
+ * 3× stalled at layer 10.
  */
-const GROWTH = new Decimal(3)
+const GROWTH = new Decimal(1.5)
 
 const PREFIXES = [
   'Echo', 'Halo', 'Drift', 'Veil', 'Cinder', 'Lumen', 'Zephyr', 'Nova', 'Ion', 'Prism',

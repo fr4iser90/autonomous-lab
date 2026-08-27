@@ -477,3 +477,77 @@ body {
     transition: none !important;
   }
 }
+
+/* ---- M12: check-back notification ---- */
+.check-back {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: rgba(100, 200, 255, 0.1);
+  color: var(--accent);
+  font-size: 14px;
+  animation: fadeIn 0.5s ease;
+}
+
+/* ---- M12: clear save button ---- */
+#clear-save-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+#clear-save-btn:hover {
+  background: rgba(255, 100, 100, 0.15);
+}
+
+/* ---- M12: mobile layout improvements ---- */
+@media (max-width: 480px) {
+  #play-body {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .game-title {
+    font-size: 32px;
+  }
+  .stat {
+    font-size: 32px;
+  }
+  .relay-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 10px;
+  }
+  .relay-buy {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .shop-tab {
+    flex: 1;
+    text-align: center;
+  }
+  .panel {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .game-title {
+    font-size: 26px;
+  }
+  .stat {
+    font-size: 28px;
+  }
+  #click-signal {
+    font-size: 16px;
+    padding: 14px 20px;
+  }
+}
