@@ -107,10 +107,9 @@ jobs:
           EOF
 
           python3 - "$tmp" <<'PY'
-          import sys
+          import os, re, sys
           path = "BUGS.md"
           entry = open(sys.argv[1], encoding="utf-8").read()
-          # strip common leading indent from heredoc
           lines = []
           for line in entry.splitlines():
               if line.startswith("          "):
@@ -121,13 +120,31 @@ jobs:
           if not entry.startswith("\n"):
               entry = "\n" + entry
           text = open(path, encoding="utf-8").read()
-          needle = "## Open"
-          i = text.find(needle)
-          if i < 0:
+          # Real markdown heading only — skip "## Open" inside HTML comments
+          insert_at = None
+          start = 0
+          while True:
+              i = text.find("## Open", start)
+              if i < 0:
+                  break
+              if i > 0 and text[i - 1] not in "\n\r":
+                  start = i + 1
+                  continue
+              before = text[:i]
+              if before.rfind("<!--") > before.rfind("-->"):
+                  start = i + 1
+                  continue
+              insert_at = i
+              break
+          if insert_at is None:
               text = text.rstrip() + "\n\n## Open\n" + entry + "\n"
           else:
-              j = i + len(needle)
+              j = insert_at + len("## Open")
               text = text[:j] + "\n" + entry + text[j:]
+          short = os.environ.get("SHORT", "")
+          stamp_line = f"Last validation: (ci-fail-bugs bot) SHA={short}"
+          if re.search(r"^Last validation:.*$", text, re.M):
+              text = re.sub(r"^Last validation:.*$", stamp_line, text, count=1, flags=re.M)
           open(path, "w", encoding="utf-8").write(text)
           PY
 
