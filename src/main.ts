@@ -1,6 +1,6 @@
 /**
  * Ashen Delve — Main entry point
- * M1-M12 + P2: Full game with Three.js, 8 mob kits + boss, combat, inventory, minimap, audio
+ * M1-M12 + P2: Full game with Three.js, 10 mob kits + boss, combat, inventory, minimap, audio
  */
 import { loadSave, saveSave } from './services/SaveService'
 import { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
@@ -17,6 +17,8 @@ import { Skeleton } from './entities/Skeleton'
 import { Bat } from './entities/Bat'
 import { Ogre } from './entities/Ogre'
 import { Mummy } from './entities/Mummy'
+import { Spider } from './entities/Spider'
+import { Wolf } from './entities/Wolf'
 import { Boss } from './entities/Boss'
 import { ChaseAI } from './systems/ChaseAI'
 import { CombatEngine } from './systems/CombatEngine'
@@ -24,6 +26,7 @@ import { Inventory } from './systems/Inventory'
 import { AudioEngine } from './systems/AudioEngine'
 import { Minimap } from './render/Minimap'
 import type { MobKit } from './entities/MobKit'
+import * as GL from './systems/GameLoop'
 
 // DOM refs
 const titleScreen = document.getElementById('title-screen')!
@@ -45,7 +48,6 @@ let renderer: GameRenderer | null = null
 let player: PlayerKit | null = null
 let camera: FollowCamera | null = null
 let input: InputManager | null = null
-let animFrame: number = 0
 let playerYaw = 0
 let minimap: Minimap | null = null
 
@@ -65,11 +67,8 @@ let inventory: Inventory | null = null
 let chaseAI: ChaseAI | null = null
 let audio: AudioEngine | null = null
 
-// Audio timing
-let lastGrowlTime = 0
-
 // --- Screen Management ---
-function showScreen(screen: 'title' | 'game' | 'settings') {
+function showScreen(screen: 'title' | 'game' | 'settings'): void {
   currentScreen = screen
   titleScreen.style.display = screen === 'title' ? 'flex' : 'none'
   gameScreen.style.display = screen === 'game' ? 'block' : 'none'
@@ -83,8 +82,7 @@ function showScreen(screen: 'title' | 'game' | 'settings') {
     deathScreen.style.display = 'none'
     pauseOverlay.style.display = 'none'
     combatLog.style.display = 'none'
-    if (animFrame) cancelAnimationFrame(animFrame)
-    animFrame = 0
+    if (GL.getAnimFrame()) cancelAnimationFrame(GL.getAnimFrame())
     if (audio) audio.stopAmbient()
   }
 }
@@ -167,7 +165,6 @@ document.addEventListener('keyup', (e: KeyboardEvent) => {
 canvas.addEventListener('mousedown', (e) => {
   if (input) input.onMouseDown()
   if (camera) camera.onPointerDown(e.clientX)
-  // Init audio on first click
   if (audio && !audio['enabled']) audio.init()
 })
 canvas.addEventListener('mouseup', () => { if (input) input.onMouseUp() })
@@ -206,12 +203,10 @@ function initVolumeSliders(): void {
   const volMaster = document.getElementById('vol-master') as HTMLInputElement
   const volSfx = document.getElementById('vol-sfx') as HTMLInputElement
   if (volMaster) volMaster.addEventListener('input', () => {
-    const val = document.getElementById('vol-master-val')!
-    val.textContent = volMaster.value + '%'
+    document.getElementById('vol-master-val')!.textContent = volMaster.value + '%'
   })
   if (volSfx) volSfx.addEventListener('input', () => {
-    const val = document.getElementById('vol-sfx-val')!
-    val.textContent = volSfx.value + '%'
+    document.getElementById('vol-sfx-val')!.textContent = volSfx.value + '%'
   })
 }
 
@@ -242,7 +237,7 @@ function addCombatLog(message: string): void {
   ;(combatLog as any)._hideTimer = setTimeout(() => { combatLog.style.display = 'none' }, 5000)
 }
 
-// --- Game Loop ---
+// --- Game Start ---
 function startNewGame(): void {
   dungeonSeed = Date.now() % 100000
   startGame(dungeonSeed)
@@ -266,22 +261,12 @@ function startGame(seed: number): void {
   updateFloor(1)
   updateDepth(0)
 
-  // Init audio
   const save = loadSave()
   audio = new AudioEngine(save.settings)
-
-  // Init systems
   combatEngine = new CombatEngine()
   inventory = new Inventory()
-  chaseAI = new ChaseAI({
-    aggroRange: 8,
-    retreatRange: 15,
-    attackRange: 1.2,
-    attackCooldown: 1.0,
-    moveSpeed: 2.5,
-  })
+  chaseAI = new ChaseAI({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5 })
 
-  // Initialize Three.js scene
   initThreeScene(seed)
 }
 
@@ -289,57 +274,31 @@ function initThreeScene(seed: number): void {
   const w = window.innerWidth
   const h = window.innerHeight
 
-  // Renderer
   renderer = new GameRenderer({
-    canvas,
-    width: w,
-    height: h,
-    bgColor: '#0a0a0e',
-    fogColor: '#0a0a0e',
-    floorColor: '#2a2520',
-    wallColor: '#1a1815',
-    wallHighlightColor: '#3a3530',
-    torchEmissive: '#ff9944',
+    canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
+    floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-
-  // Camera
-  camera = new FollowCamera({
-    distance: 10,
-    height: 7,
-    FOV: 55,
-    followLag: 0.08,
-  })
-
-  // Input
+  camera = new FollowCamera({ distance: 10, height: 7, FOV: 55, followLag: 0.08 })
   input = new InputManager()
 
-  // Generate dungeon
   const theme = getThemeForFloor(1)
   const dungeon = generateDungeon(seed, 1, theme)
-
-  // Build 3D scene
   buildScene(renderer, dungeon)
 
-  // Spawn mobs in non-first rooms
+  // Spawn mobs
   const mobKinds = [
-    () => new Goblin(renderer!),
-    () => new Shade(renderer!),
-    () => new Stalker(renderer!),
-    () => new Skeleton(renderer!),
-    () => new Bat(renderer!),
-    () => new Ogre(renderer!),
-    () => new Mummy(renderer!),
+    () => new Goblin(renderer!), () => new Shade(renderer!), () => new Stalker(renderer!),
+    () => new Skeleton(renderer!), () => new Bat(renderer!), () => new Ogre(renderer!),
+    () => new Mummy(renderer!), () => new Spider(renderer!), () => new Wolf(renderer!),
   ]
-
   for (let i = 1; i < dungeon.rooms.length; i++) {
     const room = dungeon.rooms[i]
-    const kindIdx = i % mobKinds.length
-    const mob = mobKinds[kindIdx]()
+    const mob = mobKinds[i % mobKinds.length]()
     mob.setPosition(room.cx - dungeon.width / 2 + (Math.random() - 0.5) * 2, 0, room.cy - dungeon.height / 2 + (Math.random() - 0.5) * 2)
     mobs.push(mob)
   }
 
-  // Boss room — last room on floors >= 4, or last room if floor == 1 for demo
+  // Boss room
   if (playerFloor >= 4 && dungeon.rooms.length > 2) {
     const bossRoom = dungeon.rooms[dungeon.rooms.length - 1]
     const boss = new Boss(renderer!)
@@ -353,169 +312,41 @@ function initThreeScene(seed: number): void {
   playerZ = dungeon.spawnY - dungeon.height / 2
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
-
-  // Minimap
   minimap = new Minimap(dungeon)
 
-  // Ambient audio
-  if (audio && !audio['enabled']) {
-    audio.init()
-    audio.startAmbient()
-  }
+  if (audio && !audio['enabled']) { audio.init(); audio.startAmbient() }
+  window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
 
-  // Resize handler
-  window.addEventListener('resize', () => {
-    if (renderer) {
-      renderer.resize(window.innerWidth, window.innerHeight)
-    }
-  })
+  // Initialize game loop module
+  GL.initGameLoop(deathScreen, combatLog)
+  GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
+  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, mobs, combatLogEntries)
+  GL.resetGameTime()
 
   // Start render loop
   gameLoop()
 }
 
-let lastTime = 0
-let attackCooldown = 0
-let stepCooldown = 0
-
 function gameLoop(timestamp = 0): void {
-  if (currentScreen !== 'game' || gameState !== 'playing') return
-  animFrame = requestAnimationFrame(gameLoop)
+  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, mobs, combatLogEntries)
+  const frame = GL.gameLoop(timestamp)
 
-  const dt = Math.min((timestamp - lastTime) / 1000, 0.05)
-  lastTime = timestamp
-  const time = renderer?.getElapsedTime() || 0
+  // Sync mutable state back
+  playerHP = GL.getPlayerHP()
+  playerMaxHP = GL.getPlayerMaxHP()
+  playerX = GL.getPlayerX()
+  playerZ = GL.getPlayerZ()
+  playerYaw = GL.getPlayerYaw()
+  combatLogEntries = GL.getGameLog()
+  mobs = GL.getMobs()
 
-  // Update input
-  input?.update()
-  const inp = input?.getState() ?? { forward: 0, right: 0, rotate: 0, jump: false, attack: false }
+  // Check player death
+  GL.checkPlayerDeath(updateHP, addCombatLog)
 
-  // Move player
-  if (player && renderer) {
-    const speed = 4
-    const moveX = (Math.sin(playerYaw) * inp.forward + Math.cos(playerYaw) * inp.right) * speed * dt
-    const moveZ = (Math.cos(playerYaw) * inp.forward - Math.sin(playerYaw) * inp.right) * speed * dt
-
-    playerX += moveX
-    playerZ += moveZ
-    player.setPosition(playerX, 0, playerZ)
-
-    // Footstep sounds
-    if ((inp.forward !== 0 || inp.right !== 0) && audio) {
-      stepCooldown -= dt
-      if (stepCooldown <= 0) {
-        audio.step()
-        stepCooldown = 0.4
-      }
-    }
-
-    // Attack (left-click)
-    attackCooldown -= dt
-    if (inp.attack && attackCooldown <= 0) {
-      attackCooldown = 0.5
-      if (audio) audio.attack()
-
-      // Attack nearby mobs
-      mobs.forEach(mob => {
-        const dist = mob.distanceTo(playerX, playerZ)
-        if (dist <= 2.0 && mob.state.alive) {
-          const dmg = 2 + Math.floor(Math.random() * 3)
-          mob.takeDamage(dmg)
-          if (audio) audio.hit()
-          addCombatLog(`You hit ${mob.state.type} for ${dmg} damage!`)
-        }
-      })
-    }
-
-    // Rotation
-    playerYaw += inp.rotate * 2 * dt
-    player.mesh.rotation.y = playerYaw
-
-    // Animation state
-    if (inp.forward !== 0 || inp.right !== 0) {
-      player.setAnimation('walk')
-      player.animateWalk(time)
-    } else {
-      player.setAnimation('idle')
-      player.resetAnimation()
-    }
-
-    // Update HUD
-    updateHP(playerHP, playerMaxHP)
+  // Restart loop if still alive
+  if (gameState === 'playing' && frame) {
+    requestAnimationFrame(gameLoop)
   }
-
-  // Update mobs
-  if (chaseAI) {
-    const ai = chaseAI
-    mobs.forEach(mob => {
-      if (!mob.state.alive) return
-
-      // Boss special behavior
-      if (mob.state.type === 'stalker' && mob.state.stats.maxHp === 60 && 'bossAttack' in mob) {
-        ;(mob as any).bossAttack(dt, playerX, playerZ)
-        return
-      }
-
-      // Update AI
-      const decision = ai.decide(mob, playerX, playerZ, dt)
-      if (decision.action === 'chase') {
-        mob.setPosition(decision.targetX, mob.position.y, decision.targetZ)
-        mob.update(dt, playerX, playerZ)
-      } else if (decision.action === 'attack') {
-        mob.update(dt, playerX, playerZ)
-      }
-
-      // Mob-specific AI behavior
-      if (mob.state.type === 'skeleton' && 'rangedAttack' in mob) {
-        ;(mob as any).rangedAttack(dt, playerX, playerZ)
-      } else if (mob.state.type === 'bat' && 'swarmAI' in mob) {
-        ;(mob as any).swarmAI(dt, playerX, playerZ)
-      } else if (mob.state.type === 'ogre' && 'chargeAI' in mob) {
-        ;(mob as any).chargeAI(dt, playerX, playerZ)
-      } else if (mob.state.type === 'mummy' && 'curseAura' in mob) {
-        ;(mob as any).curseAura(dt, playerX, playerZ)
-      }
-
-      // Mob growl when chasing
-      if (decision.action === 'chase' && audio && time - lastGrowlTime > 3) {
-        audio.growl()
-        lastGrowlTime = time
-      }
-
-      // Check if mob attacks player
-      const dist = mob.distanceTo(playerX, playerZ)
-      if (dist <= 1.2 && mob.state.stats.damage > 0) {
-        mob.state.stats.damage = 0
-        playerHP = Math.max(0, playerHP - mob.state.stats.damage)
-        if (audio) audio.hit()
-        updateHP(playerHP, playerMaxHP)
-        if (playerHP <= 0) {
-          gameState = 'dead'
-          deathScreen.style.display = 'flex'
-          if (audio) audio.stopAmbient()
-          addCombatLog('💀 You have fallen!')
-        }
-      }
-    })
-  }
-
-  // Update minimap
-  if (minimap && player) {
-    minimap.setPlayerPos(playerX, playerZ)
-  }
-
-  // Update camera
-  if (camera && player && renderer) {
-    camera.update(renderer, player.position, playerYaw)
-  }
-
-  // Animate torch flicker
-  if (renderer) {
-    renderer.updateTorchFlicker(time)
-  }
-
-  // Render
-  renderer?.render()
 }
 
 // --- Init ---
