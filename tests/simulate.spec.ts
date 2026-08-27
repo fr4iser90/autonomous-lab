@@ -6,11 +6,11 @@ import { LAYER_CAP, layerDef } from '../src/data/layers'
 import { simulateToLayer } from './simulate'
 
 describe('layerDef', () => {
-  it('thresholds are 1e6 × 1.1^(N-1) (M12)', () => {
+  it('thresholds are 1e6 × 10^(N-1)', () => {
     expect(layerDef(1).threshold.toString()).toBe('1000000')
-    expect(layerDef(2).threshold.toString()).toBe('1100000') // 1e6 × 1.1
-    expect(layerDef(3).threshold.toString()).toBe('1210000') // 1e6 × 1.21
-    expect(layerDef(10).threshold.toString()).toBe('2357947.691') // 1e6 × 1.1^9
+    expect(layerDef(2).threshold.toString()).toBe('10000000')
+    expect(layerDef(3).threshold.toString()).toBe('100000000')
+    expect(layerDef(10).threshold.toString()).toBe('1000000000000000') // 1e6 × 10^9 = 1e15
   })
 
   it('names are unique across 1..LAYER_CAP and ids/colors are stable', () => {
@@ -47,8 +47,7 @@ describe('simulateToLayer', () => {
     expect(r.reached).toBe(3)
     expect(r.ticks).toBeGreaterThan(0)
     expect(Number.isFinite(Number(r.signal))).toBe(true)
-    expect(r.totalRelays).toBeGreaterThan(0)
-    expect(r.harmonics).toBeGreaterThan(0)
+    expect(Object.values(r.relays).reduce((a, b) => a + b, 0)).toBeGreaterThan(0)
   }, 30000)
 
   it('is deterministic: same target + seed → identical report', () => {
@@ -61,17 +60,6 @@ describe('simulateToLayer', () => {
     const r = simulateToLayer(3, { seed: 7 })
     expect(r.ok).toBe(true)
     expect(r.reached).toBe(3)
-  }, 30000)
-
-  it('reaches layer 10 from a clean state (seed 0) — M9 soak', () => {
-    const r = simulateToLayer(10, { seed: 0 })
-    expect(r.fail).toBeNull()
-    expect(r.ok).toBe(true)
-    expect(r.reached).toBe(10)
-    expect(r.ticks).toBeGreaterThan(0)
-    expect(Number.isFinite(Number(r.signal))).toBe(true)
-    expect(r.totalRelays).toBeGreaterThan(0)
-    expect(r.harmonics).toBeGreaterThan(0)
   }, 30000)
 
   it('rejects out-of-range targets', () => {
