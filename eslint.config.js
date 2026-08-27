@@ -9,7 +9,7 @@ export default tseslint.config(
       'dist/**',
       'demo/**',
       'node_modules/**',
-      'example-prompts/**',
+      'lab/**',
       '.output/**',
       '**/.output/**',
       '*.config.js',

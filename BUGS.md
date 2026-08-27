@@ -1,4 +1,4 @@
-<!-- BOILERPLATE_PLACEHOLDER: run-owned bug queue. Builder drains ## Open at every C-0 / P4-0; VL-validation agent appends only (no code). See example-prompts/games/voxel-craft.md + voxel-craft-VL-validation.md -->
+<!-- BOILERPLATE_PLACEHOLDER: run-owned bug queue. Builder drains ## Open at every C-0 / P4-0; VL-validation agent appends only (no code). See lab/examples/games/voxel-craft.md + voxel-craft-VL-validation.md -->
 
 # BUGS
 
