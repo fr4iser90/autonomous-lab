@@ -4,7 +4,7 @@ example-prompts/games/voxel-craft.md + voxel-craft-VL-validation.md -->
 
 # BUGS
 
-Last validation: (ci-fail-bugs bot) SHA=2abec7d
+Last validation: agent SHA=ed7510d (P4-1 cycle 2 — nova-cascade + echo-burst upgrades)
 
 ## Open
 

@@ -1,20 +1,20 @@
 # Progress — Signal Ascent (run agent/celestial-inc-20260826)
 
 ## NOW
-- Phase: **Phase 4 — cycle 1 COMPLETE**, cycle 2 P4-1 FEATURE in progress
+- Phase: **Phase 4 — cycle 1 COMPLETE**, cycle 2 P4-1 FEATURE COMPLETE, CI running on PR #22
 - Phase 3: DEMO.webm recorded, 10 storyboard frames PASS, 0 console errors
 - Milestone: M12 — gate green, 130 tests
 - Branch: agent/celestial-inc-20260826 (from origin/baseline @ 394f599)
 - LAYER_CAP: 50 (live, src/data/layers.ts — Phase 4 bulk-raises +10/cycle)
 - deepest_soak_layer: 50 (simulateToLayer(50) green, both seeds 0 & 42 reach in ~1.05M ticks ≤ 2M budget)
 - Cycle 1 ACCEPT: P4-1 POLISH (layer strip click-to-switch, M7 check-back view, 125 tests, CI green)
-- Cycle 1 SHA: cycle 1 commit on agent/celestial-inc-20260826
-- Cycle 2: P4-1 FEATURE — new upgrade pack (nova-cascade ×3 nova, echo-burst ×2 global)
-- Cycle 2 status: data + tests + UI smoke + build all green, 130 tests
+- Cycle 2: P4-1 FEATURE — new upgrade pack: Nova Cascade (×3 nova), Echo Burst (×2 global), 8 upgrades total
 - Gate: `npm test && npm run test:ui && npm run build` — 130 vitest + UI smoke + build green
+- Pre-PR visual: DONE — 4 screenshots PASS (title, play, layer switch, resonators tab)
+- Sim50: seed 0 → 1,050,004 ticks, seed 42 → 1,049,371 ticks — both ≤ 2M budget, 50 harmonics
 - Note: ports 5173–5176 held by foreign run; dev on 5179 for PRE-PR visuals
 - Balance note: threshold growth retuned 3× → 1.5× → 1.2× → 1.1×; HARMONIC_BONUS 2% → 3% → 5%; harmonicReward power 0.65 → 0.75
-- Next: push cycle 1 + cycle 2 → CI green → handoff → cycle 2 P4-3 prove
+- Next: CI green on PR #22 → handoff → cycle 2 P4-3 prove → cycle 3 planning
 
 ## Log
 - 2026-08-26: M11 built — Special layer 10 "Echo Layer" mechanics (`src/data/specialLayers.ts`): ascending from layer 10 grants +1 extra Harmonic (echoBonusFor(10) = 1). Auto-ascend toggle (`engine.state.autoAscend`, checkbox on Stats panel): when true, shell auto-calls `layers.ascend()` each tick once threshold met (safe mode: requires ≥1 Harmonic). Achievement system (10 achievements, `src/data/achievements.ts`): First Spark, First Relay, Pulse Starter, Beam Alignment, Nova Ignition, First Ascent, Stratum Climber, Echo Walker, Signal Architect (100 relays), Persistent Ascenter (1K clicks); flags persist in `state.upgrades`, checked each tick, toasts show unlocks. Stats panel in the side-panels: highest layer, total harmonics, relays bought, clicks, play time (ms → h:m:s). Save v5: `stats` field (`totalRelaysBought`, `totalClicks`, `playTime`); v4→v5 migration loads zeroes. +20 vitest specs (special layers, echo bonus, auto-ascend toggle, 12 achievement checks, 2 toggle tests). 104 vitest + UI smoke + build green.
