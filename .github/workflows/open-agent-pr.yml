@@ -25,13 +25,24 @@ jobs:
           set -euo pipefail
           branch="${GITHUB_REF_NAME}"
           owner="${GITHUB_REPOSITORY_OWNER}"
-          # head must be owner:branch for gh
-          open_count="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "${owner}:${branch}" --state open --json number --jq 'length')"
+
+          count_open() {
+            # Try owner:branch then bare branch — gh head filter is picky.
+            local n
+            n="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "${owner}:${branch}" --state open --json number --jq 'length' 2>/dev/null || echo 0)"
+            if [[ "$n" != "0" ]]; then echo "$n"; return; fi
+            n="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "${branch}" --state open --json number --jq 'length' 2>/dev/null || echo 0)"
+            echo "$n"
+          }
+
+          open_count="$(count_open)"
           if [[ "$open_count" != "0" ]]; then
             echo "Open PR already exists for $branch"
             exit 0
           fi
-          if gh pr create \
+
+          set +e
+          create_out="$(gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --base main \
             --head "$branch" \
@@ -43,15 +54,28 @@ jobs:
           - Automerge lands on \`main\` (squash, or conflict-resolved merge → main)
           - Do not push \`main\`/\`baseline\` from the agent
           EOF
-          )"; then
+          )" 2>&1)"
+          create_ec=$?
+          set -e
+          echo "$create_out"
+
+          if [[ "$create_ec" -eq 0 ]]; then
             echo "Created PR"
             exit 0
           fi
-          # Race: PR opened between list and create — treat as success
-          open_count="$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "${owner}:${branch}" --state open --json number --jq 'length')"
+
+          # gh often prints "already exists" + URL even when --head list filters miss
+          if echo "$create_out" | grep -qiE 'already exists|pull request.*exists'; then
+            echo "PR already exists (from gh create message) — OK"
+            exit 0
+          fi
+
+          # Race: PR opened between list and create
+          open_count="$(count_open)"
           if [[ "$open_count" != "0" ]]; then
             echo "PR exists after create race — OK"
             exit 0
           fi
+
           echo "::error::gh pr create failed and no open PR found"
           exit 1
