@@ -29,3 +29,8 @@ export function getShopItemsForFloor(floor: number): ShopItemDef[] {
   if (floor >= 2) return SHOP_ITEMS.slice(0, 5) // potions + shield + club
   return SHOP_ITEMS.slice(0, 3) // potions only
 }
+
+/** Map a shop item ID to its inventory item ID (strip '-shop' suffix). Returns undefined if no match. */
+export function shopIdToItemId(shopId: string): string | undefined {
+  return shopId.endsWith('-shop') ? shopId.slice(0, -5) : undefined
+}

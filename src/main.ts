@@ -33,7 +33,8 @@ import { Inventory } from './systems/Inventory'
 import { AudioEngine } from './systems/AudioEngine'
 import { Minimap } from './render/Minimap'
 import type { MobKit } from './entities/MobKit'
-import { getShopItemsForFloor, getShopItemById } from './data/shopItems'
+import { getShopItemsForFloor, shopIdToItemId } from './data/shopItems'
+import { getItemById } from './data/items'
 import { Economy } from './systems/Economy'
 import { SkillTree, getSkillsForFloor, getSkillDefById } from './systems/SkillTree'
 import * as GL from './systems/GameLoop'
@@ -273,83 +274,79 @@ function updateInventoryUI(): void {
   slotEls.forEach((el, i) => {
     if (i < slots.length) {
       const slot = slots[i]
-      ;(el as HTMLElement).innerHTML = `<span class="item-icon">${slot.item.icon}</span><span class="item-name">${slot.item.name}</span>`
+      const equipped = slot.equipped ? ' [E]' : ''
+      const label = slot.item.type === 'potion' ? '[U]se' : slot.equipped ? '[U]nequip' : '[E]quip'
+      ;(el as HTMLElement).innerHTML = `<span class="item-icon">${slot.item.icon}</span><span class="item-name">${slot.item.name}</span>${equipped}<br><span class="item-action" data-id="${slot.item.id}">${label}</span>`
       ;(el as HTMLElement).classList.add('has-item')
+      const actionEl = (el as HTMLElement).querySelector('.item-action')
+      if (actionEl) actionEl.addEventListener('click', () => handleItemAction(slot))
     } else {
-      ;(el as HTMLElement).innerHTML = ''
-      ;(el as HTMLElement).classList.remove('has-item')
+      ;(el as HTMLElement).innerHTML = ''; (el as HTMLElement).classList.remove('has-item')
     }
   })
 }
 
+function handleItemAction(slot: { item: import('./data/items').ItemDef; equipped: boolean }): void {
+  if (!inventory) return
+  if (slot.item.type === 'potion') {
+    const heal = inventory.usePotion(slot.item)
+    if (heal > 0) { GL.healPlayer(heal, playerMaxHP); playerHP = Math.min(playerMaxHP, playerHP + heal); addCombatLog(`🧪 Used ${slot.item.name}! +${heal} HP`) }
+  } else {
+    const bonus = inventory.equip(slot.item)
+    addCombatLog(`${slot.equipped ? 'Unequipped' : 'Equipped'} ${slot.item.name}${bonus > 0 ? ` (+${bonus} HP)` : ''}`)
+  }
+  updateInventoryUI(); updateHP(playerHP, playerMaxHP)
+}
+
 // --- Scrap UI ---
 function updateScrapUI(): void {
-  const scrapLabel = document.getElementById('scrap-label')!
-  if (scrapLabel) scrapLabel.textContent = `Scrap: ${player?.scrap ?? 0}`
+  const el = document.getElementById('scrap-label')
+  if (el) el.textContent = `Scrap: ${player?.scrap ?? 0}`
 }
 
 // --- Shop UI ---
 function updateShopUI(): void {
   if (!economy || !player) return
   const grid = document.getElementById('shop-grid')!
-  const items = getShopItemsForFloor(playerFloor)
-  grid.innerHTML = items.map(item => {
-    const canAfford = economy!.scrap >= item.cost
-    return `<div class="inv-slot shop-item ${canAfford ? '' : 'cant-afford'}" data-id="${item.id}">
-      <span class="item-icon">${item.icon}</span>
-      <span class="item-name">${item.name}</span>
-      <span class="item-cost">${item.cost} scrap</span>
-    </div>`
-  }).join('')
-  grid.querySelectorAll('.shop-item').forEach(el => {
+  const ec = economy
+  const inv = inventory
+  getShopItemsForFloor(playerFloor).forEach(item => {
+    const canAfford = ec.scrap >= item.cost
+    const el = document.createElement('div')
+    el.className = `inv-slot shop-item ${canAfford ? '' : 'cant-afford'}`
+    el.dataset.id = item.id
+    el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-name">${item.name}</span><span class="item-cost">${item.cost} scrap</span>`
     el.addEventListener('click', () => {
-      const id = (el as HTMLElement).dataset.id
-      const item = getShopItemById(id ?? '')
-      if (!item) return
-      const success = economy?.purchase(item)
-      if (success) {
-        addCombatLog(`🛒 Bought ${item.name} for ${item.cost} scrap`)
-        updateShopUI()
-        updateScrapUI()
-      } else {
-        addCombatLog('❌ Not enough scrap!')
-      }
+      if (!ec.purchase(item)) return addCombatLog('❌ Not enough scrap!')
+      addCombatLog(`🛒 Bought ${item.name} for ${item.cost} scrap`)
+      const itemId = shopIdToItemId(item.id), invItem = itemId ? getItemById(itemId) : null
+      if (invItem && inv?.addItem(invItem)) addCombatLog(`  → Added ${invItem.name} to inventory`)
+      updateShopUI(); updateScrapUI()
     })
+    grid.appendChild(el)
   })
 }
 
 // --- Skill UI ---
 function updateSkillUI(): void {
   if (!skillTree || !economy) return
-  const grid = document.getElementById('skill-grid')!
-  const skills = getSkillsForFloor(playerFloor)
-  const st = skillTree
-  grid.innerHTML = skills.map(sk => {
-    const acquired = st.has(sk.id)
-    const canAfford = economy!.scrap >= sk.cost
-    return `<div class="inv-slot skill-item ${acquired ? 'skill-acquired' : canAfford ? '' : 'cant-afford'}" data-id="${sk.id}">
-      <span class="item-icon">${sk.icon}</span>
-      <span class="item-name">${sk.name}</span>
-      <span class="item-desc">${sk.description}</span>
-      <span class="item-cost">${acquired ? '✅ Owned' : sk.cost + ' scrap'}</span>
-    </div>`
-  }).join('')
-  grid.querySelectorAll('.skill-item').forEach(el => {
+  const grid = document.getElementById('skill-grid')!, st = skillTree, ec = economy
+  getSkillsForFloor(playerFloor).forEach(sk => {
+    const acquired = st.has(sk.id), canAfford = ec.scrap >= sk.cost
+    const el = document.createElement('div')
+    el.className = `inv-slot skill-item ${acquired ? 'skill-acquired' : canAfford ? '' : 'cant-afford'}`
+    el.dataset.id = sk.id
+    el.innerHTML = `<span class="item-icon">${sk.icon}</span><span class="item-name">${sk.name}</span><span class="item-desc">${sk.description}</span><span class="item-cost">${acquired ? '✅ Owned' : sk.cost + ' scrap'}</span>`
     el.addEventListener('click', () => {
-      const id = (el as HTMLElement).dataset.id
-      const sk = getSkillDefById(id ?? '')
-      if (!sk || st.has(sk.id)) return
-      const success = economy?.purchase(sk)
-      if (success) {
-        st.recordAcquisition(sk.id)
+      if (acquired || !canAfford) return
+      const def = getSkillDefById(sk.id)
+      if (!def) return addCombatLog('❌ Unknown skill!')
+      if (ec.purchase(def) && st.recordAcquisition(def.id)) {
         GL.setBaseHP(20 + st.getActiveEffects().hpBonus)
-        addCombatLog(`✨ Learned ${sk.name}!`)
-        updateSkillUI()
-        updateScrapUI()
-      } else {
-        addCombatLog('❌ Not enough scrap!')
-      }
+        addCombatLog(`✨ Learned ${def.name}!`); updateSkillUI(); updateScrapUI()
+      } else { addCombatLog('❌ Not enough scrap!') }
     })
+    grid.appendChild(el)
   })
 }
 
@@ -414,25 +411,15 @@ function initThreeScene(seed: number): void {
   currentDungeon = dungeon
   buildScene(renderer, dungeon)
   // Spawn mobs
-  const mobKinds = [
-    () => new Goblin(renderer!), () => new Shade(renderer!), () => new Stalker(renderer!),
-    () => new Skeleton(renderer!), () => new Bat(renderer!), () => new Ogre(renderer!),
-    () => new Mummy(renderer!), () => new Spider(renderer!), () => new Wolf(renderer!),
-    () => new Zombie(renderer!), () => new Harpy(renderer!), () => new Troll(renderer!),
-    () => new Lich(renderer!), () => new Phantom(renderer!), () => new Elemental(renderer!),
-  ]
+  const mobKinds = [() => new Goblin(renderer!), () => new Shade(renderer!), () => new Stalker(renderer!), () => new Skeleton(renderer!), () => new Bat(renderer!), () => new Ogre(renderer!), () => new Mummy(renderer!), () => new Spider(renderer!), () => new Wolf(renderer!), () => new Zombie(renderer!), () => new Harpy(renderer!), () => new Troll(renderer!), () => new Lich(renderer!), () => new Phantom(renderer!), () => new Elemental(renderer!)]
   for (let i = 1; i < dungeon.rooms.length; i++) {
-    const room = dungeon.rooms[i]
-    const mob = mobKinds[i % mobKinds.length]()
-    mob.setPosition(room.cx - dungeon.width / 2 + (Math.random() - 0.5) * 2, 0, room.cy - dungeon.height / 2 + (Math.random() - 0.5) * 2)
+    const r = dungeon.rooms[i], mob = mobKinds[i % mobKinds.length]()
+    mob.setPosition(r.cx - dungeon.width / 2 + (Math.random() - 0.5) * 2, 0, r.cy - dungeon.height / 2 + (Math.random() - 0.5) * 2)
     mobs.push(mob)
   }
-  // Boss room
   if (playerFloor >= 4 && dungeon.rooms.length > 2) {
-    const bossRoom = dungeon.rooms[dungeon.rooms.length - 1]
-    const boss = new Boss(renderer!)
-    boss.setPosition(bossRoom.cx - dungeon.width / 2, 0, bossRoom.cy - dungeon.height / 2)
-    mobs.push(boss)
+    const br = dungeon.rooms[dungeon.rooms.length - 1], boss = new Boss(renderer!)
+    boss.setPosition(br.cx - dungeon.width / 2, 0, br.cy - dungeon.height / 2); mobs.push(boss)
   }
   // Player
   player = new PlayerKit(renderer!)
@@ -448,6 +435,7 @@ function initThreeScene(seed: number): void {
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
   GL.setSkillTree(skillTree)
+  GL.setInventory(inventory)
   GL.setDungeonData(dungeon)
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()

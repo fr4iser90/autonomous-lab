@@ -40,6 +40,7 @@ let _chaseAI: ChaseAI | null = null
 let _audio: AudioEngine | null = null
 let _skillTree: SkillTree | null = null
 let _dungeon: DungeonData | null = null
+let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => number } | null = null
 
 // Game state (injected)
 let _currentScreen: 'title' | 'game' | 'settings' = 'title'
@@ -92,6 +93,17 @@ export function resetGameTime(): void {
 
 export function setSkillTree(st: SkillTree | null): void {
   _skillTree = st
+}
+
+export function setInventory(inv: { getEquippedDamage: () => number; getEquippedArmor: () => number } | null): void {
+  _inventory = inv
+}
+
+/** Apply healing to the player. Returns new HP. */
+export function healPlayer(amount: number, currentMaxHP: number): number {
+  if (amount <= 0) return _playerHP
+  _playerHP = Math.min(currentMaxHP, _playerHP + amount)
+  return _playerHP
 }
 
 export function updateGameVars(
@@ -172,7 +184,8 @@ export function gameLoop(timestamp = 0): number {
         const dist = mob.distanceTo(_playerX, _playerZ)
         if (dist <= 2.0 && mob.state.alive) {
           const effects = _skillTree?.getActiveEffects() ?? { damageBonus: 0, hpBonus: 0, speedBonus: 0, critChanceBonus: 0 }
-          const baseDmg = 2 + Math.floor(Math.random() * 3) + effects.damageBonus
+          const weaponDmg = _inventory?.getEquippedDamage() ?? 0
+          const baseDmg = 2 + Math.floor(Math.random() * 3) + effects.damageBonus + weaponDmg
           const isCrit = Math.random() < (0.15 + effects.critChanceBonus)
           const dmg = isCrit ? baseDmg * 2 : baseDmg
           mob.takeDamage(dmg)
@@ -264,7 +277,9 @@ export function gameLoop(timestamp = 0): number {
       const dist = mob.distanceTo(_playerX, _playerZ)
       if (dist <= 1.2 && mob.state.stats.damage > 0) {
         mob.state.stats.damage = 0
-        _playerHP = Math.max(0, _playerHP - mob.state.stats.damage)
+        const armor = _inventory?.getEquippedArmor() ?? 0
+        const netDmg = Math.max(1, mob.state.stats.damage - armor)
+        _playerHP = Math.max(0, _playerHP - netDmg)
         if (_audio) _audio.hit()
       }
     }
