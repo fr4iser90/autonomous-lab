@@ -11,8 +11,9 @@ import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
 import { SkillTree } from './SkillTree'
-import { isOnStealthTile } from './DungeonPCG'
+import { isOnStealthTile, getTrapAt } from './DungeonPCG'
 import type { DungeonData } from './DungeonPCG'
+import { TRAP_DEFS } from '../data/traps'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -26,6 +27,8 @@ let _playerFloor = 1
 let _mobs: MobKit[] = []
 let _combatLogEntries: string[] = []
 let _lastGrowlTime = 0
+let _trapHitTimer = 0
+let _lastTrapType: string | null = null
 
 // Systems (injected at init)
 let _renderer: GameRenderer | null = null
@@ -133,6 +136,21 @@ export function gameLoop(timestamp = 0): number {
     _playerX += moveX
     _playerZ += moveZ
     _player.setPosition(_playerX, 0, _playerZ)
+
+    // P4-4: Trap detection — deal damage when player steps on a trap
+    if ((inp.forward !== 0 || inp.right !== 0) && _dungeon) {
+      _trapHitTimer -= dt
+      const trapType = getTrapAt(_dungeon, _playerX, _playerZ)
+      if (trapType && _trapHitTimer <= 0) {
+        const trapDef = TRAP_DEFS[trapType]
+        const damage = trapDef.damage + Math.floor(_playerFloor * 0.5) // +0.5 damage per floor
+        _playerHP = Math.max(0, _playerHP - damage)
+        _combatLogEntries.push(`${trapDef.label} trap! -${damage} HP`)
+        _trapHitTimer = 0.5 // 0.5s cooldown to prevent repeated triggers
+        _lastTrapType = trapType
+        if (_audio) _audio.hit()
+      }
+    }
 
     // Footstep sounds
     if ((inp.forward !== 0 || inp.right !== 0) && _audio) {
@@ -302,3 +320,9 @@ export function getGameLog(): string[] { return _combatLogEntries }
 export function getMobs(): MobKit[] { return _mobs }
 export function getPlayerFloor(): number { return _playerFloor }
 export function setBaseHP(baseHP: number): void { _playerMaxHP = baseHP }
+
+/** P4-4: Get the current trap hit state for UI feedback */
+export function getTrapHitState(): { active: boolean; trapType: string | null } {
+  const active = _trapHitTimer > 0
+  return { active, trapType: active ? _lastTrapType : null }
+}

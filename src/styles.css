@@ -175,6 +175,16 @@ button:active {
   margin-top: 2px;
 }
 
+.trap-hit-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ff4444;
+  margin-top: 2px;
+  transition: opacity 0.15s ease;
+  text-shadow: 0 0 6px rgba(255, 68, 68, 0.6);
+}
+
 .inventory-toggle, .shop-toggle {
   font-family: "EB Garamond", serif;
   font-size: 0.85rem;

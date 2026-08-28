@@ -7,6 +7,8 @@ import { createRng, hashSeed } from '../lib/seedRng'
 import type { GameRenderer } from '../render/GameRenderer'
 import type { FloorTheme } from '../data/floors'
 import { FLOOR_THEMES } from '../data/floors'
+import type { TrapType } from '../data/traps'
+import { TRAP_DEFS, randomTrapType } from '../data/traps'
 
 export enum TileType {
   FLOOR = 0,
@@ -15,6 +17,7 @@ export enum TileType {
   STAIRS = 3,
   SPAWN = 4,
   STEALTH = 5,
+  TRAP = 6,
 }
 
 export interface Room {
@@ -44,6 +47,7 @@ export interface DungeonData {
   theme: FloorTheme
   floorNumber: number
   stealthTiles: Set<string>
+  trapPositions: Map<string, TrapType>
 }
 
 const CELL_FLOOR = TileType.FLOOR
@@ -52,6 +56,7 @@ const CELL_DOOR = TileType.DOOR
 const CELL_STAIRS = TileType.STAIRS
 const CELL_SPAWN = TileType.SPAWN
 const CELL_STEALTH = TileType.STEALTH
+const CELL_TRAP = TileType.TRAP
 
 export function generateDungeon(seed: number, floorNumber: number = 1, theme: FloorTheme = FLOOR_THEMES[0]): DungeonData {
   const rng = createRng(hashSeed(seed))
@@ -143,6 +148,27 @@ export function generateDungeon(seed: number, floorNumber: number = 1, theme: Fl
     }
   }
 
+  // Generate traps — hidden hazards for P4-4
+  const trapPositions = new Map<string, TrapType>()
+  const trapChance = 0.04 + floorNumber * 0.01 // more traps on deeper floors
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = y * cols + x
+      const cell = cells[idx]
+      // Only place on non-spawn, non-stairs, non-stealth floor/door tiles
+      if ((cell.type === CELL_FLOOR || cell.type === CELL_DOOR) &&
+          !(x === spawnX && y === spawnY) &&
+          !(x === stairsX && y === stairsY) &&
+          !stealthTiles.has(`${x},${y}`)) {
+        if (rng() < trapChance) {
+          const trapType = randomTrapType()
+          cell.type = CELL_TRAP
+          trapPositions.set(`${x},${y}`, trapType)
+        }
+      }
+    }
+  }
+
   // Verify reachability via BFS
   const reachable = bfsReachable(cells, cols, rows, spawnX, spawnY)
   if (!reachable.has(stairsY * cols + stairsX)) {
@@ -163,6 +189,7 @@ export function generateDungeon(seed: number, floorNumber: number = 1, theme: Fl
     theme,
     floorNumber,
     stealthTiles,
+    trapPositions,
   }
 }
 
@@ -231,7 +258,7 @@ function bfsReachable(cells: Cell[], cols: number, rows: number, sx: number, sy:
       const nidx = ny * cols + nx
       if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited.has(nidx)) {
         const ncell = cells[nidx]
-        if (ncell.type === CELL_FLOOR || ncell.type === CELL_DOOR || ncell.type === CELL_STAIRS || ncell.type === CELL_SPAWN || ncell.type === CELL_STEALTH) {
+        if (ncell.type === CELL_FLOOR || ncell.type === CELL_DOOR || ncell.type === CELL_STAIRS || ncell.type === CELL_SPAWN || ncell.type === CELL_STEALTH || ncell.type === CELL_TRAP) {
           visited.add(nidx)
           queue.push(nidx)
         }
@@ -257,16 +284,18 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
       const worldX = x - width / 2
       const worldZ = y - height / 2
 
-      if (cell.type === CELL_FLOOR || cell.type === CELL_DOOR || cell.type === CELL_SPAWN || cell.type === CELL_STAIRS || cell.type === CELL_STEALTH) {
-        // Floor tile (stealth tiles rendered darker for shadowy effect)
+      if (cell.type === CELL_FLOOR || cell.type === CELL_DOOR || cell.type === CELL_SPAWN || cell.type === CELL_STAIRS || cell.type === CELL_STEALTH || cell.type === CELL_TRAP) {
+        // Floor tile (stealth tiles rendered darker for shadowy effect, traps sit on floor)
         const tileGeo = new THREE.BoxGeometry(0.95, 0.1, 0.95)
         const isStealth = cell.type === CELL_STEALTH
+        const isTrap = cell.type === CELL_TRAP
+        const baseColor = isStealth ? new THREE.Color(floorColor).multiplyScalar(0.55) : new THREE.Color(floorColor)
         const tileMat = new THREE.MeshStandardMaterial({
-          color: isStealth ? new THREE.Color(floorColor).multiplyScalar(0.55) : new THREE.Color(floorColor),
-          roughness: 0.95,
+          color: baseColor,
+          roughness: isTrap ? 0.7 : 0.95, // slightly smoother for trap surfaces
         })
         const tile = new THREE.Mesh(tileGeo, tileMat)
-        tile.position.set(worldX, 0.05, worldZ)
+        tile.position.set(worldX, isTrap ? 0.06 : 0.05, worldZ)
         tile.receiveShadow = true
         renderer.scene.add(tile)
       }
@@ -321,6 +350,9 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
     const tz = room.cy - height / 2
     renderer.addTorchVisual(tx + 0.5, tz + 0.5)
   }
+
+  // Render trap visuals (spikes, poison pools, fire patches)
+  renderTrapVisuals(renderer, dungeon)
 }
 
 // Re-export floor themes for convenience
@@ -332,4 +364,67 @@ export function isOnStealthTile(dungeon: DungeonData, worldX: number, worldZ: nu
   const gridX = Math.floor(worldX + dungeon.width / 2)
   const gridY = Math.floor(worldZ + dungeon.height / 2)
   return dungeon.stealthTiles.has(`${gridX},${gridY}`)
+}
+
+/** Check if a world-space position is on a trap, and return the trap type */
+export function getTrapAt(dungeon: DungeonData, worldX: number, worldZ: number): TrapType | null {
+  const gridX = Math.floor(worldX + dungeon.width / 2)
+  const gridY = Math.floor(worldZ + dungeon.height / 2)
+  return dungeon.trapPositions.get(`${gridX},${gridY}`) ?? null
+}
+
+/** Render trap visuals as 3D objects on the dungeon floor */
+export function renderTrapVisuals(renderer: GameRenderer, dungeon: DungeonData): void {
+  const trapGroup = new THREE.Group()
+  trapGroup.name = 'traps'
+
+  for (const [key, trapType] of dungeon.trapPositions) {
+    const [gx, gy] = key.split(',').map(Number)
+    const worldX = gx - dungeon.width / 2 + 0.5
+    const worldZ = gy - dungeon.height / 2 + 0.5
+    const def = TRAP_DEFS[trapType]
+
+    if (trapType === 'spike') {
+      // Spike: upward-pointing pyramid
+      const geo = new THREE.ConeGeometry(0.15, 0.3, 4)
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(def.color),
+        emissive: new THREE.Color(def.emissive),
+        emissiveIntensity: 0.3,
+        roughness: 0.4,
+        metalness: 0.6,
+      })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(worldX, 0.15, worldZ)
+      trapGroup.add(mesh)
+    } else if (trapType === 'poison') {
+      // Poison: flat green pool
+      const geo = new THREE.CircleGeometry(0.25, 16)
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(def.color),
+        emissive: new THREE.Color(def.emissive),
+        emissiveIntensity: 0.2,
+        roughness: 0.8,
+      })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.rotation.x = -Math.PI / 2
+      mesh.position.set(worldX, 0.02, worldZ)
+      trapGroup.add(mesh)
+    } else if (trapType === 'fire') {
+      // Fire: flat orange-red patch with emissive glow
+      const geo = new THREE.CircleGeometry(0.3, 16)
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(def.color),
+        emissive: new THREE.Color(def.emissive),
+        emissiveIntensity: 0.6,
+        roughness: 1.0,
+      })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.rotation.x = -Math.PI / 2
+      mesh.position.set(worldX, 0.02, worldZ)
+      trapGroup.add(mesh)
+    }
+  }
+
+  renderer.scene.add(trapGroup)
 }

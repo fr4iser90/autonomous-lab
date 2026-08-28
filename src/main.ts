@@ -3,7 +3,7 @@
  * M1-M12 + P4: Full game with Three.js, stealth zones, skill tree, economy
  */
 import { loadSave, saveSave } from './services/SaveService'
-import { updateHP, updateFloor, updateDepth, updateStealth } from './app/uiHelpers'
+import { updateHP, updateFloor, updateDepth, updateStealth, updateTrapHit } from './app/uiHelpers'
 import { GameRenderer } from './render/GameRenderer'
 import { FollowCamera } from './render/camera'
 import { InputManager } from './systems/input'
@@ -461,20 +461,20 @@ function gameLoop(timestamp = 0): void {
   const frame = GL.gameLoop(timestamp)
 
   // Sync mutable state back
-  playerHP = GL.getPlayerHP()
-  playerMaxHP = GL.getPlayerMaxHP()
-  playerX = GL.getPlayerX()
-  playerZ = GL.getPlayerZ()
-  playerYaw = GL.getPlayerYaw()
-  playerFloor = GL.getPlayerFloor()
+  ;[playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor] = [
+    GL.getPlayerHP(), GL.getPlayerMaxHP(), GL.getPlayerX(), GL.getPlayerZ(), GL.getPlayerYaw(), GL.getPlayerFloor(),
+  ]
   combatLogEntries = GL.getGameLog()
   mobs = GL.getMobs()
-
-  // Update scrap UI
   updateScrapUI()
 
   // P4-3: stealth HUD
   if (currentDungeon) { updateStealth(isOnStealthTile(currentDungeon, playerX, playerZ)); document.getElementById('stealth-label')!.style.display = '' }
+
+  // P4-4: trap hit UI
+  const trapState = GL.getTrapHitState()
+  const trapEl = document.getElementById('trap-hit-label')!
+  if (trapState.active) { trapEl.style.display = 'block'; updateTrapHit(true, trapState.trapType) } else { trapEl.style.display = 'none' }
 
   // Check player death
   GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0)
