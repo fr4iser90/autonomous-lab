@@ -4,12 +4,13 @@
 
 ## NOW
 
-- Phase: **Phase 2 — content expansion** — M1–M12 complete, expanding toward CAP
-- Milestone: 14 mob kits (14/16), 16 items (16/16), 7 floor themes (7/16)
-- Branch: `agent/dungeon-crawl-20260827` → PR #40 merged into `main`
+- Phase: **Phase 2 — content expansion** — M1–M12 complete, CAP reached on mobKits + items
+- Milestone: 16 mob kits (16/16), 16 items (16/16), 7 floor themes (7/16)
+- Branch: `agent/dungeon-crawl-20260829` → PR #46 (in progress)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **23 tests green, build green, ~549 KB bundle**
+- Gate: **23 tests green, build green, ~553 KB bundle**
 - BUGS: all cleared
+- PR #45 merged (squash) — items CAP reached!
 
 ## Milestones
 
@@ -49,11 +50,13 @@
 - 2026-08-27: P2-1: Added 2 floor themes (Elven Ruins 5–9, Magma Caverns 10+).
 - 2026-08-28: P2-2: Added Spider, Wolf mob kits (10→14 mobKits). Extracted game loop to GameLoop.ts.
 - 2026-08-28: P2-3: Added Zombie, Harpy, Troll, Lich mob kits (14→14). Added 6 items (10→16 items CAP reached). Added 3 floor themes (4→7).
+- 2026-08-28: PR #45 merged — items CAP reached (16/16).
+- 2026-08-29: P2-4: Added Phantom (phase-shifting ghost) and Elemental (fire elemental with burn aura). Mob kits CAP reached: 16/16!
 
 ## CAP Checklist
 
-- mobKits: 14/16 (Goblin, Shade, Stalker, Skeleton, Bat, Ogre, Mummy, Boss, Spider, Wolf, Zombie, Harpy, Troll, Lich) — near CAP
-- items: 16/16 — CAP reached! (rusty-sword, iron-axe, flame-staff, steel-club, health-potion, greater-potion, mega-potion, dungeon-key, iron-shield, rune-ring, lightning-bow, poison-dagger, plate-armor, crystal-orb, blessed-amulet, enchanted-boots)
+- mobKits: 16/16 ✅ **CAP REACHED!** (Goblin, Shade, Stalker, Skeleton, Bat, Ogre, Mummy, Boss, Spider, Wolf, Zombie, Harpy, Troll, Lich, Phantom, Elemental)
+- items: 16/16 ✅ **CAP REACHED!** (rusty-sword, iron-axe, flame-staff, steel-club, health-potion, greater-potion, mega-potion, dungeon-key, iron-shield, rune-ring, lightning-bow, poison-dagger, plate-armor, crystal-orb, blessed-amulet, enchanted-boots)
 - floorThemes: 7/16 (ash, crypt, ruins, magma, swamp, frozen, void) — halfway to CAP
 - propTypes: (none added) — within CAP
 

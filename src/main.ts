@@ -1,6 +1,6 @@
 /**
  * Ashen Delve — Main entry point
- * M1-M12 + P2: Full game with Three.js, 14 mob kits + boss, combat, inventory, minimap, audio
+ * M1-M12 + P2: Full game with Three.js, 16 mob kits + boss, combat, inventory, minimap, audio
  */
 import { loadSave, saveSave } from './services/SaveService'
 import { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
@@ -23,6 +23,8 @@ import { Zombie } from './entities/Zombie'
 import { Harpy } from './entities/Harpy'
 import { Troll } from './entities/Troll'
 import { Lich } from './entities/Lich'
+import { Phantom } from './entities/Phantom'
+import { Elemental } from './entities/Elemental'
 import { Boss } from './entities/Boss'
 import { ChaseAI } from './systems/ChaseAI'
 import { CombatEngine } from './systems/CombatEngine'
@@ -295,7 +297,7 @@ function initThreeScene(seed: number): void {
     () => new Skeleton(renderer!), () => new Bat(renderer!), () => new Ogre(renderer!),
     () => new Mummy(renderer!), () => new Spider(renderer!), () => new Wolf(renderer!),
     () => new Zombie(renderer!), () => new Harpy(renderer!), () => new Troll(renderer!),
-    () => new Lich(renderer!),
+    () => new Lich(renderer!), () => new Phantom(renderer!), () => new Elemental(renderer!),
   ]
   for (let i = 1; i < dungeon.rooms.length; i++) {
     const room = dungeon.rooms[i]
