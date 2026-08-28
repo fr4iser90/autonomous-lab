@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three'
 import type { GameRenderer } from '../render/GameRenderer'
-export type MobType = 'goblin' | 'shade' | 'stalker' | 'skeleton' | 'bat' | 'ogre' | 'mummy' | 'spider' | 'wolf' | 'zombie' | 'harpy' | 'troll' | 'lich' | 'phantom' | 'elemental'
+export type MobType = 'goblin' | 'shade' | 'stalker' | 'skeleton' | 'bat' | 'ogre' | 'mummy' | 'spider' | 'wolf' | 'zombie' | 'harpy' | 'troll' | 'lich' | 'phantom' | 'elemental' | 'tutorial-dummy'
 
 export interface LootEntry {
   /** Item ID to drop */
@@ -80,6 +80,7 @@ const LOOT_TABLES: Record<MobType, LootEntry[]> = {
     { itemId: 'mega-potion', chance: 0.25 },
     { itemId: 'crystal-orb', chance: 0.05 },
   ],
+  'tutorial-dummy': [],
 }
 
 export function getLootTable(type: MobType): LootEntry[] {
@@ -185,5 +186,45 @@ export abstract class MobKit {
       }
     })
     this.renderer.scene.remove(this.mesh)
+  }
+}
+
+/** TutorialDummyMob — a non-aggressive grey training dummy for onboarding */
+export class TutorialDummyMob extends MobKit {
+  constructor(renderer: GameRenderer) {
+    super(renderer, 'tutorial-dummy', {
+      hp: 30,
+      maxHp: 30,
+      damage: 0,
+      speed: 0,
+      aggroRange: 0,
+      chaseSpeed: 0,
+      attackCooldown: 0,
+    }, 0)
+    this.lastAttackTime = 0
+    this.mesh.position.set(10, 0.9, 5)
+    this.position.set(10, 0, 5)
+  }
+
+  buildMesh(_renderer: GameRenderer, _type: MobType): void {
+    const mat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.8 })
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 1, 4, 8), mat)
+    body.userData.bob = true
+    const hpBar = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, 0.08, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0x44ff44 }),
+    )
+    hpBar.position.set(0, 1.2, 0)
+    hpBar.userData.hpBar = true
+    this.mesh.add(body)
+    this.mesh.add(hpBar)
+  }
+
+  override onDeath(): void {
+    this.mesh.traverse((obj: THREE.Object3D) => {
+      if (obj instanceof THREE.Mesh) {
+        obj.material = new THREE.MeshStandardMaterial({ color: 0x333333, transparent: true, opacity: 0.2 })
+      }
+    })
   }
 }
