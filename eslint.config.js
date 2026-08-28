@@ -20,7 +20,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx,js,mjs,cjs}'],
+    files: ['src/**/*.{ts,tsx,js,mjs,cjs}', 'tests/**/*.{ts,tsx,js,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.browser, ...globals.node },

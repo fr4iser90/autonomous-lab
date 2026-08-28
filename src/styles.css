@@ -221,6 +221,38 @@ button:active {
   color: var(--ash-ui-muted);
 }
 
+/* Combat Log */
+.combat-log {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(18, 16, 26, 0.85);
+  border-top: 1px solid var(--ash-ui-muted);
+  padding: 0.5rem 1rem;
+  z-index: 6;
+  pointer-events: auto;
+}
+
+.combat-log h3 {
+  font-family: "Cinzel", serif;
+  font-size: 0.85rem;
+  color: var(--ash-accent);
+  margin-bottom: 0.25rem;
+}
+
+.combat-log-entries {
+  max-height: 100px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  color: var(--ash-ui-text);
+  line-height: 1.4;
+}
+
+.combat-log-entries p {
+  margin-bottom: 0.15rem;
+}
+
 /* Overlays */
 .overlay {
   position: absolute;
