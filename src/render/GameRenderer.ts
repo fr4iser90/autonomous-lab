@@ -53,8 +53,13 @@ export class GameRenderer {
     this.renderer = new THREE.WebGLRenderer({ canvas: config.canvas, antialias: true })
     this.renderer.setSize(config.width, config.height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
+    // Shadow maps require depth textures — may be unavailable in headless CI
+    const gl = config.canvas.getContext('webgl2') as WebGL2RenderingContext | null
+    const hasDepth = gl ? !!gl.getExtension('WEBGL_depth_texture') : false
+    this.renderer.shadowMap.enabled = hasDepth
+    if (hasDepth) this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 0.8
 
