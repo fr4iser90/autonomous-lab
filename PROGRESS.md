@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 6 — bugfix + validation** — B-9 through B-13 fixed, B-7 + B-8 fixed, P5-1–P5-5 all shipped
+- Phase: **Phase 6 — bugfix + validation** — B-9 through B-13b fixed, B-7 + B-8 fixed, P5-1–P5-5 all shipped
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
@@ -46,6 +46,8 @@
 ## Log
 
 - **2026-08-29 VALIDATE (Phase 6 / Play — document only)**: SHA=`03d549e`. Playwright smoke test via `addInitScript` + single `page.evaluate()`. Title: PASS (4/4). Boot: PASS. HUD: PASS (floor=Floor 1, hp-text=20/20, stealth=Visible, scrap=0, keys=🔑 0). Panels: PASS (E=inventory, Q=shop, S=skills, ESC=pause — all open/close correctly). Attack (mouse): PASS (combat log fires, logBeforeLen=41). Boss UI: PASS (bar + warning exist, barActive=false expected). Mobs: 0 at start (expected). **2 new bugs found**: B-7 (settings-back always returns to title, breaking pause→settings→back flow), B-8 (stealth-label initially hidden but shown after first game loop frame). `VALIDATE: 03d549e PASS` (19/20 smoke checks — 1 test-selector bug corrected).
+
+- **2026-08-29 VALIDATE (Phase 6 / Pages — live at fr4iser90.github.io/autonomous-l/)**: SHA=`aff5f2c`. Playwright live test against deployed Pages. Title: PASS ("Ashen Delve"). Controls info: PASS (WASD, Mouse, Space/Click, E/O/T/ESC all listed). Boot: PASS (title hidden, game screen visible). Canvas: PASS (1280x720, Three.js r170). HUD: PASS (HP=20/20, Floor=Floor 1, Depth=0, Stealth=Visible, Scrap=0, Controls Hint="WASD Move | Space Attack | E Inventory | O Shop | T Skills | Esc Pause"). **1 new bug found**: B-14 (Pages stale — Automerge `sync-agent` skipped on squash-merge, so Pages deploy skipped; game content not updated since 19:43 despite merge at 19:56).
 
 - 2026-08-27: M1–M9 shipped (PR #31). Gate green locally.
 - 2026-08-27: M10–M12 shipped — Audio, Boss, Minimap, full integration.
