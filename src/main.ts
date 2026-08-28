@@ -37,6 +37,7 @@ import { getShopItemsForFloor, shopIdToItemId } from './data/shopItems'
 import { getItemById } from './data/items'
 import { Economy } from './systems/Economy'
 import { SkillTree, getSkillsForFloor, getSkillDefById } from './systems/SkillTree'
+import { LootDropManager } from './systems/LootDrop'
 import * as GL from './systems/GameLoop'
 
 // DOM refs
@@ -81,6 +82,7 @@ let economy: Economy | null = null
 let skillTree: SkillTree | null = null
 let chaseAI: ChaseAI | null = null
 let audio: AudioEngine | null = null
+let lootManager: LootDropManager | null = null
 
 // --- Screen Management ---
 function showScreen(screen: 'title' | 'game' | 'settings'): void {
@@ -404,6 +406,7 @@ function initThreeScene(seed: number): void {
     floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
   camera = new FollowCamera({ distance: 10, height: 7, FOV: 55, followLag: 0.08 })
+  lootManager = new LootDropManager(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new InputManager()
 
   const theme = getThemeForFloor(1)
@@ -437,6 +440,9 @@ function initThreeScene(seed: number): void {
   GL.setSkillTree(skillTree)
   GL.setInventory(inventory)
   GL.setDungeonData(dungeon)
+  GL.setLootSpawn((_mobType, x, z, item) => {
+    if (lootManager) lootManager.spawn(item, x, z)
+  })
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
 
@@ -455,6 +461,12 @@ function gameLoop(timestamp = 0): void {
   combatLogEntries = GL.getGameLog()
   mobs = GL.getMobs()
   updateScrapUI()
+
+  // Update loot drops
+  if (lootManager && frame) {
+    const time = renderer?.getElapsedTime() ?? 0
+    lootManager.update(0.016, time, playerX, playerZ)
+  }
 
   // P4-3: stealth HUD
   if (currentDungeon) { updateStealth(isOnStealthTile(currentDungeon, playerX, playerZ)); document.getElementById('stealth-label')!.style.display = '' }
@@ -483,5 +495,4 @@ export { showScreen, gameState, currentScreen }
 export { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
 export { playerHP, playerMaxHP, playerFloor }
 export { combatLogEntries, mobs }
-export { combatEngine, inventory, chaseAI, economy, skillTree }
-export { audio }
+export { combatEngine, inventory, chaseAI, economy, skillTree, audio, lootManager }
