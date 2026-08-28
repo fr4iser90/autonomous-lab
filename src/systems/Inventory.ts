@@ -28,27 +28,40 @@ export class Inventory {
     return true
   }
 
-  /** Equip a weapon item */
-  equip(item: ItemDef): boolean {
+  /** Equip an item — weapons add damage, armor adds HP or speed. Returns stat bonus applied. */
+  equip(item: ItemDef): number {
     const slot = this.slots.find(s => s.item.id === item.id)
-    if (!slot) return false
+    if (!slot || slot.equipped) return 0
     slot.equipped = true
-    return true
+    if (slot.item.type === 'weapon') return 0 // damage read separately via getEquippedDamage
+    if (slot.item.type === 'armor') return slot.item.value
+    return 0
   }
 
-  /** Use a potion from inventory */
-  usePotion(item: ItemDef): boolean {
-    const slot = this.slots.find(s => s.item.id === item.id)
-    if (!slot || slot.item.type !== 'potion') return false
-    // Remove from inventory after use
-    this.slots = this.slots.filter(s => s.item.id !== item.id)
-    return true
-  }
-
-  /** Get equipped weapon damage */
+  /** Get equipped weapon damage bonus */
   getEquippedDamage(): number {
     const weapon = this.slots.find(s => s.equipped && s.item.type === 'weapon')
-    return weapon ? weapon.item.value : 1 // bare hands = 1
+    return weapon ? weapon.item.value : 0
+  }
+
+  /** Get equipped armor value (damage reduction) */
+  getEquippedArmor(): number {
+    let total = 0
+    for (const slot of this.slots) {
+      if (slot.equipped && slot.item.type === 'armor') {
+        total += slot.item.value
+      }
+    }
+    return total
+  }
+
+  /** Use a potion from inventory — returns heal amount (0 if not a potion). */
+  usePotion(item: ItemDef): number {
+    const slot = this.slots.find(s => s.item.id === item.id)
+    if (!slot || slot.item.type !== 'potion') return 0
+    const heal = slot.item.value
+    this.slots = this.slots.filter(s => s.item.id !== item.id)
+    return heal
   }
 
   /** Get all slots */
