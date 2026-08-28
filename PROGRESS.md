@@ -108,3 +108,4 @@
 - 🔧 B-11 fix (Phase 6 validation): Resolved S key conflict — skills toggle moved from S to T (T for "Skill Tree"), S remains for backward movement. `main.ts` + `index.html`.
 - 🔧 B-12 fix (Phase 6 validation): Added Space bar as keyboard attack key — attack was mouse-click only, not documented. `input.ts`.
 - 🔧 B-13 fix (Phase 6 validation): Added `controls-hint` element to HUD showing full key mapping. `index.html` + `styles.css`.
+- ✅ Phase 6 validation (2026-08-29): Playwright smoke test against live Pages confirmed title screen shows "WASD|Arrow|click|attack|mouse|keyboard|controls|move" — controls text present. All 126 tests green, gate green. ESLint fix: `validate-*.mjs` added to eslint ignores (browser globals in validation scripts).
