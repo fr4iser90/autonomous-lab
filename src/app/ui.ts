@@ -11,6 +11,7 @@ import type { LootDropManager } from '../systems/LootDrop'
 import type { DungeonData } from '../systems/DungeonPCG'
 import type { FloorTheme } from '../data/floors'
 import type { TrapType } from '../data/traps'
+import type { ShrineType } from '../data/shrines'
 import type { ItemRarity, ItemDef } from '../data/items'
 import type { TutorialState } from '../systems/TutorialMode'
 import type { InputManager } from '../systems/input'
@@ -49,6 +50,7 @@ const deathScreen = document.getElementById('death-screen')!
 const pauseOverlay = document.getElementById('pause-overlay')!
 const combatLog = document.getElementById('combat-log')!
 const lootToast = document.getElementById('loot-toast')!
+const shrinePrompt = document.getElementById('shrine-prompt')!
 const shopPanel = document.getElementById('shop-panel')!
 const skillPanel = document.getElementById('skill-panel')!
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
@@ -389,6 +391,12 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
           } else {
             skillPanel.style.display = 'none'
           }
+        } else if (e.key === 'r' || e.key === 'R') {
+          // Shrine activation
+          e.preventDefault()
+          if (gameState === 'playing') {
+            GL.requestShrineActivate()
+          }
         }
       } else if (gameState === 'paused') {
         if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
@@ -479,6 +487,15 @@ export function startGame(seed: number): void {
   GL.setLootSpawn((_mobType: string, x: number, z: number, item: ItemDef) => {
     if (lootManager) lootManager.spawn(item, x, z)
   })
+  GL.setShrineProximityCallback((_shrineType: string) => {
+    shrinePrompt.style.display = 'block'
+    shrinePrompt.textContent = `✨ Shrine — Press [R]`
+  })
+  GL.setShrineActivatedCallback((msg: string) => {
+    addCombatLog(msg)
+    shrinePrompt.style.display = 'none'
+    if (audio) audio.hit()
+  })
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
 
@@ -542,6 +559,15 @@ export function startTutorialGame(seed: number): void {
   GL.setLootSpawn((_mobType: string, x: number, z: number, item: ItemDef) => {
     if (lootManager) lootManager.spawn(item, x, z)
   })
+  GL.setShrineProximityCallback((_shrineType: string) => {
+    shrinePrompt.style.display = 'block'
+    shrinePrompt.textContent = `✨ Shrine — Press [R]`
+  })
+  GL.setShrineActivatedCallback((msg: string) => {
+    addCombatLog(msg)
+    shrinePrompt.style.display = 'none'
+    if (audio) audio.hit()
+  })
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
   TutorialMode.startTutorial(tutorialState)
@@ -564,6 +590,7 @@ function buildTutorialDungeon(seed: number, theme: FloorTheme): DungeonData {
     floorNumber: 1,
     stealthTiles: new Set<string>(),
     trapPositions: new Map<string, TrapType>(),
+    shrinePositions: new Map<string, ShrineType>(),
   }
 }
 

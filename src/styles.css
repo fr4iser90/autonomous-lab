@@ -247,6 +247,21 @@ button:active {
   text-shadow: 0 0 6px rgba(255, 68, 68, 0.6);
 }
 
+.shrine-prompt {
+  font-family: "Cinzel", serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffdd44;
+  margin-top: 2px;
+  text-shadow: 0 0 8px rgba(255, 221, 68, 0.8);
+  animation: shrine-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes shrine-glow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
 .inventory-toggle, .shop-toggle {
   font-family: "EB Garamond", serif;
   font-size: 0.85rem;

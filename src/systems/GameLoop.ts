@@ -14,10 +14,11 @@ import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
 import { SkillTree } from './SkillTree'
-import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs } from './DungeonPCG'
+import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs, getShrineAt, deactivateShrine } from './DungeonPCG'
 import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
-import { poison, burn, freeze } from '../data/statusEffects'
+import { poison, burn, freeze, shield } from '../data/statusEffects'
+import { SHRINE_DEFS } from '../data/shrines'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -60,6 +61,16 @@ export function setDoorOpenedCallback(cb: (msg: string) => void): void {
 let _onFloorAdvanced: ((floor: number) => void) | null = null
 export function setFloorAdvancedCallback(cb: (floor: number) => void): void {
   _onFloorAdvanced = cb
+}
+
+// Shrine callbacks (set from main.ts)
+let _onShrineActivated: ((msg: string) => void) | null = null
+let _onShrineProximity: ((shrineType: string) => void) | null = null
+export function setShrineActivatedCallback(cb: (msg: string) => void): void {
+  _onShrineActivated = cb
+}
+export function setShrineProximityCallback(cb: (shrineType: string) => void): void {
+  _onShrineProximity = cb
 }
 
 // Game state (injected)
@@ -129,6 +140,62 @@ export function healPlayer(amount: number, currentMaxHP: number): number {
   if (amount <= 0) return _playerHP
   _playerHP = Math.min(currentMaxHP, _playerHP + amount)
   return _playerHP
+}
+
+// Shrine activation flag (set from ui.ts via requestShrineActivate)
+let _shrineActivatePending = false
+// Shrine buff tracking: +bonus damage for duration seconds
+let _buffTimer = 0
+let _buffBonusDmg = 0
+
+/** Request shrine activation from UI — called when player presses R */
+export function requestShrineActivate(): void {
+  _shrineActivatePending = true
+}
+
+/** Get the current shrine bonus damage from active buff */
+export function getShrineBuffBonus(): number {
+  return _buffBonusDmg
+}
+
+/** Activate a shrine at the player's current position. Returns message or null. */
+export function tryActivateShrine(): string | null {
+  if (!_shrineActivatePending || !_dungeon || !_player) return null
+  const shrineType = getShrineAt(_dungeon, _playerX, _playerZ)
+  if (!shrineType) return null
+
+  const def = SHRINE_DEFS[shrineType]
+  let message = `${def.emoji} ${def.label}: `
+
+  switch (shrineType) {
+    case 'heal': {
+      const healAmt = Math.floor(_playerMaxHP * 0.3)
+      _playerHP = Math.min(_playerMaxHP, _playerHP + healAmt)
+      message += `+${healAmt} HP!`
+      break
+    }
+    case 'buff': {
+      // Add damage buff for 30 seconds
+      _buffBonusDmg = 2
+      _buffTimer = 30
+      message += `+2 DMG for 30s!`
+      break
+    }
+    case 'shield': {
+      // Add shield status effect for 20 seconds (2 dmg reduction)
+      const shieldDef = shield(20, 2)
+      _player.statusEffects.push(shieldDef)
+      message += `+2 armor for 20s!`
+      break
+    }
+  }
+
+  // Deactivate the shrine
+  deactivateShrine(_dungeon, _playerX, _playerZ)
+
+  // Reset flags
+  _shrineActivatePending = false
+  return message
 }
 
 export function updateGameVars(
@@ -225,6 +292,23 @@ export function gameLoop(timestamp = 0): number {
       }
     }
 
+    // P4-2: Shrine proximity detection — notify UI when player stands on a shrine
+    if (_dungeon) {
+      const shrineType = getShrineAt(_dungeon, _playerX, _playerZ)
+      if (shrineType && _onShrineProximity) {
+        _onShrineProximity(shrineType)
+      }
+    }
+
+    // P4-2: Shrine activation — when player presses R on a shrine
+    if (_dungeon && _shrineActivatePending) {
+      const msg = tryActivateShrine()
+      if (msg) {
+        _combatLogEntries.push(msg)
+        _onShrineActivated?.(msg)
+      }
+    }
+
     // Footstep sounds
     if ((inp.forward !== 0 || inp.right !== 0) && _audio) {
       _stepCooldown -= dt
@@ -246,7 +330,7 @@ export function gameLoop(timestamp = 0): number {
         if (dist <= 2.0 && mob.state.alive) {
           const effects = _skillTree?.getActiveEffects() ?? { damageBonus: 0, hpBonus: 0, speedBonus: 0, critChanceBonus: 0 }
           const weaponDmg = _inventory?.getEquippedDamage() ?? 0
-          const baseDmg = 2 + Math.floor(Math.random() * 3) + effects.damageBonus + weaponDmg
+          const baseDmg = 2 + Math.floor(Math.random() * 3) + effects.damageBonus + weaponDmg + _buffBonusDmg
           const isCrit = Math.random() < (0.15 + effects.critChanceBonus)
           const dmg = isCrit ? baseDmg * 2 : baseDmg
           mob.takeDamage(dmg)
@@ -462,6 +546,14 @@ export function gameLoop(timestamp = 0): number {
         _player.statusEffects.splice(i, 1)
         _combatLogEntries.push(`${_playerHP > 0 ? '✅' : '💀'} ${eff.label} effect ended`)
       }
+    }
+  }
+
+  // P4-2: Tick shrine buff timer
+  if (_buffTimer > 0) {
+    _buffTimer -= dt
+    if (_buffTimer <= 0) {
+      _buffBonusDmg = 0
     }
   }
 
