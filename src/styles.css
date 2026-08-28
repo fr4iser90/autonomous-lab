@@ -550,3 +550,72 @@ button:active {
 .title-text {
   animation: flicker 3s ease-in-out infinite;
 }
+
+/* P6: Boss phase alerts in combat log */
+.phase-alert {
+  color: var(--ash-accent) !important;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(255, 153, 68, 0.4);
+}
+
+/* P6: Boss warning flash overlay */
+#boss-warning {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Cinzel", serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ff4444;
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 7;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+#boss-warning.flash {
+  opacity: 1;
+  animation: bossWarningFlash 0.5s ease-out forwards;
+}
+
+@keyframes bossWarningFlash {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* P6: Boss health bar in HUD */
+.boss-hp-bar {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.boss-hp-bar.active {
+  display: flex;
+}
+
+.boss-hp-track {
+  width: 120px;
+  height: 8px;
+  background: var(--ash-ui-bg);
+  border: 1px solid var(--ash-blood);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.boss-hp-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff0000, #ff4400);
+  transition: width 0.3s;
+}
+
+.boss-hp-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ash-blood);
+}
