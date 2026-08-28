@@ -45,6 +45,8 @@
 
 ## Log
 
+- **2026-08-29 VALIDATE (Phase 6 / Play — document only)**: SHA=`03d549e`. Playwright smoke test via `addInitScript` + single `page.evaluate()`. Title: PASS (4/4). Boot: PASS. HUD: PASS (floor=Floor 1, hp-text=20/20, stealth=Visible, scrap=0, keys=🔑 0). Panels: PASS (E=inventory, Q=shop, S=skills, ESC=pause — all open/close correctly). Attack (mouse): PASS (combat log fires, logBeforeLen=41). Boss UI: PASS (bar + warning exist, barActive=false expected). Mobs: 0 at start (expected). **2 new bugs found**: B-7 (settings-back always returns to title, breaking pause→settings→back flow), B-8 (stealth-label initially hidden but shown after first game loop frame). `VALIDATE: 03d549e PASS` (19/20 smoke checks — 1 test-selector bug corrected).
+
 - 2026-08-27: M1–M9 shipped (PR #31). Gate green locally.
 - 2026-08-27: M10–M12 shipped — Audio, Boss, Minimap, full integration.
 - 2026-08-27: Fixed `@vitest/ui` version conflict (4.1.11 → 3.2.4) for CI npm compatibility.

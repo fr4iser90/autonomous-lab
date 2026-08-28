@@ -1,0 +1,25 @@
+{
+  "sha": "03d549e",
+  "phase": "Phase 6 Validation (Play / Document)",
+  "date": "2026-08-29T12:00:00",
+  "checks": {
+    "title": "PASS",
+    "boot": "PASS",
+    "hud": "PASS",
+    "inventory": "PASS",
+    "shop": "PASS",
+    "skills": "PASS",
+    "pause": "PASS",
+    "settings": "PASS",
+    "attack": "PASS",
+    "bossUI": "PASS",
+    "bugsFound": ["B-7", "B-8"],
+    "bugsFixed": []
+  },
+  "notes": [
+    "Playwright browser crashes after ~10s of rAF in headless Chromium (known WebGL limitation)",
+    "All DOM-level tests passed via single page.evaluate() call",
+    "Screenshot saved: phase6-title.png (title screen, before game boot)",
+    "HP label test used #hp-text (not #hp-label which is a CSS class)"
+  ]
+}

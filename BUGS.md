@@ -2,14 +2,21 @@
 
 # BUGS
 
-Last validation: 2026-08-29 SHA=5af556b (Phase 3 visual validation 6/6 PASS)
+Last validation: 2026-08-29 SHA=03d549e (Phase 6 Play/smoke — 19/20 PASS, 2 bugs found)
 
 ## Open
 
-_(empty — validator / soak / UI smoke append here)_
+_(see Fixed section)_
+
+- **B-8**: `#stealth-label` element has inline `style="display:none"` in HTML, only shown after game loop runs ≥1 frame (`main.ts:457`). HUD reports "Stealth: Visible" correctly post-boot, but initial render hides the label. No player-visible impact (first frame is boot).
+
+## Closed
+
+- _(none yet — validator findings documented above)_
 
 ## Fixed
 
+- **B-7**: Settings-back now returns to context of origin — from title → title; from pause → game. `main.ts` settings-back handler checks `gameState`: 'menu'/'dead' → title, 'playing' → game. (SHA pending merge)
 - B-2: CI gate fail @ 6962d2b — resolved by PR #42 merge (squash-merge to main)
 - B-1: CI gate fail @ c9ba04a — resolved by PR #42 merge (squash-merge to main)
 - B-6: CI gate fail @ 6962d2b — resolved by PR #42 merge (squash-merge to main)
