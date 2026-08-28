@@ -18,8 +18,10 @@ permissions:
   id-token: write
 
 concurrency:
+  # Do not cancel: a noop workflow_run (no land) used to cancel an in-flight
+  # push/workflow_dispatch deploy and leave Pages stale.
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   decide:
@@ -47,6 +49,10 @@ jobs:
               core.setOutput('should_deploy', 'false')
               return
             }
+            // Automerge jobs: squash | merge-to-main | sync-agent.
+            // sync-agent ONLY runs when something actually landed on main
+            // (needs.squash.merged || needs.merge-to-main.landed). Deploy then.
+            // Old bug: looked for job name "merge" (never existed) → always skip.
             const jobs = await github.paginate(
               github.rest.actions.listJobsForWorkflowRun,
               {
@@ -55,19 +61,16 @@ jobs:
                 run_id: wr.id,
               },
             )
-            const mergeJob = jobs.find((j) => j.name === 'merge')
-            if (!mergeJob || mergeJob.conclusion === 'skipped') {
-              core.info('Automerge merge job skipped — skip Pages')
-              core.setOutput('should_deploy', 'false')
+            const sync = jobs.find((j) => j.name === 'sync-agent')
+            if (sync && sync.conclusion === 'success') {
+              core.info('Automerge sync-agent succeeded — deploy Pages from main')
+              core.setOutput('should_deploy', 'true')
               return
             }
-            if (mergeJob.conclusion !== 'success') {
-              core.info(`merge job=${mergeJob.conclusion} — skip Pages`)
-              core.setOutput('should_deploy', 'false')
-              return
-            }
-            core.info('Automerge merge job succeeded — deploy Pages from main')
-            core.setOutput('should_deploy', 'true')
+            core.info(
+              `Automerge ran but sync-agent=${sync?.conclusion ?? 'absent/skipped'} — skip Pages (no land)`,
+            )
+            core.setOutput('should_deploy', 'false')
 
   build:
     needs: decide
