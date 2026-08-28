@@ -4,11 +4,11 @@
 
 ## NOW
 
-- Phase: **Phase 5 — item functionality** — P5-1+P5-2 shipped, P5-3 PR#64
+- Phase: **Phase 5 — item functionality** — P5-1+P5-2 shipped, P5-3 PR#64, P5-4 sealed doors
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-4 merged ✅ (PR#60)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **104 tests green, build green, ~568 KB bundle**
+- Gate: **117 tests green, build green, ~576 KB bundle**
 - BUGS: all cleared
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
@@ -40,6 +40,7 @@
 | P5-1 | Item rarity on all 16 | ✅ SHIPPED PR#61 | `items.ts` (Rarity type on all 16 defs) |
 | P5-2 | LootDrop system | ✅ SHIPPED PR#62 | `LootDrop.ts` (weighted drops, 3D collectibles, auto-pickup) |
 | P5-3 | Rarity UI + loot toast | 🔄 PR#64 WIP | `main.ts` (rarity class/label helpers, showLootToast, updateInventoryUI, updateShopUI), `styles.css` (rarity colors), `index.html` (loot-toast HUD) |
+| P5-4 | Sealed doors + key consumption | ✅ IN-PR PR#65 | `Inventory.ts` (getKeyCount, addKeys, consumeKey), `DungeonPCG.ts` (getGridPosition, isSealedDoor, openDoorAt), `GameLoop.ts` (door collision block), `main.ts` (key count HUD, door toast), `styles.css` (key HUD + door toast), `index.html` (key-count + door-toast elements), `tests/sealed-doors.test.ts` (8 tests), `Inventory.test.ts` (5 key tests) |
 
 ## Log
 
@@ -89,3 +90,4 @@
 - ✅ P5-1: Item rarity on all 16 items shipped (PR#61)
 - ✅ P5-2: LootDrop system shipped (weighted drops, 3D collectibles, auto-pickup, PR#62)
 - 🔄 P5-3: Rarity UI + loot toast feedback (PR#64) — color-coded slots, toast with rarity variants, auto-pickup feedback
+- 🔄 P5-4: Sealed doors — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.

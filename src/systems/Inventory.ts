@@ -18,6 +18,24 @@ export class Inventory {
   private slots: InventorySlot[] = []
   private readonly maxSlots = 6
   private readonly chests: Map<string, Chest> = new Map()
+  private _keyCount = 0
+
+  /** Get current key count */
+  getKeyCount(): number {
+    return this._keyCount
+  }
+
+  /** Add dungeon keys (used when buying from shop or looting) */
+  addKeys(n: number): void {
+    this._keyCount += n
+  }
+
+  /** Try to consume one dungeon key. Returns true if key was consumed. */
+  consumeKey(): boolean {
+    if (this._keyCount <= 0) return false
+    this._keyCount--
+    return true
+  }
 
   /** Add item to inventory */
   addItem(item: ItemDef): boolean {

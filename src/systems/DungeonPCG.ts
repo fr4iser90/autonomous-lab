@@ -373,6 +373,30 @@ export function getTrapAt(dungeon: DungeonData, worldX: number, worldZ: number):
   return dungeon.trapPositions.get(`${gridX},${gridY}`) ?? null
 }
 
+/** Convert world position to dungeon grid coordinates */
+export function getGridPosition(dungeon: DungeonData, worldX: number, worldZ: number): [number, number] {
+  return [Math.floor(worldX + dungeon.width / 2), Math.floor(worldZ + dungeon.height / 2)]
+}
+
+/** P5-4: Check if a dungeon tile at world position is a sealed door */
+export function isSealedDoor(dungeon: DungeonData, worldX: number, worldZ: number): boolean {
+  const [gx, gy] = getGridPosition(dungeon, worldX, worldZ)
+  const cell = dungeon.cells[gy * dungeon.width + gx]
+  return cell !== undefined && cell.type === TileType.DOOR
+}
+
+/** P5-4: Open a sealed door by changing its tile type to FLOOR */
+export function openDoorAt(dungeon: DungeonData, worldX: number, worldZ: number): boolean {
+  const [gx, gy] = getGridPosition(dungeon, worldX, worldZ)
+  const idx = gy * dungeon.width + gx
+  const cell = dungeon.cells[idx]
+  if (cell && cell.type === TileType.DOOR) {
+    cell.type = TileType.FLOOR
+    return true
+  }
+  return false
+}
+
 /** Render trap visuals as 3D objects on the dungeon floor */
 export function renderTrapVisuals(renderer: GameRenderer, dungeon: DungeonData): void {
   const trapGroup = new THREE.Group()
