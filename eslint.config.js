@@ -14,6 +14,8 @@ export default tseslint.config(
       '**/.output/**',
       '*.config.js',
       '*.config.cjs',
+      '*.config.mjs',
+      'validate-*.mjs',
       '.dependency-cruiser.cjs',
     ],
   },
