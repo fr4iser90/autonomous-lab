@@ -34,3 +34,21 @@ export function updateStealth(inStealth: boolean): void {
     label.style.color = inStealth ? '#66aaff' : '#e8dcc8'
   }
 }
+
+/** P4-4: Update trap hit indicator */
+export function updateTrapHit(active: boolean, trapType: string | null): void {
+  const el = document.getElementById('trap-hit-label')
+  if (!el) return
+  if (active && trapType) {
+    const colors: Record<string, string> = {
+      spike: '#ff4444',
+      poison: '#44ff44',
+      fire: '#ff8800',
+    }
+    el.textContent = `⚠ ${trapType.toUpperCase()} TRAP!`
+    el.style.color = colors[trapType] || '#ff4444'
+    el.style.opacity = '1'
+  } else {
+    el.style.opacity = '0'
+  }
+}

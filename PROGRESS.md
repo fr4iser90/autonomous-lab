@@ -1,14 +1,14 @@
-<!-- PROGRESS: Ashen Delve — Phase 4. P4-2 skill tree and P4-3 stealth zones shipped. -->
+<!-- PROGRESS: Ashen Delve — Phase 4. P4-1 economy, P4-2 skill tree, P4-3 stealth, P4-4 traps. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 4 — economy, skill tree, stealth** — P4-2 skill tree shipped, P4-3 stealth zones shipped
+- Phase: **Phase 4 — economy, skill tree, stealth, traps** — P4-1→P4-4 shipped
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2` → PR open
+- Branch: `agent/dungeon-crawl-20260829-v2` → PR open (P4-4)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **71 tests green, build green, ~562 KB bundle**
+- Gate: **83 tests green, build green, ~565 KB bundle**
 - BUGS: all cleared
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
@@ -36,6 +36,7 @@
 | P4-1 | Economy (scrap + shop) | ✅ SHIPPED PR#52 | `Economy.ts`, `shopItems.ts`, `tests/economy.test.ts` |
 | P4-2 | Skill tree | ✅ SHIPPED PR#53 | `SkillTree.ts`, `tests/skill-tree.test.ts` |
 | P4-3 | Stealth zones | ✅ SHIPPED PR#55 | `DungeonPCG.ts`, `ChaseAI.ts`, `GameLoop.ts`, `uiHelpers.ts`, `tests/stealth.test.ts` |
+| P4-4 | Floor traps | 🔄 PR#60 WIP | `traps.ts`, `DungeonPCG.ts` (trap gen/render), `GameLoop.ts` (trap damage), `uiHelpers.ts`, `index.html`, `tests/traps.test.ts` |
 
 ## Log
 
@@ -58,6 +59,7 @@
 - 2026-08-29: PR #53 merged (squash) — Phase 4-2: Skill tree (8 skills, floor-gated, 19 tests).
 - 2026-08-29: PR #54 merged (squash) — VALIDATE Playwright: 6/6 headless PASS, headless WebGL fixes.
 - 2026-08-29: PR #55 merged (squash) — Phase 4-3: Stealth zones (stealth tiles reduce aggro range by 65%, darker floor tiles, HUD indicator, 10 tests).
+- 2026-08-29: P4-4: Floor traps — 3 trap types (spike/poison/fire), dungeon generation, trap damage in game loop, 3D visuals, HUD indicator, 12 tests. PR#60.
 
 ## CAP Checklist
 
@@ -77,3 +79,5 @@
 - ✅ P4-1: Economy shipped (scrap + shop)
 - ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
 - ✅ P4-3: Stealth zones shipped (stealth tiles reduce aggro by 65%, darker floors, HUD indicator)
+- 🔄 P4-4: Floor traps (spike/poison/fire — 3 types, 12 tests, PR#60)
+- Phase 5: Determine next feature slice from design.md / IDEA — traps proven, stealth proven, economy proven
