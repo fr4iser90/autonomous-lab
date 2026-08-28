@@ -1,4 +1,4 @@
-<!-- PROGRESS: Ashen Delve — Phase 4. P4-1 economy, P4-2 skill tree, P4-3 stealth, P4-4 traps. -->
+<!-- PROGRESS: Ashen Delve — Phase 5 complete. P5-1 rarity, P5-2 lootDrop, P5-3 rarity UI, P5-4 sealed doors, P5-5 stairs descent. -->
 
 # Progress
 
@@ -41,7 +41,7 @@
 | P5-2 | LootDrop system | ✅ SHIPPED PR#62 | `LootDrop.ts` (weighted drops, 3D collectibles, auto-pickup) |
 | P5-3 | Rarity UI + loot toast | ✅ SHIPPED PR#64 | `main.ts` (rarity class/label helpers, showLootToast, updateInventoryUI, updateShopUI), `styles.css` (rarity colors), `index.html` (loot-toast HUD) |
 | P5-4 | Sealed doors + key consumption | ✅ SHIPPED PR#65 | `Inventory.ts` (getKeyCount, addKeys, consumeKey), `DungeonPCG.ts` (getGridPosition, isSealedDoor, openDoorAt), `GameLoop.ts` (door collision block), `main.ts` (key count HUD, door toast), `styles.css` (key HUD + door toast), `index.html` (key-count + door-toast elements), `tests/sealed-doors.test.ts` (8 tests), `Inventory.test.ts` (5 key tests) |
-| P5-5 | Stairs descent + floor progression | ✅ SHIPPED PR#66 | `Transition.ts` (spawnMobs/spawnBoss/advanceToFloor/showFloorToast), `main.ts` (wired callback, 481 lines), `GameRenderer.ts` (clearScene), `DungeonPCG.ts` (isOnStairs), `tests/floor-advance.test.ts` (9 tests) |
+| P5-5 | Stairs descent + floor progression | ✅ SHIPPED PR#66 (validated PR#67) | `Transition.ts` (spawnMobs/spawnBoss/advanceToFloor/showFloorToast), `main.ts` (wired callback, 481 lines), `GameRenderer.ts` (clearScene), `DungeonPCG.ts` (isOnStairs), `tests/floor-advance.test.ts` (9 tests) |
 
 ## Log
 
@@ -69,6 +69,7 @@
 - 2026-08-29: P5-2: LootDrop system — weighted mob drops, 3D floating collectibles, auto-pickup via manager, `LootDropManager.update()` returns collected items. PR#62.
 - 2026-08-29: P5-3: Rarity UI polish — color-coded inventory slots (green/blue/gold for common/uncommon/rare), loot collection toast with fade-out, shop rarity labels, auto-pickup toast in game loop. PR#64.
 - 2026-08-29: P5-5: Stairs descent — floor progression on stairs tiles. New Transition.ts module (spawnMobs/spawnBoss/advanceToFloor/showFloorToast), GameRenderer.clearScene(), DungeonPCG.isOnStairs(), stairs cooldown in GameLoop. 9 new tests. PR#66.
+- 2026-08-29: P5-5 validate: Found 2 bugs in Transition.ts — `updateGameVars` passed old `playerFloor` instead of new `floor`, and `addCombatLog` called twice per descent. Fixed: pass `floor`, remove duplicate log, clean unused params. Gate green (126/126, 577 KB). PR#67.
 
 ## CAP Checklist
 
@@ -83,7 +84,7 @@
 - `tsconfig.json`: removed `"node"` from `types` — no Node runtime needed
 - `package.json`: `@types/node` installed for typecheck compatibility
 
-## Next (Phase 5)
+## Next (Phase 6)
 
 - ✅ P4-1: Economy shipped (scrap + shop)
 - ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
@@ -94,3 +95,4 @@
 - ✅ P5-3: Rarity UI + loot toast feedback shipped (PR#64) — color-coded slots, toast with rarity variants, auto-pickup feedback
 - ✅ P5-4: Sealed doors shipped — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.
 - ✅ P5-5: Stairs descent shipped — floor progression. DungeonPCG: isOnStairs. GameLoop: stairs detection + cooldown. Transition.ts: spawnMobs/spawnBoss/advanceToFloor/showFloorToast. main.ts: wired callback (481 lines). GameRenderer.ts: clearScene(). 9 new tests. PR#66.
+- 🔧 P5-5 validate: Fixed `updateGameVars` floor param + duplicate combat log. PR#67 (gate green, 126/126 tests).
