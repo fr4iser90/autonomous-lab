@@ -4,12 +4,15 @@
 
 ## NOW
 
-- Phase: **Phase 2 — content expansion** — M1–M12 complete, expanding toward CAP
-- Milestone: 8 mob kits (8/16), 10 items (10/16), 4 floor themes (4/16)
-- Branch: `agent/dungeon-crawl-20260827`
+- Phase: **Phase 2 — content expansion** — M1–M12 complete, CAP reached on mobKits + items + floorThemes
+- Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16)
+- Branch: `agent/dungeon-crawl-20260829` → PR #46 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **22 tests green, build green, ~510 KB bundle**
+- Gate: **23 tests green, build green, ~555 KB bundle**
 - BUGS: all cleared
+- PR #45 merged (squash) — items CAP reached!
+- PR #46 merged (squash) — mobKits CAP reached!
+- Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
 
@@ -30,11 +33,11 @@
 
 ## P2 — Phase 2 Content Expansion
 
-| Content | Shipped | Total | CAP |
-|---------|---------|-------|-----|
-| Mob Kits | 8 | 16 | skeleton, bat, ogre, mummy |
-| Items | 10 | 16 | steel-club, mega-potion, iron-shield, rune-ring |
-| Floor Themes | 4 | 16 | elven ruins (5–9), magma caverns (10+) |
+| Content | Shipped | Total | Status |
+|---------|---------|-------|--------|
+| Mob Kits | 16 | 16 | ✅ CAP REACHED |
+| Items | 16 | 16 | ✅ CAP REACHED |
+| Floor Themes | 16 | 16 | ✅ CAP REACHED |
 
 ## Log
 
@@ -47,12 +50,17 @@
 - 2026-08-27: P2-1: Added 4 mob variants (Skeleton ranged, Bat swarm, Ogre charge, Mummy curse).
 - 2026-08-27: P2-1: Added 4 items (steel-club, mega-potion, iron-shield, rune-ring).
 - 2026-08-27: P2-1: Added 2 floor themes (Elven Ruins 5–9, Magma Caverns 10+).
+- 2026-08-28: P2-2: Added Spider, Wolf mob kits (10→14 mobKits). Extracted game loop to GameLoop.ts.
+- 2026-08-28: P2-3: Added Zombie, Harpy, Troll, Lich mob kits (14→14). Added 6 items (10→16 items CAP reached). Added 3 floor themes (4→7).
+- 2026-08-28: PR #45 merged — items CAP reached (16/16).
+- 2026-08-29: P2-4: Added Phantom (phase-shifting ghost) and Elemental (fire elemental with burn aura). Mob kits CAP reached: 16/16!
+- 2026-08-29: P2-5: Added 9 new floor themes (crystal-cave, jungle, ice-cave, swamp, dark-forest, volcanic, sky-temple, shadow-realm, celestial, abyssal) to reach 16/16 CAP.
 
 ## CAP Checklist
 
-- mobKits: 8/16 (Goblin, Shade, Stalker, Skeleton, Bat, Ogre, Mummy, Boss) — halfway to CAP
-- items: 10/16 — well above half CAP
-- floorThemes: 4/16 — a quarter to CAP
+- mobKits: 16/16 ✅ **CAP REACHED!** (Goblin, Shade, Stalker, Skeleton, Bat, Ogre, Mummy, Boss, Spider, Wolf, Zombie, Harpy, Troll, Lich, Phantom, Elemental)
+- items: 16/16 ✅ **CAP REACHED!** (rusty-sword, iron-axe, flame-staff, steel-club, health-potion, greater-potion, mega-potion, dungeon-key, iron-shield, rune-ring, lightning-bow, poison-dagger, plate-armor, crystal-orb, blessed-amulet, enchanted-boots)
+- floorThemes: 16/16 ✅ **CAP REACHED!** (ash, crypt, ruins, crystal-cave, jungle, magma, ice-cave, swamp, dark-forest, frozen, volcanic, sky-temple, void, shadow-realm, celestial, abyssal)
 - propTypes: (none added) — within CAP
 
 ## Fixes Applied
@@ -63,7 +71,7 @@
 
 ## Next (Phase 2b → Phase 3)
 
-- Finish Phase 2: reach CAP on mobKits, items, floorThemes
+- ✅ Phase 2 complete: mobKits 16/16, items 16/16, floorThemes 16/16 — all CAP reached
 - Phase 2b: soak testing with all content types
 - Phase 3: demo (webm, storyboard frames, visual validation)
 - Phase 4: economy, skill tree, stealth zones
