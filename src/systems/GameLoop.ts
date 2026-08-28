@@ -191,6 +191,17 @@ export function gameLoop(timestamp = 0): number {
         ;(mob as any).webAttack(dt, _playerX, _playerZ)
       } else if (type === 'wolf' && 'chargeAI' in mob) {
         ;(mob as any).chargeAI(dt, _playerX, _playerZ)
+      } else if (type === 'zombie' && 'regenerate' in mob) {
+        ;(mob as any).regenerate(dt)
+      } else if (type === 'harpy' && 'swoopAttack' in mob) {
+        ;(mob as any).swoopAttack(dt, _playerX, _playerZ)
+      } else if (type === 'troll' && ('groundSlam' in mob || 'regenerate' in mob)) {
+        if ('groundSlam' in mob) (mob as any).groundSlam(dt, _playerX, _playerZ)
+        if ('regenerate' in mob) (mob as any).regenerate(dt)
+      } else if (type === 'lich' && ('summonMinion' in mob || 'updateCurseAura' in mob || 'castSpell' in mob)) {
+        if ('summonMinion' in mob) (mob as any).summonMinion()
+        if ('updateCurseAura' in mob) (mob as any).updateCurseAura(dt, _playerX, _playerZ)
+        if ('castSpell' in mob) (mob as any).castSpell(dt)
       }
 
       // Mob growl when chasing

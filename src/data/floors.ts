@@ -62,6 +62,42 @@ export const FLOOR_THEMES: FloorTheme[] = [
     },
     propTypes: ['torch', 'lava-pool', 'crystal'],
   },
+  {
+    id: 'swamp',
+    name: 'Murky Swamp',
+    floorColors: {
+      floor: '#1a2515',
+      wall: '#101a0c',
+      wallHighlight: '#2a3520',
+      fog: '#0e1508',
+      bg: '#0e1508',
+    },
+    propTypes: ['torch', 'reed', 'mushroom'],
+  },
+  {
+    id: 'frozen',
+    name: 'Frozen Crypt',
+    floorColors: {
+      floor: '#1a2530',
+      wall: '#101a25',
+      wallHighlight: '#2a3a4a',
+      fog: '#0a0e15',
+      bg: '#0a0e15',
+    },
+    propTypes: ['torch', 'icicle', 'frozen-pool'],
+  },
+  {
+    id: 'void',
+    name: 'Void Nexus',
+    floorColors: {
+      floor: '#15101a',
+      wall: '#0a0810',
+      wallHighlight: '#2a2035',
+      fog: '#06040a',
+      bg: '#06040a',
+    },
+    propTypes: ['torch', 'rift', 'floating-shard'],
+  },
 ]
 
 export function getThemeById(id: string): FloorTheme | undefined {
@@ -72,5 +108,8 @@ export function getThemeForFloor(floor: number): FloorTheme {
   if (floor <= 3) return FLOOR_THEMES[0] // ash
   if (floor <= 6) return FLOOR_THEMES[1] // crypt
   if (floor <= 9) return FLOOR_THEMES[2] // ruins
-  return FLOOR_THEMES[3] // magma
+  if (floor <= 12) return FLOOR_THEMES[3] // magma
+  if (floor <= 15) return FLOOR_THEMES[4] // swamp
+  if (floor <= 18) return FLOOR_THEMES[5] // frozen
+  return FLOOR_THEMES[6] // void
 }
