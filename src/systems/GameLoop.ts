@@ -14,7 +14,7 @@ import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
 import { SkillTree } from './SkillTree'
-import { isOnStealthTile, getTrapAt } from './DungeonPCG'
+import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt } from './DungeonPCG'
 import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
 
@@ -43,10 +43,16 @@ let _chaseAI: ChaseAI | null = null
 let _audio: AudioEngine | null = null
 let _skillTree: SkillTree | null = null
 let _dungeon: DungeonData | null = null
-let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => number } | null = null
+let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => number; getKeyCount: () => number; consumeKey: () => boolean } | null = null
 
 // Loot drop callback (set from main.ts)
 let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void) | null = null
+
+// Door opened callback (set from main.ts)
+let _onDoorOpened: ((msg: string) => void) | null = null
+export function setDoorOpenedCallback(cb: (msg: string) => void): void {
+  _onDoorOpened = cb
+}
 
 // Game state (injected)
 let _currentScreen: 'title' | 'game' | 'settings' = 'title'
@@ -101,7 +107,7 @@ export function setSkillTree(st: SkillTree | null): void {
   _skillTree = st
 }
 
-export function setInventory(inv: { getEquippedDamage: () => number; getEquippedArmor: () => number } | null): void {
+export function setInventory(inv: { getEquippedDamage: () => number; getEquippedArmor: () => number; getKeyCount: () => number; consumeKey: () => boolean } | null): void {
   _inventory = inv
 }
 
@@ -156,9 +162,26 @@ export function gameLoop(timestamp = 0): number {
     const moveX = (Math.sin(_playerYaw) * inp.forward + Math.cos(_playerYaw) * inp.right) * speed * dt
     const moveZ = (Math.cos(_playerYaw) * inp.forward - Math.sin(_playerYaw) * inp.right) * speed * dt
 
-    _playerX += moveX
-    _playerZ += moveZ
-    _player.setPosition(_playerX, 0, _playerZ)
+    // P5-4: Sealed door collision — block movement on sealed doors unless key is consumed
+    let allowMove = true
+    if (_dungeon && (moveX !== 0 || moveZ !== 0)) {
+      const tentX = _playerX + moveX
+      const tentZ = _playerZ + moveZ
+      if (isSealedDoor(_dungeon, tentX, tentZ)) {
+        if (_inventory?.consumeKey()) {
+          openDoorAt(_dungeon, tentX, tentZ)
+          _onDoorOpened?.('🔑 Door opened!')
+          // allowMove stays true — key consumed, door opened
+        } else {
+          allowMove = false // no key — blocked
+        }
+      }
+    }
+    if (allowMove) {
+      _playerX += moveX
+      _playerZ += moveZ
+      _player.setPosition(_playerX, 0, _playerZ)
+    }
 
     // P4-4: Trap detection — deal damage when player steps on a trap
     if ((inp.forward !== 0 || inp.right !== 0) && _dungeon) {

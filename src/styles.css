@@ -202,6 +202,34 @@ button:active {
   color: var(--ash-accent);
 }
 
+.key-count-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  color: #6688cc;
+}
+
+.door-toast {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  color: #ffcc44;
+  background: var(--ash-ui-bg);
+  border: 1px solid var(--ash-accent);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.door-toast.visible {
+  opacity: 1;
+}
+
 /* Inventory */
 .inventory {
   position: absolute;

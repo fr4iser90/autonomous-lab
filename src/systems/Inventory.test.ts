@@ -169,3 +169,41 @@ describe('shop → inventory flow', () => {
     expect(inv.getEquippedDamage()).toBe(3)
   })
 })
+
+// --- P5-4: Key count ---
+
+describe('key count (P5-4)', () => {
+  it('starts at 0', () => {
+    expect(new Inventory().getKeyCount()).toBe(0)
+  })
+
+  it('increments with addKeys', () => {
+    const inv = new Inventory()
+    inv.addKeys(1)
+    expect(inv.getKeyCount()).toBe(1)
+    inv.addKeys(3)
+    expect(inv.getKeyCount()).toBe(4)
+  })
+
+  it('consumeKey returns true and decrements when key available', () => {
+    const inv = new Inventory()
+    inv.addKeys(2)
+    expect(inv.consumeKey()).toBe(true)
+    expect(inv.getKeyCount()).toBe(1)
+    expect(inv.consumeKey()).toBe(true)
+    expect(inv.getKeyCount()).toBe(0)
+  })
+
+  it('consumeKey returns false and does not decrement when no keys', () => {
+    const inv = new Inventory()
+    expect(inv.consumeKey()).toBe(false)
+    expect(inv.getKeyCount()).toBe(0)
+  })
+
+  it('consumeKey does not go below 0', () => {
+    const inv = new Inventory()
+    inv.consumeKey()
+    inv.consumeKey()
+    expect(inv.getKeyCount()).toBe(0)
+  })
+})

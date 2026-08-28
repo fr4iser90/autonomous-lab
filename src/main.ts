@@ -208,8 +208,8 @@ function initButtonHandlers(): void {
   const shopToggle = document.getElementById('shop-toggle')
   const skillToggle = document.getElementById('skill-toggle')
 
-  if (btnNew) btnNew.addEventListener('click', startNewGame)
-  if (btnContinue) btnContinue.addEventListener('click', startContinueGame)
+  if (btnNew) btnNew.addEventListener('click', () => { dungeonSeed = Date.now() % 100000; startGame(dungeonSeed) })
+  if (btnContinue) btnContinue.addEventListener('click', () => startGame(dungeonSeed || 12345))
   if (btnSettings) btnSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
   if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen('title') })
   if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = 20; playerMaxHP = 20; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); if (skillTree) skillTree.reset(); GL.setBaseHP(20); updateScrapUI() })
@@ -262,6 +262,16 @@ function showLootToast(item: import('./data/items').ItemDef): void {
   _lootToastTimer = setTimeout(() => { lootToast.className = '' }, 1500)
 }
 
+let _doorToastTimer: ReturnType<typeof setTimeout> | undefined = undefined
+function showDoorToast(msg: string): void {
+  if (_doorToastTimer) clearTimeout(_doorToastTimer)
+  const el = document.getElementById('door-toast')
+  if (!el) return
+  el.textContent = msg
+  el.className = 'door-toast visible'
+  _doorToastTimer = setTimeout(() => { el.className = 'door-toast' }, 1200)
+}
+
 function updateInventoryUI(): void {
   if (!inventory) return
   const slotEls = inventoryPanel.querySelectorAll('.slot')
@@ -298,6 +308,13 @@ function updateScrapUI(): void {
   if (el) el.textContent = `Scrap: ${player?.scrap ?? 0}`
 }
 
+function updateKeyCountUI(): void {
+  const el = document.getElementById('key-count-label')
+  if (!el) return
+  if (!inventory) { el.textContent = '🔑 0'; return }
+  el.textContent = `🔑 ${inventory.getKeyCount()}`
+}
+
 function updateShopUI(): void {
   if (!economy || !player) return
   const grid = document.getElementById('shop-grid')!
@@ -318,6 +335,11 @@ function updateShopUI(): void {
       if (invItem2 && inv?.addItem(invItem2)) {
         addCombatLog(`  → Added ${invItem2.name} to inventory`)
         showLootToast(invItem2)
+      }
+      // P5-4: Keys grant key count (not inventory slot)
+      if (invItem2?.id === 'dungeon-key' && inv?.addKeys) {
+        inv.addKeys(1)
+        updateKeyCountUI()
       }
       updateShopUI(); updateScrapUI()
     })
@@ -356,15 +378,6 @@ function addCombatLog(message: string): void {
   ;(combatLog as any)._hideTimer = setTimeout(() => { combatLog.style.display = 'none' }, 5000)
 }
 
-function startNewGame(): void {
-  dungeonSeed = Date.now() % 100000
-  startGame(dungeonSeed)
-}
-
-function startContinueGame(): void {
-  startGame(dungeonSeed || 12345)
-}
-
 function startGame(seed: number): void {
   gameState = 'playing'
   playerHP = 20
@@ -378,7 +391,6 @@ function startGame(seed: number): void {
   updateHP(playerHP, playerMaxHP)
   updateFloor(1)
   updateDepth(0)
-
   const save = loadSave()
   audio = new AudioEngine(save.settings)
   combatEngine = new CombatEngine()
@@ -386,13 +398,7 @@ function startGame(seed: number): void {
   economy = new Economy()
   skillTree = new SkillTree()
   chaseAI = new ChaseAI({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5, stealthMultiplier: 0.35 })
-
-  initThreeScene(seed)
-}
-
-function initThreeScene(seed: number): void {
-  const w = window.innerWidth
-  const h = window.innerHeight
+  const w = window.innerWidth, h = window.innerHeight
 
   renderer = new GameRenderer({
     canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
@@ -433,6 +439,7 @@ function initThreeScene(seed: number): void {
   GL.setSkillTree(skillTree)
   GL.setInventory(inventory)
   GL.setDungeonData(dungeon)
+  GL.setDoorOpenedCallback(showDoorToast)
   GL.setLootSpawn((_mobType, x, z, item) => {
     if (lootManager) lootManager.spawn(item, x, z)
   })
@@ -453,7 +460,7 @@ function gameLoop(timestamp = 0): void {
   ]
   combatLogEntries = GL.getGameLog()
   mobs = GL.getMobs()
-  updateScrapUI()
+  updateScrapUI(); updateKeyCountUI()
 
   // Update loot drops
   if (lootManager && frame) {
