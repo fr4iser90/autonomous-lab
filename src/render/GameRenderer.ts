@@ -185,6 +185,29 @@ export class GameRenderer {
     return this.clock.getElapsedTime()
   }
 
+  /** Clear all scene objects except ground, wallGroup, and lights (for floor transitions) */
+  clearScene(): void {
+    const lightIds = new Set(this.torchLights.map(l => l.uuid))
+    const toRemove: THREE.Object3D[] = []
+    this.scene.traverse((obj) => {
+      if (obj !== this.ground && obj !== this.wallGroup && !lightIds.has(obj.uuid)) {
+        toRemove.push(obj)
+      }
+    })
+    toRemove.forEach(obj => this.scene.remove(obj))
+    // Dispose geometries and materials
+    toRemove.forEach(obj => {
+      obj.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose()
+          if (child.material instanceof THREE.MeshStandardMaterial) {
+            child.material.dispose()
+          }
+        }
+      })
+    })
+  }
+
   /** Cleanup */
   dispose(): void {
     this.renderer.dispose()

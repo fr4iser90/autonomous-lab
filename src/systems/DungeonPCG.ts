@@ -397,6 +397,13 @@ export function openDoorAt(dungeon: DungeonData, worldX: number, worldZ: number)
   return false
 }
 
+/** P5-5: Check if a dungeon tile at world position is stairs (for floor advance) */
+export function isOnStairs(dungeon: DungeonData, worldX: number, worldZ: number): boolean {
+  const [gx, gy] = getGridPosition(dungeon, worldX, worldZ)
+  const cell = dungeon.cells[gy * dungeon.width + gx]
+  return cell !== undefined && cell.type === TileType.STAIRS
+}
+
 /** Render trap visuals as 3D objects on the dungeon floor */
 export function renderTrapVisuals(renderer: GameRenderer, dungeon: DungeonData): void {
   const trapGroup = new THREE.Group()
