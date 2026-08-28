@@ -135,7 +135,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
         } else {
           inventoryPanel.style.display = 'none'
         }
-      } else if (e.key === 'q' || e.key === 'Q') {
+      } else if (e.key === 'o' || e.key === 'O') {
         if (shopPanel.style.display === 'none') {
           shopPanel.style.display = 'block'
           inventoryPanel.style.display = 'none'
@@ -144,7 +144,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
         } else {
           shopPanel.style.display = 'none'
         }
-      } else if (e.key === 's' || e.key === 'S') {
+      } else if (e.key === 't' || e.key === 'T') {
         if (skillPanel.style.display === 'none') {
           skillPanel.style.display = 'block'
           inventoryPanel.style.display = 'none'

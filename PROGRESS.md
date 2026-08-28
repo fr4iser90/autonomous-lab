@@ -4,12 +4,12 @@
 
 ## NOW
 
-- Phase: **Phase 6 — bugfix + validation** — B-7 + B-8 fixed, P5-1–P5-5 all shipped
+- Phase: **Phase 6 — bugfix + validation** — B-9 through B-13 fixed, B-7 + B-8 fixed, P5-1–P5-5 all shipped
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **126 tests green, build green, ~577 KB bundle**
-- BUGS: **all drained** (B-7, B-8 fixed)
+- Gate: **126 tests green, build green, ~585 KB bundle**
+- BUGS: **all drained** (B-7 through B-13 fixed)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
@@ -103,3 +103,8 @@
 - 🔧 P5-5 validate: Fixed `updateGameVars` floor param + duplicate combat log. PR#67 (gate green, 126/126 tests).
 - 🔧 B-7 fix (Phase 6): Settings-back button now returns to origin context — from title → title, from pause → game. `main.ts` settings-back handler checks `gameState`: 'menu'/'dead' → title, 'playing' → game. PR#69.
 - 🔧 B-8 fix (Phase 6): Removed inline `display:none` from `#stealth-label` in HTML — label visible from first frame. PR#70. All bugs now drained.
+- 🔧 B-9 fix (Phase 6 validation): Added controls text to title screen — player can now see WASD Move, Mouse Drag Rotate, Space/Click Attack, E Inventory, O Shop, T Skills, Esc/P Pause before starting. `index.html` + `styles.css`.
+- 🔧 B-10 fix (Phase 6 validation): Resolved Q/E key conflict — removed keyboard rotation (was conflicting with shop/inventory toggles), rotation now mouse-drag only. Repurposed O for Shop and T for Skills. `input.ts` + `main.ts`.
+- 🔧 B-11 fix (Phase 6 validation): Resolved S key conflict — skills toggle moved from S to T (T for "Skill Tree"), S remains for backward movement. `main.ts` + `index.html`.
+- 🔧 B-12 fix (Phase 6 validation): Added Space bar as keyboard attack key — attack was mouse-click only, not documented. `input.ts`.
+- 🔧 B-13 fix (Phase 6 validation): Added `controls-hint` element to HUD showing full key mapping. `index.html` + `styles.css`.

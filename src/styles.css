@@ -60,7 +60,23 @@ body {
   font-style: italic;
   font-size: 1.2rem;
   color: var(--ash-ui-muted);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+
+.controls-info {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: "EB Garamond", serif;
+  color: var(--ash-ui-muted);
+  line-height: 1.6;
+}
+
+.controls-info p {
+  margin: 0.15rem 0;
+}
+
+.controls-info strong {
+  color: var(--ash-ui-text);
 }
 
 .menu-buttons {
@@ -194,6 +210,15 @@ button:active {
 
 .shop-toggle:hover {
   color: var(--ash-accent);
+}
+
+.controls-hint {
+  font-family: "EB Garamond", serif;
+  font-size: 0.7rem;
+  color: var(--ash-ui-muted);
+  text-align: right;
+  margin-top: 0.25rem;
+  opacity: 0.7;
 }
 
 .scrap-label {

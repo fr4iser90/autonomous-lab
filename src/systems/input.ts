@@ -21,9 +21,9 @@ export class InputManager {
   update(): void {
     this._state.forward = (this.keys.get('w') || this.keys.get('W') ? 1 : 0) - (this.keys.get('s') || this.keys.get('S') ? 1 : 0)
     this._state.right = (this.keys.get('d') || this.keys.get('D') ? 1 : 0) - (this.keys.get('a') || this.keys.get('A') ? 1 : 0)
-    this._state.rotate = (this.keys.get('q') || this.keys.get('Q') ? -1 : 0) + (this.keys.get('e') || this.keys.get('E') ? 1 : 0)
-    this._state.jump = !!this.keys.get(' ')
-    this._state.attack = this.mouseDown
+    // Rotation via mouse drag only (no keyboard conflict with UI keys)
+    this._state.jump = false
+    this._state.attack = this.mouseDown || !!this.keys.get(' ')
   }
 
   onKeyDown(e: KeyboardEvent): void {
