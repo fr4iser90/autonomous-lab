@@ -3,7 +3,7 @@
  * P4-2: Sacred shrines that grant buffs when activated.
  */
 import { describe, it, expect } from 'vitest'
-import { generateDungeon, getShrineAt, TileType } from '../src/systems/DungeonPCG'
+import { generateDungeon, getShrineAt } from '../src/systems/DungeonPCG'
 import { SHRINE_DEFS, ShrineType, randomShrineType } from '../src/data/shrines'
 
 describe('Shrine data', () => {
