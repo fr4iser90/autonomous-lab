@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import type { GameRenderer } from '../render/GameRenderer'
 
-export type MobType = 'goblin' | 'shade' | 'stalker' | 'skeleton' | 'bat' | 'ogre' | 'mummy'
+export type MobType = 'goblin' | 'shade' | 'stalker' | 'skeleton' | 'bat' | 'ogre' | 'mummy' | 'spider' | 'wolf' | 'zombie' | 'harpy' | 'troll' | 'lich' | 'phantom' | 'elemental'
 
 export interface MobStats {
   hp: number

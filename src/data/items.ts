@@ -20,6 +20,12 @@ export const ITEMS: ItemDef[] = [
   { id: 'dungeon-key', name: 'Dungeon Key', description: 'Unlocks sealed doors.', type: 'key', value: 1, icon: '🔑' },
   { id: 'iron-shield', name: 'Iron Shield', description: 'Blocks 2 damage per hit.', type: 'armor', value: 2, icon: '🛡️' },
   { id: 'rune-ring', name: 'Rune Ring', description: '+2 max HP. Pulsing runes.', type: 'armor', value: 2, icon: '💍' },
+  { id: 'lightning-bow', name: 'Lightning Bow', description: 'Shoots bolts of lightning. +8 damage.', type: 'weapon', value: 8, icon: '🏹' },
+  { id: 'poison-dagger', name: 'Poison Dagger', description: 'Inflicts poison for 3 seconds.', type: 'weapon', value: 6, icon: '🗡️' },
+  { id: 'plate-armor', name: 'Plate Armor', description: 'Heavy plate. Blocks 4 damage per hit.', type: 'armor', value: 4, icon: '🛡️' },
+  { id: 'crystal-orb', name: 'Crystal Orb', description: '+10 max MP. Glows with inner light.', type: 'armor', value: 10, icon: '🔮' },
+  { id: 'blessed-amulet', name: 'Blessed Amulet', description: '+3 max HP. Divine protection.', type: 'armor', value: 3, icon: '📿' },
+  { id: 'enchanted-boots', name: 'Enchanted Boots', description: '+1 speed. Leaves faint sparkles.', type: 'armor', value: 1, icon: '👢' },
 ]
 
 export function getItemById(id: string): ItemDef | undefined {
