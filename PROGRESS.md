@@ -6,11 +6,13 @@
 
 - Phase: **Phase 2 — content expansion** — M1–M12 complete, CAP reached on mobKits + items
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 7 floor themes (7/16)
-- Branch: `agent/dungeon-crawl-20260829` → PR #46 (in progress)
+- Branch: `agent/dungeon-crawl-20260829` → PR #46 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **23 tests green, build green, ~553 KB bundle**
 - BUGS: all cleared
 - PR #45 merged (squash) — items CAP reached!
+- PR #46 merged (squash) — mobKits CAP reached!
+- Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
 
