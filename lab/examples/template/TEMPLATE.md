@@ -38,7 +38,7 @@ DSH RUNTIME
 - create_goal once if useful; policy error → IGNORE; continue with tools.
   Never mark create_goal complete. Human kills the process.
 - Pull machine laws from lab/roles/: concept → arch (once) → then followup
-  cycle (fix → validate every 3 features → feature). See lab/roles/README.md.
+  cycle (fix → validate every 3 → demo every 5 → feature). See lab/roles/README.md.
 - Read lab/AGENTS.md + lab/BOILERPLATE.md (branch/gate/ownership only).
   Never edit lab/**, .github/workflows, LICENSE, eslint/depcruise configs.
 - Branch: agent/{{GAME_SLUG}} from baseline (new) or continue existing tip.
@@ -49,6 +49,9 @@ DSH RUNTIME
 - Vision: every PRE-PR / VALIDATE / DEMO frame → read_image PASS/FAIL.
 - Live: push agent/* → CI → automerge → Pages https://fr4iser90.github.io/autonomous-lab/
 - Tracking: PROGRESS.md NOW primary (+ CONTENT/FEATURES/SOAK/BUGS/DEMO as needed).
+- If the genre needs first-run teaching: ship **one Tutorial mode for basics
+  only** (core loop) early — not a tutorial per feature. Prefer it as the
+  Validate/Demo/PLAY CHECK path. Per-content proof stays CONTENT VISUAL + demo.md.
 - Always leave a next tool call.
 ```
 
