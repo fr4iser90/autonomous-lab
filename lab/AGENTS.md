@@ -61,9 +61,10 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
 ## Stack defaults (boilerplate)
 
 - Vite + TypeScript client app; preview **5173** only — never bind **3080**
-- Prefer **`pnpm install`** over **`npm install`** when both work. One package manager per tree.
-- Vitest for pure logic; Playwright when the objective / prompt requires UI demos
-- `npm run gate` / `pnpm run gate` = **typecheck + lint + boundaries + test + build**
+- Prefer **`pnpm install`** / **`pnpm run gate`**. CI (`ci.yml`, Pages, automerge
+  conflict-land) uses **pnpm** — not `npm ci`. Prefer pnpm locally to match CI.
+- Vitest for pure logic; Playwright when the objective / prompt requires UI demos.
+  `pnpm run gate` = **typecheck + lint + boundaries + test + build**
   (runs may also add `test:ui`). Must pass before claiming a task done.
 - Engines (Canvas, Phaser, Three, DOM-only, …) — see **`lab/MODEL_STACKS.md`**; pin in
   `PROGRESS.md` / `shared/design.md` on first adopt — do not thrash
@@ -76,7 +77,7 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
 
 1. Implement **one** concrete task from the overnight prompt / `PROGRESS.md` NOW (not from leftover boilerplate prose).
 2. Update Vitest / UI smoke when applicable.
-3. `npm run gate` green **locally**.
+3. `pnpm run gate` green **locally**.
 4. Tip **GitHub** check `gate` green (or FIX-ONLY open CI `BUGS.md` blockers from
    `ci-fail-bugs`). Local green alone is not enough to claim ACCEPT / next Mn.
 5. Update run docs (`PROGRESS` / `CONTENT` / …) to match what shipped.
