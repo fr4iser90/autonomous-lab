@@ -53,6 +53,26 @@ Rules:
 **Tracking surface for the run (primary):** `PROGRESS.md` (+ `CONTENT.md` / `FEATURES.md` / … as the overnight prompt requires).  
 **Do not** treat boilerplate toy UI (`src/economy.ts`, harvest button) as the product.
 
+### CI / Pages / Automerge — human-only (hard stop)
+
+**CI, Pages, and Automerge are human-owned.** Agents never repair the pipeline.
+
+- If you **suspect** deploy or workflows are broken: write **one** line in
+  `BUGS.md` ## Open tagged `human` / boilerplate, then **immediately continue**
+  game work (`src/`, tests, run docs). Do not investigate YAML.
+- **Forbidden:** reading `.github/**` in order to patch it; editing, committing,
+  or pushing workflow files; opening a branch only for CI; asking for PAT /
+  `workflow` scope; treating a “B-xx CI / Pages / Automerge fix” as your job.
+- Push rejected for missing `workflow` scope = **stop**. No workaround.
+- **Pages lag is normal:** after automerge into `main`, GitHub Pages can take
+  **up to ~5 minutes** to show the new build. Wait / re-check; do **not** file
+  a pipeline bug or edit workflows because the site still shows the previous
+  SHA for a few minutes.
+- A **live Pages PASS** (playable smoke / validate) means infra is **not** your
+  problem — inventing pipeline bugs after a green Pages check is forbidden.
+- `ci-fail-bugs` gate blockers on **game tip** (`BUGS.md`) are FIX-ONLY in
+  `src/` / tests / run docs — **not** an invitation to edit workflows.
+
 ### `.autonomy/` (legacy / optional)
 
 `.autonomy/*` may exist as empty templates. **Preferred:** ignore it and track in `PROGRESS.md` / prompt milestones.  
@@ -70,8 +90,9 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
   `PROGRESS.md` / `shared/design.md` on first adopt — do not thrash
 - Role laws: `lab/roles/*` (+ IDEA). Example genre packs: `lab/examples/games/*`
   (**two files per game**: Initial + Followup). Typical loop: one Initial then
-  one Followup forever (fix → validate cadence → feature). No separate
-  `*-VL-validation` prompt files — use `lab/roles/validate.md`.
+  one Followup forever (fix → validate cadence → demo cadence → feature). No
+  separate `*-VL-validation` / demo overnight prompts — use `lab/roles/validate.md`
+  and `lab/roles/demo.md`.
 
 ## Definition of Done (every autonomy round)
 
@@ -91,5 +112,7 @@ If you touch `.autonomy`, never let it contradict `PROGRESS.md`. Do not invent a
 
 - Baking a specific game genre into `baseline`
 - Rewriting CI/Pages/automerge / `lab/**` / README Lab header from the agent
+  (see **CI / Pages / Automerge — human-only** above — no exceptions for
+  “root cause”, “B-xx”, or Pages feeling stale)
 - Changing `baseline` history
 - Cloud saves, auth, multiplayer, or a second Pages site
