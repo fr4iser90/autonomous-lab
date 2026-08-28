@@ -30,9 +30,11 @@
               <span class="hp-text" id="hp-text">20/20</span>
             </div>
             <div class="floor-label" id="floor-label">Floor 1</div>
+            <div class="scrap-label" id="scrap-label">Scrap: 0</div>
           </div>
           <div class="hud-right">
             <div class="inventory-toggle" id="inv-toggle">[E] Inventory</div>
+            <div class="shop-toggle" id="shop-toggle" style="cursor:pointer">🛒 Shop</div>
             <div class="depth-label" id="depth-label">Depth: 0</div>
           </div>
         </div>
@@ -44,6 +46,11 @@
           <h3>Inventory</h3>
           <div id="inventory-grid" class="inventory-grid"></div>
           <p class="close-hint">Press [E] to close</p>
+        </div>
+        <div id="shop-panel" class="inventory" style="display:none">
+          <h3>Shop</h3>
+          <div id="shop-grid" class="inventory-grid"></div>
+          <p class="close-hint">Press [Q] to close</p>
         </div>
         <div id="death-screen" class="overlay" style="display:none">
           <h2 class="death-title">You Have Fallen</h2>

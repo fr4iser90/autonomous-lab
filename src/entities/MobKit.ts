@@ -20,6 +20,7 @@ export interface MobState {
   type: MobType
   stats: MobStats
   alive: boolean
+  scrapReward: number
 }
 
 export abstract class MobKit {
@@ -28,9 +29,9 @@ export abstract class MobKit {
   protected renderer: GameRenderer
   protected walkTime = 0
 
-  constructor(renderer: GameRenderer, type: MobType, stats: MobStats) {
+  constructor(renderer: GameRenderer, type: MobType, stats: MobStats, scrapReward: number = 0) {
     this.renderer = renderer
-    this.state = { type, stats, alive: true }
+    this.state = { type, stats, alive: true, scrapReward }
     this.mesh = new THREE.Group()
     this.buildMesh(renderer, type)
     renderer.scene.add(this.mesh)

@@ -32,6 +32,8 @@ import { Inventory } from './systems/Inventory'
 import { AudioEngine } from './systems/AudioEngine'
 import { Minimap } from './render/Minimap'
 import type { MobKit } from './entities/MobKit'
+import { getShopItemsForFloor, getShopItemById } from './data/shopItems'
+import { Economy } from './systems/Economy'
 import * as GL from './systems/GameLoop'
 
 // DOM refs
@@ -43,6 +45,7 @@ const inventoryPanel = document.getElementById('inventory-panel')!
 const deathScreen = document.getElementById('death-screen')!
 const pauseOverlay = document.getElementById('pause-overlay')!
 const combatLog = document.getElementById('combat-log')!
+const shopPanel = document.getElementById('shop-panel')!
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
 
 // State
@@ -70,6 +73,7 @@ let combatLogEntries: string[] = []
 // Systems
 let combatEngine: CombatEngine | null = null
 let inventory: Inventory | null = null
+let economy: Economy | null = null
 let chaseAI: ChaseAI | null = null
 let audio: AudioEngine | null = null
 
@@ -85,6 +89,7 @@ function showScreen(screen: 'title' | 'game' | 'settings'): void {
   } else {
     hud.style.display = 'none'
     inventoryPanel.style.display = 'none'
+    shopPanel.style.display = 'none'
     deathScreen.style.display = 'none'
     pauseOverlay.style.display = 'none'
     combatLog.style.display = 'none'
@@ -150,9 +155,18 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
       } else if (e.key === 'e' || e.key === 'E') {
         if (inventoryPanel.style.display === 'none') {
           inventoryPanel.style.display = 'block'
+          shopPanel.style.display = 'none'
           updateInventoryUI()
         } else {
           inventoryPanel.style.display = 'none'
+        }
+      } else if (e.key === 'q' || e.key === 'Q') {
+        if (shopPanel.style.display === 'none') {
+          shopPanel.style.display = 'block'
+          inventoryPanel.style.display = 'none'
+          updateShopUI()
+        } else {
+          shopPanel.style.display = 'none'
         }
       }
     } else if (gameState === 'paused') {
@@ -194,16 +208,24 @@ function initButtonHandlers(): void {
   const btnResume = document.getElementById('btn-resume')
   const btnPauseSettings = document.getElementById('btn-pause-settings')
   const btnPauseTitle = document.getElementById('btn-pause-title')
+  const shopToggle = document.getElementById('shop-toggle')
 
   if (btnNew) btnNew.addEventListener('click', startNewGame)
   if (btnContinue) btnContinue.addEventListener('click', startContinueGame)
   if (btnSettings) btnSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
   if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen('title') })
-  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = playerMaxHP; updateHP(playerHP, playerMaxHP) })
+  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = playerMaxHP; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); updateScrapUI() })
   if (btnTitle) btnTitle.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
   if (btnResume) btnResume.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
   if (btnPauseSettings) btnPauseSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
   if (btnPauseTitle) btnPauseTitle.addEventListener('click', () => { pauseOverlay.style.display = 'none'; showScreen('title'); gameState = 'menu' })
+  if (shopToggle) shopToggle.addEventListener('click', () => {
+    if (gameState === 'playing') {
+      shopPanel.style.display = shopPanel.style.display === 'block' ? 'none' : 'block'
+      inventoryPanel.style.display = 'none'
+      if (shopPanel.style.display === 'block') updateShopUI()
+    }
+  })
 }
 
 // Volume sliders
@@ -232,6 +254,42 @@ function updateInventoryUI(): void {
       ;(el as HTMLElement).innerHTML = ''
       ;(el as HTMLElement).classList.remove('has-item')
     }
+  })
+}
+
+// --- Scrap UI ---
+function updateScrapUI(): void {
+  const scrapLabel = document.getElementById('scrap-label')!
+  if (scrapLabel) scrapLabel.textContent = `Scrap: ${player?.scrap ?? 0}`
+}
+
+// --- Shop UI ---
+function updateShopUI(): void {
+  if (!economy || !player) return
+  const grid = document.getElementById('shop-grid')!
+  const items = getShopItemsForFloor(playerFloor)
+  grid.innerHTML = items.map(item => {
+    const canAfford = economy!.scrap >= item.cost
+    return `<div class="inv-slot shop-item ${canAfford ? '' : 'cant-afford'}" data-id="${item.id}">
+      <span class="item-icon">${item.icon}</span>
+      <span class="item-name">${item.name}</span>
+      <span class="item-cost">${item.cost} scrap</span>
+    </div>`
+  }).join('')
+  grid.querySelectorAll('.shop-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = (el as HTMLElement).dataset.id
+      const item = getShopItemById(id ?? '')
+      if (!item) return
+      const success = economy?.purchase(item)
+      if (success) {
+        addCombatLog(`🛒 Bought ${item.name} for ${item.cost} scrap`)
+        updateShopUI()
+        updateScrapUI()
+      } else {
+        addCombatLog('❌ Not enough scrap!')
+      }
+    })
   })
 }
 
@@ -273,6 +331,7 @@ function startGame(seed: number): void {
   audio = new AudioEngine(save.settings)
   combatEngine = new CombatEngine()
   inventory = new Inventory()
+  economy = new Economy()
   chaseAI = new ChaseAI({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5 })
 
   initThreeScene(seed)
@@ -330,7 +389,7 @@ function initThreeScene(seed: number): void {
   // Initialize game loop module
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
-  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, mobs, combatLogEntries)
+  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
 
   // Start render loop
@@ -338,7 +397,7 @@ function initThreeScene(seed: number): void {
 }
 
 function gameLoop(timestamp = 0): void {
-  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, mobs, combatLogEntries)
+  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   const frame = GL.gameLoop(timestamp)
 
   // Sync mutable state back
@@ -347,11 +406,15 @@ function gameLoop(timestamp = 0): void {
   playerX = GL.getPlayerX()
   playerZ = GL.getPlayerZ()
   playerYaw = GL.getPlayerYaw()
+  playerFloor = GL.getPlayerFloor()
   combatLogEntries = GL.getGameLog()
   mobs = GL.getMobs()
 
+  // Update scrap UI
+  updateScrapUI()
+
   // Check player death
-  GL.checkPlayerDeath(updateHP, addCombatLog)
+  GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0)
 
   // Restart loop if still alive
   if (gameState === 'playing' && frame) {
@@ -369,5 +432,5 @@ export { showScreen, gameState, currentScreen }
 export { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
 export { playerHP, playerMaxHP, playerFloor }
 export { combatLogEntries, mobs }
-export { combatEngine, inventory, chaseAI }
+export { combatEngine, inventory, chaseAI, economy }
 export { audio }

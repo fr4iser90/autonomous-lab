@@ -19,6 +19,7 @@ let _playerMaxHP = 20
 let _playerX = 0
 let _playerZ = 0
 let _playerYaw = 0
+let _playerFloor = 1
 let _mobs: MobKit[] = []
 let _combatLogEntries: string[] = []
 let _lastGrowlTime = 0
@@ -83,6 +84,7 @@ export function updateGameVars(
   playerX: number,
   playerZ: number,
   playerYaw: number,
+  playerFloor: number,
   mobs: MobKit[],
   combatLogEntries: string[],
 ): void {
@@ -91,6 +93,7 @@ export function updateGameVars(
   _playerX = playerX
   _playerZ = playerZ
   _playerYaw = playerYaw
+  _playerFloor = playerFloor
   _mobs = mobs
   _combatLogEntries = combatLogEntries
 }
@@ -138,6 +141,11 @@ export function gameLoop(timestamp = 0): number {
         if (dist <= 2.0 && mob.state.alive) {
           const dmg = 2 + Math.floor(Math.random() * 3)
           mob.takeDamage(dmg)
+          // Credit scrap when mob dies
+          if (!mob.state.alive && _player) {
+            const scrap = Math.ceil(mob.state.stats.maxHp / 4) + _playerFloor
+            _player.scrap += scrap
+          }
           if (_audio) _audio.hit()
         }
       })
@@ -246,7 +254,7 @@ export function gameLoop(timestamp = 0): number {
   return _animFrame
 }
 
-export function checkPlayerDeath(updateHP: (hp: number, maxHp: number) => void, addCombatLog: (msg: string) => void): void {
+export function checkPlayerDeath(updateHP: (hp: number, maxHp: number) => void, addCombatLog: (msg: string) => void, playerScrap = 0): void {
   if (_gameState !== 'playing') return
   updateHP(_playerHP, _playerMaxHP)
   if (_playerHP <= 0) {
@@ -254,6 +262,10 @@ export function checkPlayerDeath(updateHP: (hp: number, maxHp: number) => void, 
     _deathScreen.style.display = 'flex'
     if (_audio) _audio.stopAmbient()
     addCombatLog('💀 You have fallen!')
+    const statsEl = document.getElementById('death-stats')
+    const scrapEl = document.getElementById('death-scrap')
+    if (statsEl) statsEl.textContent = `Deepest Floor: ${_playerFloor}`
+    if (scrapEl) scrapEl.textContent = `Scrap Collected: ${playerScrap}`
   }
 }
 
@@ -270,3 +282,4 @@ export function setPlayerHP(v: number) { _playerHP = v }
 export function setPlayerMaxHP(v: number) { _playerMaxHP = v }
 export function getGameLog(): string[] { return _combatLogEntries }
 export function getMobs(): MobKit[] { return _mobs }
+export function getPlayerFloor(): number { return _playerFloor }
