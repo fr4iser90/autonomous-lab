@@ -7,8 +7,8 @@ import type { ItemDef } from '../data/items'
 import { getItemById } from '../data/items'
 import { shopIdToItemId } from '../data/shopItems'
 
-const item = (id: string, name: string, type: ItemDef['type'], value: number): ItemDef =>
-  ({ id, name, description: 'test', type, value, icon: 'x' })
+const item = (id: string, name: string, type: ItemDef['type'], value: number, rarity: 'common' | 'uncommon' | 'rare' = 'common'): ItemDef =>
+  ({ id, name, description: 'test', type, value, icon: 'x', rarity })
 
 describe('Inventory', () => {
   let inv: Inventory

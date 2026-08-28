@@ -4,8 +4,87 @@
  */
 import * as THREE from 'three'
 import type { GameRenderer } from '../render/GameRenderer'
-
 export type MobType = 'goblin' | 'shade' | 'stalker' | 'skeleton' | 'bat' | 'ogre' | 'mummy' | 'spider' | 'wolf' | 'zombie' | 'harpy' | 'troll' | 'lich' | 'phantom' | 'elemental'
+
+export interface LootEntry {
+  /** Item ID to drop */
+  itemId: string
+  /** Drop chance 0–1 */
+  chance: number
+}
+
+/** Loot tables per mob type — keyed by MobType */
+const LOOT_TABLES: Record<MobType, LootEntry[]> = {
+  goblin: [
+    { itemId: 'health-potion', chance: 0.4 },
+    { itemId: 'rusty-sword', chance: 0.25 },
+  ],
+  shade: [
+    { itemId: 'health-potion', chance: 0.3 },
+    { itemId: 'iron-axe', chance: 0.2 },
+  ],
+  stalker: [
+    { itemId: 'poison-dagger', chance: 0.2 },
+    { itemId: 'health-potion', chance: 0.35 },
+  ],
+  skeleton: [
+    { itemId: 'iron-shield', chance: 0.25 },
+    { itemId: 'health-potion', chance: 0.3 },
+    { itemId: 'iron-axe', chance: 0.15 },
+  ],
+  bat: [
+    { itemId: 'health-potion', chance: 0.3 },
+  ],
+  ogre: [
+    { itemId: 'plate-armor', chance: 0.05 },
+    { itemId: 'mega-potion', chance: 0.15 },
+    { itemId: 'steel-club', chance: 0.2 },
+  ],
+  mummy: [
+    { itemId: 'blessed-amulet', chance: 0.2 },
+    { itemId: 'health-potion', chance: 0.35 },
+    { itemId: 'dungeon-key', chance: 0.15 },
+  ],
+  spider: [
+    { itemId: 'poison-dagger', chance: 0.2 },
+    { itemId: 'health-potion', chance: 0.3 },
+  ],
+  wolf: [
+    { itemId: 'iron-axe', chance: 0.25 },
+    { itemId: 'health-potion', chance: 0.3 },
+  ],
+  zombie: [
+    { itemId: 'health-potion', chance: 0.35 },
+    { itemId: 'iron-shield', chance: 0.2 },
+  ],
+  harpy: [
+    { itemId: 'lightning-bow', chance: 0.15 },
+    { itemId: 'greater-potion', chance: 0.3 },
+  ],
+  troll: [
+    { itemId: 'steel-club', chance: 0.15 },
+    { itemId: 'plate-armor', chance: 0.05 },
+    { itemId: 'mega-potion', chance: 0.2 },
+  ],
+  lich: [
+    { itemId: 'crystal-orb', chance: 0.1 },
+    { itemId: 'greater-potion', chance: 0.25 },
+    { itemId: 'lightning-bow', chance: 0.15 },
+  ],
+  phantom: [
+    { itemId: 'greater-potion', chance: 0.3 },
+    { itemId: 'rune-ring', chance: 0.2 },
+  ],
+  elemental: [
+    { itemId: 'flame-staff', chance: 0.15 },
+    { itemId: 'mega-potion', chance: 0.25 },
+    { itemId: 'crystal-orb', chance: 0.05 },
+  ],
+}
+
+export function getLootTable(type: MobType): LootEntry[] {
+  return LOOT_TABLES[type] ?? []
+}
 
 export interface MobStats {
   hp: number

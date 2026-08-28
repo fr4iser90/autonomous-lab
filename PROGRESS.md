@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 4 → Phase 5** — P4-1→P4-4 shipped, P5-1 item functionality in progress
+- Phase: **Phase 5 — item functionality** — P5-1 shipped (PR#61)
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-4 merged ✅ (PR#60)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)

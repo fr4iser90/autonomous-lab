@@ -7,6 +7,9 @@ import { FollowCamera } from '../render/camera'
 import { InputManager } from './input'
 import { PlayerKit } from '../kits/playerKit'
 import type { MobKit } from '../entities/MobKit'
+import { getLootTable } from '../entities/MobKit'
+import type { ItemDef } from '../data/items'
+import { getItemById } from '../data/items'
 import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
@@ -41,6 +44,9 @@ let _audio: AudioEngine | null = null
 let _skillTree: SkillTree | null = null
 let _dungeon: DungeonData | null = null
 let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => number } | null = null
+
+// Loot drop callback (set from main.ts)
+let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void) | null = null
 
 // Game state (injected)
 let _currentScreen: 'title' | 'game' | 'settings' = 'title'
@@ -97,6 +103,11 @@ export function setSkillTree(st: SkillTree | null): void {
 
 export function setInventory(inv: { getEquippedDamage: () => number; getEquippedArmor: () => number } | null): void {
   _inventory = inv
+}
+
+/** Set the loot-drop spawn callback */
+export function setLootSpawn(cb: (mobType: string, x: number, z: number, item: ItemDef) => void): void {
+  _lootSpawn = cb
 }
 
 /** Apply healing to the player. Returns new HP. */
@@ -193,6 +204,18 @@ export function gameLoop(timestamp = 0): number {
           if (!mob.state.alive && _player) {
             const scrap = Math.ceil(mob.state.stats.maxHp / 4) + _playerFloor
             _player.scrap += scrap
+          }
+          // Spawn loot drops on mob death
+          if (!mob.state.alive && _lootSpawn) {
+            const lootTable = getLootTable(mob.state.type)
+            for (const entry of lootTable) {
+              if (Math.random() < entry.chance) {
+                const item = getItemById(entry.itemId)
+                if (item) {
+                  _lootSpawn(mob.state.type, mob.position.x, mob.position.z, item)
+                }
+              }
+            }
           }
           if (_audio) _audio.hit()
         }
