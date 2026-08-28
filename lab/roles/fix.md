@@ -11,6 +11,10 @@ DSH RUNTIME — ROLE: FIX / PROBLEM
 - Never push main/baseline. Never delete lint/boundaries to “make green”
   without fixing the underlying violation (unless rule is clearly wrong — then
   document in BUGS and tighten, don't gut gate).
+- **Infra bugs are not FIX-ONLY.** Skip Open entries tagged `human` /
+  boilerplate / CI / Pages / Automerge / workflows. Do not edit `.github/**`.
+  Gate tip red from `ci-fail-bugs` → fix **game** code/tests/docs only
+  (`lab/AGENTS.md` human-only hard stop).
 
 ================================================================
 JOB
