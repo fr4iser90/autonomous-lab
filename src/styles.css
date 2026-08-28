@@ -142,6 +142,52 @@ button:active {
   gap: 0.25rem;
 }
 
+.status-effects-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.25rem 0.4rem;
+  background: var(--ash-ui-bg);
+  border: 1px solid var(--ash-ui-muted);
+  border-radius: 3px;
+  min-height: 2rem;
+}
+
+.status-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-family: "Cinzel", serif;
+  color: var(--ash-text);
+}
+
+.status-effect-emoji {
+  font-size: 0.9rem;
+}
+
+.status-effect-name {
+  font-weight: 600;
+}
+
+.status-effect-timer {
+  color: var(--ash-text-muted);
+  font-size: 0.65rem;
+}
+
+.status-effect-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--ash-ui-bg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.status-effect-fill {
+  height: 100%;
+  transition: width 0.1s linear;
+}
+
 .hp-bar {
   display: flex;
   align-items: center;
@@ -643,4 +689,83 @@ button:active {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--ash-blood);
+}
+
+/* Tutorial overlay */
+.tutorial-overlay {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: auto;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.tutorial-box {
+  background: rgba(10, 8, 6, 0.92);
+  border: 2px solid var(--ash-accent);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  min-width: 300px;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 153, 68, 0.2);
+}
+
+.tutorial-box h3 {
+  font-family: "Cinzel", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ash-accent);
+  margin: 0.3rem 0;
+}
+
+.tutorial-box h2 {
+  font-family: "Cinzel", serif;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--ash-accent);
+  margin: 0.3rem 0;
+}
+
+.tutorial-box p {
+  font-family: "EB Garamond", serif;
+  font-size: 1rem;
+  color: var(--ash-text);
+  margin: 0.4rem 0;
+}
+
+.tutorial-emoji {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.tutorial-key-hint {
+  display: inline-block;
+  background: var(--ash-accent);
+  color: #111;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  margin-top: 0.3rem;
+}
+
+.tutorial-skip-hint {
+  font-size: 0.75rem !important;
+  color: var(--ash-text-muted) !important;
+  margin-top: 0.5rem !important;
+}
+
+.tutorial-overlay.tutorial-complete .tutorial-box {
+  border-color: #44ff88;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(68, 255, 136, 0.3);
 }

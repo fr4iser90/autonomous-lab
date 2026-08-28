@@ -14,6 +14,7 @@ export interface MetaData {
   scrapCurrency: number
   unlockedItems: string[]
   runSeeds: number[]
+  tutorialDone: boolean
 }
 
 export interface HighScore {
@@ -41,6 +42,7 @@ const DEFAULT_META: MetaData = {
   scrapCurrency: 0,
   unlockedItems: [],
   runSeeds: [],
+  tutorialDone: false,
 }
 
 const DEFAULT_SCORES: HighScore[] = []

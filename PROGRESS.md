@@ -4,13 +4,14 @@
 
 ## NOW
 
-- Phase: **Phase 6 — bugfix + validation** — B-9 through B-13b fixed, B-7 + B-8 fixed, P5-1–P5-5 all shipped
+- Phase: **Phase 7 — status effects + tutorial** — P7-1 (status effects) complete, M7.5 tutorial next
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **126 tests green, build green, ~585 KB bundle**
-- BUGS: **all drained** (B-7 through B-13 fixed)
+- Gate: **126 tests green, build green, ~589 KB bundle**
+- BUGS: **game bugs drained** (B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
+- P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 
 ## Milestones
 
