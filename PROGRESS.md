@@ -1,17 +1,15 @@
-<!-- PROGRESS: Ashen Delve — Phase 2 in progress. M1–M12 shipped, PHASE 2 content expansion underway. -->
+<!-- PROGRESS: Ashen Delve — Phase 4 in progress. P4-1 (economy) shipped. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 3 — visual validation** — M1–M12 complete, Phase 2 CAP reached, Phase 3 validation complete
-- Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual validation (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829` → PR #46 merged into `main`
+- Phase: **Phase 4 — economy, skill tree, stealth** — P4-1 economy shipped
+- Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
+- Branch: `agent/dungeon-crawl-20260829-v2` → PR #52 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **23 tests green, build green, ~555 KB bundle**
+- Gate: **42 tests green, build green, ~558 KB bundle**
 - BUGS: all cleared
-- PR #45 merged (squash) — items CAP reached!
-- PR #46 merged (squash) — mobKits CAP reached!
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
@@ -31,13 +29,13 @@
 | M11 | Boss + Minimap | ✅ | `src/entities/Boss.ts`, `src/render/Minimap.ts` |
 | M12 | Polish + Integration | ✅ | `src/main.ts` (full game loop) |
 
-## P2 — Phase 2 Content Expansion
+## P4 — Phase 4 Systems
 
-| Content | Shipped | Total | Status |
-|---------|---------|-------|--------|
-| Mob Kits | 16 | 16 | ✅ CAP REACHED |
-| Items | 16 | 16 | ✅ CAP REACHED |
-| Floor Themes | 16 | 16 | ✅ CAP REACHED |
+| Slice | Feature | Status | Key files |
+|-------|---------|--------|-----------|
+| P4-1 | Economy (scrap + shop) | ✅ SHIPPED PR#52 | `Economy.ts`, `shopItems.ts`, `tests/economy.test.ts` |
+| P4-2 | Skill tree | 🔜 NEXT | — |
+| P4-3 | Stealth zones | 🔜 | — |
 
 ## Log
 
@@ -56,6 +54,7 @@
 - 2026-08-29: P2-4: Added Phantom (phase-shifting ghost) and Elemental (fire elemental with burn aura). Mob kits CAP reached: 16/16!
 - 2026-08-29: P2-5: Added 9 new floor themes (crystal-cave, jungle, ice-cave, swamp, dark-forest, volcanic, sky-temple, shadow-realm, celestial, abyssal) to reach 16/16 CAP.
 - 2026-08-29: PR #50 merged (squash) — Phase 3 visual validation: ESC pause fix, 6/6 Playwright DOM checks PASS, DEMO.md updated.
+- 2026-08-29: PR #52 merged (squash) — Phase 4-1: Economy system (scrap currency + shop purchases, 19 tests, ~558 KB).
 
 ## CAP Checklist
 
@@ -70,9 +69,9 @@
 - `tsconfig.json`: removed `"node"` from `types` — no Node runtime needed
 - `package.json`: `@types/node` installed for typecheck compatibility
 
-## Next (Phase 3 complete → Phase 4)
+## Next (Phase 4-2: Skill Tree)
 
-- ✅ Phase 2 complete: mobKits 16/16, items 16/16, floorThemes 16/16 — all CAP reached
-- ✅ Phase 2b: soak testing completed
-- ✅ Phase 3 complete: visual validation 6/6 PASS (Playwright DOM checks + screenshots)
-- Phase 4: economy, skill tree, stealth zones
+- ✅ P4-1: Economy shipped (scrap + shop)
+- 🔜 P4-2: Skill tree — passive upgrades purchasable with scrap
+- 🔜 P4-3: Stealth zones
+- VALIDATE: SHA=f80be61

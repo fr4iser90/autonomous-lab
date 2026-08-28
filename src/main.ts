@@ -34,6 +34,7 @@ import { Minimap } from './render/Minimap'
 import type { MobKit } from './entities/MobKit'
 import { getShopItemsForFloor, getShopItemById } from './data/shopItems'
 import { Economy } from './systems/Economy'
+import { SkillTree, getSkillsForFloor, getSkillDefById } from './systems/SkillTree'
 import * as GL from './systems/GameLoop'
 
 // DOM refs
@@ -46,6 +47,7 @@ const deathScreen = document.getElementById('death-screen')!
 const pauseOverlay = document.getElementById('pause-overlay')!
 const combatLog = document.getElementById('combat-log')!
 const shopPanel = document.getElementById('shop-panel')!
+const skillPanel = document.getElementById('skill-panel')!
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
 
 // State
@@ -74,6 +76,7 @@ let combatLogEntries: string[] = []
 let combatEngine: CombatEngine | null = null
 let inventory: Inventory | null = null
 let economy: Economy | null = null
+let skillTree: SkillTree | null = null
 let chaseAI: ChaseAI | null = null
 let audio: AudioEngine | null = null
 
@@ -90,6 +93,7 @@ function showScreen(screen: 'title' | 'game' | 'settings'): void {
     hud.style.display = 'none'
     inventoryPanel.style.display = 'none'
     shopPanel.style.display = 'none'
+    skillPanel.style.display = 'none'
     deathScreen.style.display = 'none'
     pauseOverlay.style.display = 'none'
     combatLog.style.display = 'none'
@@ -164,9 +168,19 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (shopPanel.style.display === 'none') {
           shopPanel.style.display = 'block'
           inventoryPanel.style.display = 'none'
+          skillPanel.style.display = 'none'
           updateShopUI()
         } else {
           shopPanel.style.display = 'none'
+        }
+      } else if (e.key === 's' || e.key === 'S') {
+        if (skillPanel.style.display === 'none') {
+          skillPanel.style.display = 'block'
+          inventoryPanel.style.display = 'none'
+          shopPanel.style.display = 'none'
+          updateSkillUI()
+        } else {
+          skillPanel.style.display = 'none'
         }
       }
     } else if (gameState === 'paused') {
@@ -209,12 +223,13 @@ function initButtonHandlers(): void {
   const btnPauseSettings = document.getElementById('btn-pause-settings')
   const btnPauseTitle = document.getElementById('btn-pause-title')
   const shopToggle = document.getElementById('shop-toggle')
+  const skillToggle = document.getElementById('skill-toggle')
 
   if (btnNew) btnNew.addEventListener('click', startNewGame)
   if (btnContinue) btnContinue.addEventListener('click', startContinueGame)
   if (btnSettings) btnSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
   if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen('title') })
-  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = playerMaxHP; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); updateScrapUI() })
+  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = 20; playerMaxHP = 20; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); if (skillTree) skillTree.reset(); GL.setBaseHP(20); updateScrapUI() })
   if (btnTitle) btnTitle.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
   if (btnResume) btnResume.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
   if (btnPauseSettings) btnPauseSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
@@ -223,7 +238,16 @@ function initButtonHandlers(): void {
     if (gameState === 'playing') {
       shopPanel.style.display = shopPanel.style.display === 'block' ? 'none' : 'block'
       inventoryPanel.style.display = 'none'
+      skillPanel.style.display = 'none'
       if (shopPanel.style.display === 'block') updateShopUI()
+    }
+  })
+  if (skillToggle) skillToggle.addEventListener('click', () => {
+    if (gameState === 'playing') {
+      skillPanel.style.display = skillPanel.style.display === 'block' ? 'none' : 'block'
+      inventoryPanel.style.display = 'none'
+      shopPanel.style.display = 'none'
+      if (skillPanel.style.display === 'block') updateSkillUI()
     }
   })
 }
@@ -293,6 +317,41 @@ function updateShopUI(): void {
   })
 }
 
+// --- Skill UI ---
+function updateSkillUI(): void {
+  if (!skillTree || !economy) return
+  const grid = document.getElementById('skill-grid')!
+  const skills = getSkillsForFloor(playerFloor)
+  const st = skillTree
+  grid.innerHTML = skills.map(sk => {
+    const acquired = st.has(sk.id)
+    const canAfford = economy!.scrap >= sk.cost
+    return `<div class="inv-slot skill-item ${acquired ? 'skill-acquired' : canAfford ? '' : 'cant-afford'}" data-id="${sk.id}">
+      <span class="item-icon">${sk.icon}</span>
+      <span class="item-name">${sk.name}</span>
+      <span class="item-desc">${sk.description}</span>
+      <span class="item-cost">${acquired ? '✅ Owned' : sk.cost + ' scrap'}</span>
+    </div>`
+  }).join('')
+  grid.querySelectorAll('.skill-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = (el as HTMLElement).dataset.id
+      const sk = getSkillDefById(id ?? '')
+      if (!sk || st.has(sk.id)) return
+      const success = economy?.purchase(sk)
+      if (success) {
+        st.recordAcquisition(sk.id)
+        GL.setBaseHP(20 + st.getActiveEffects().hpBonus)
+        addCombatLog(`✨ Learned ${sk.name}!`)
+        updateSkillUI()
+        updateScrapUI()
+      } else {
+        addCombatLog('❌ Not enough scrap!')
+      }
+    })
+  })
+}
+
 // --- Combat UI ---
 function addCombatLog(message: string): void {
   combatLogEntries.push(message)
@@ -332,6 +391,7 @@ function startGame(seed: number): void {
   combatEngine = new CombatEngine()
   inventory = new Inventory()
   economy = new Economy()
+  skillTree = new SkillTree()
   chaseAI = new ChaseAI({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5 })
 
   initThreeScene(seed)
@@ -389,6 +449,7 @@ function initThreeScene(seed: number): void {
   // Initialize game loop module
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
+  GL.setSkillTree(skillTree)
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
 
@@ -432,5 +493,5 @@ export { showScreen, gameState, currentScreen }
 export { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
 export { playerHP, playerMaxHP, playerFloor }
 export { combatLogEntries, mobs }
-export { combatEngine, inventory, chaseAI, economy }
+export { combatEngine, inventory, chaseAI, economy, skillTree }
 export { audio }

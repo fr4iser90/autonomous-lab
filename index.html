@@ -35,6 +35,7 @@
           <div class="hud-right">
             <div class="inventory-toggle" id="inv-toggle">[E] Inventory</div>
             <div class="shop-toggle" id="shop-toggle" style="cursor:pointer">🛒 Shop</div>
+            <div class="shop-toggle" id="skill-toggle" style="cursor:pointer">✨ Skills</div>
             <div class="depth-label" id="depth-label">Depth: 0</div>
           </div>
         </div>
@@ -51,6 +52,11 @@
           <h3>Shop</h3>
           <div id="shop-grid" class="inventory-grid"></div>
           <p class="close-hint">Press [Q] to close</p>
+        </div>
+        <div id="skill-panel" class="inventory" style="display:none">
+          <h3>Skill Tree</h3>
+          <div id="skill-grid" class="inventory-grid"></div>
+          <p class="close-hint">Press [S] to close</p>
         </div>
         <div id="death-screen" class="overlay" style="display:none">
           <h2 class="death-title">You Have Fallen</h2>
