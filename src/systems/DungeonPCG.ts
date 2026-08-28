@@ -9,6 +9,8 @@ import type { FloorTheme } from '../data/floors'
 import { FLOOR_THEMES } from '../data/floors'
 import type { TrapType } from '../data/traps'
 import { TRAP_DEFS, randomTrapType } from '../data/traps'
+import type { ShrineType } from '../data/shrines'
+import { SHRINE_DEFS, randomShrineType } from '../data/shrines'
 
 export enum TileType {
   FLOOR = 0,
@@ -48,6 +50,7 @@ export interface DungeonData {
   floorNumber: number
   stealthTiles: Set<string>
   trapPositions: Map<string, TrapType>
+  shrinePositions: Map<string, ShrineType>
 }
 
 const CELL_FLOOR = TileType.FLOOR
@@ -169,6 +172,28 @@ export function generateDungeon(seed: number, floorNumber: number = 1, theme: Fl
     }
   }
 
+  // Generate shrines — one per floor, placed in a random room center
+  const shrinePositions = new Map<string, ShrineType>()
+  // Place on at least one room (if rooms exist)
+  if (rooms.length > 1) {
+    // Pick a room that's not the first or last (not spawn/stairs)
+    const shrineRoomIdx = 1 + Math.floor(rng() * (rooms.length - 2))
+    const shrineRoom = rooms[Math.min(shrineRoomIdx, rooms.length - 1)]
+    // Try a few positions in that room for a valid floor tile
+    const shrineType = randomShrineType()
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const sx = shrineRoom.x + 1 + Math.floor(rng() * Math.max(1, shrineRoom.w - 2))
+      const sy = shrineRoom.y + 1 + Math.floor(rng() * Math.max(1, shrineRoom.h - 2))
+      const sKey = `${sx},${sy}`
+      if (!stealthTiles.has(sKey) && !trapPositions.has(sKey) &&
+          !(sx === spawnX && sy === spawnY) &&
+          !(sx === stairsX && sy === stairsY)) {
+        shrinePositions.set(sKey, shrineType)
+        break
+      }
+    }
+  }
+
   // Verify reachability via BFS
   const reachable = bfsReachable(cells, cols, rows, spawnX, spawnY)
   if (!reachable.has(stairsY * cols + stairsX)) {
@@ -190,6 +215,7 @@ export function generateDungeon(seed: number, floorNumber: number = 1, theme: Fl
     floorNumber,
     stealthTiles,
     trapPositions,
+    shrinePositions,
   }
 }
 
@@ -353,6 +379,9 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
 
   // Render trap visuals (spikes, poison pools, fire patches)
   renderTrapVisuals(renderer, dungeon)
+
+  // Render shrine visuals (glowing pedestals)
+  renderShrineVisuals(renderer, dungeon)
 }
 
 // Re-export floor themes for convenience
@@ -458,4 +487,69 @@ export function renderTrapVisuals(renderer: GameRenderer, dungeon: DungeonData):
   }
 
   renderer.scene.add(trapGroup)
+}
+
+/** Check if a world-space position is on a shrine */
+export function isOnShrine(dungeon: DungeonData, worldX: number, worldZ: number): boolean {
+  const gridX = Math.floor(worldX + dungeon.width / 2)
+  const gridY = Math.floor(worldZ + dungeon.height / 2)
+  return dungeon.shrinePositions.has(`${gridX},${gridY}`)
+}
+
+/** Get the shrine type at a world-space position, or null */
+export function getShrineAt(dungeon: DungeonData, worldX: number, worldZ: number): ShrineType | null {
+  const gridX = Math.floor(worldX + dungeon.width / 2)
+  const gridY = Math.floor(worldZ + dungeon.height / 2)
+  return dungeon.shrinePositions.get(`${gridX},${gridY}`) ?? null
+}
+
+/** Remove a shrine from the dungeon (after activation) */
+export function deactivateShrine(dungeon: DungeonData, worldX: number, worldZ: number): boolean {
+  const gridX = Math.floor(worldX + dungeon.width / 2)
+  const gridY = Math.floor(worldZ + dungeon.height / 2)
+  return dungeon.shrinePositions.delete(`${gridX},${gridY}`)
+}
+
+/** Render shrine visuals as glowing 3D pedestals on the dungeon floor */
+export function renderShrineVisuals(renderer: GameRenderer, dungeon: DungeonData): void {
+  const shrineGroup = new THREE.Group()
+  shrineGroup.name = 'shrines'
+
+  for (const [key, shrineType] of dungeon.shrinePositions) {
+    const [gx, gy] = key.split(',').map(Number)
+    const worldX = gx - dungeon.width / 2 + 0.5
+    const worldZ = gy - dungeon.height / 2 + 0.5
+    const def = SHRINE_DEFS[shrineType]
+
+    // Pedestal base
+    const baseGeo = new THREE.CylinderGeometry(0.35, 0.4, 0.15, 8)
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(def.color),
+      emissive: new THREE.Color(def.emissive),
+      emissiveIntensity: 0.4,
+      roughness: 0.3,
+      metalness: 0.5,
+    })
+    const base = new THREE.Mesh(baseGeo, baseMat)
+    base.position.set(worldX, 0.08, worldZ)
+    shrineGroup.add(base)
+
+    // Glow orb (pulsing)
+    const orbGeo = new THREE.SphereGeometry(0.12, 12, 8)
+    const orbMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(def.emissive),
+      emissive: new THREE.Color(def.emissive),
+      emissiveIntensity: 1.0,
+      roughness: 0.1,
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.85,
+    })
+    const orb = new THREE.Mesh(orbGeo, orbMat)
+    orb.position.set(worldX, 0.45, worldZ)
+    orb.name = `shrine-orb-${shrineType}`
+    shrineGroup.add(orb)
+  }
+
+  renderer.scene.add(shrineGroup)
 }
