@@ -202,6 +202,12 @@ export function gameLoop(timestamp = 0): number {
         if ('summonMinion' in mob) (mob as any).summonMinion()
         if ('updateCurseAura' in mob) (mob as any).updateCurseAura(dt, _playerX, _playerZ)
         if ('castSpell' in mob) (mob as any).castSpell(dt)
+      } else if (type === 'phantom' && ('phaseShift' in mob || 'floatMovement' in mob)) {
+        if ('phaseShift' in mob) (mob as any).phaseShift(dt)
+        if ('floatMovement' in mob) (mob as any).floatMovement(dt, _playerX, _playerZ)
+      } else if (type === 'elemental' && ('burnAura' in mob || 'flameBurst' in mob)) {
+        if ('burnAura' in mob) (mob as any).burnAura(dt, _playerX, _playerZ)
+        if ('flameBurst' in mob) (mob as any).flameBurst()
       }
 
       // Mob growl when chasing
