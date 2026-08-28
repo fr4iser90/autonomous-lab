@@ -322,12 +322,13 @@ jobs:
           echo "pr=${{ steps.pick.outputs.pr }}" >> "$GITHUB_OUTPUT"
 
   # --- After land: point agent/* at main tip (stops squash-history conflict loops) ---
-  # Always runs after Automerge completes successfully. When nothing landed,
-  # the script is a no-op (no HEAD_REF to sync). This ensures Pages always
-  # sees a completed Automerge run and deploys.
   sync-agent:
     needs: [squash, merge-to-main]
-    if: always() && needs.squash.result == 'success'
+    if: >
+      always() && (
+        needs.squash.outputs.merged == 'true' ||
+        needs.merge-to-main.outputs.landed == 'true'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Resolve which agent branch to sync

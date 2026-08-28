@@ -44,25 +44,33 @@ jobs:
               return
             }
             const wr = context.payload.workflow_run
-            // Only react to Automerge agent PRs completions.
-            // CI completions should not trigger Pages deploy.
-            if (wr.workflow.name !== 'Automerge agent PRs') {
-              core.info(`workflow=${wr.workflow.name} — skip Pages (not Automerge)`)
-              core.setOutput('should_deploy', 'false')
-              return
-            }
             if (wr.conclusion !== 'success') {
               core.info(`Automerge conclusion=${wr.conclusion} — skip Pages`)
               core.setOutput('should_deploy', 'false')
               return
             }
-            // Automerge completed successfully → main was updated (squash or merge-to-main).
-            // sync-agent always runs on success now (may be no-op if nothing landed),
-            // so its absence does not mean nothing landed. Deploy.
-            // B-14 fix: previously required sync-agent.conclusion === 'success',
-            // but sync-agent was skipped on squash-merge → Pages never deployed.
-            core.info('Automerge succeeded — deploy Pages from main')
-            core.setOutput('should_deploy', 'true')
+            // Automerge jobs: squash | merge-to-main | sync-agent.
+            // sync-agent ONLY runs when something actually landed on main
+            // (needs.squash.merged || needs.merge-to-main.landed). Deploy then.
+            // Old bug: looked for job name "merge" (never existed) → always skip.
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: wr.id,
+              },
+            )
+            const sync = jobs.find((j) => j.name === 'sync-agent')
+            if (sync && sync.conclusion === 'success') {
+              core.info('Automerge sync-agent succeeded — deploy Pages from main')
+              core.setOutput('should_deploy', 'true')
+              return
+            }
+            core.info(
+              `Automerge ran but sync-agent=${sync?.conclusion ?? 'absent/skipped'} — skip Pages (no land)`,
+            )
+            core.setOutput('should_deploy', 'false')
 
   build:
     needs: decide
