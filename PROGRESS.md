@@ -4,14 +4,15 @@
 
 ## NOW
 
-- Phase: **Phase 2 — content expansion** — M1–M12 complete, CAP reached on mobKits + items + floorThemes
+- Phase: **Phase 2 complete** — all CAPs reached; Phase 2b soak testing pending
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16)
-- Branch: `agent/dungeon-crawl-20260829` → PR #46 merged into `main`
+- Branch: `agent/dungeon-crawl-20260829` → PR #47 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **23 tests green, build green, ~555 KB bundle**
 - BUGS: all cleared
 - PR #45 merged (squash) — items CAP reached!
 - PR #46 merged (squash) — mobKits CAP reached!
+- PR #47 merged (squash) — floorThemes CAP reached!
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
@@ -72,6 +73,6 @@
 ## Next (Phase 2b → Phase 3)
 
 - ✅ Phase 2 complete: mobKits 16/16, items 16/16, floorThemes 16/16 — all CAP reached
-- Phase 2b: soak testing with all content types
+- Phase 2b: soak testing with all content types (playtest across all 16 floors/themes/mobs/items)
 - Phase 3: demo (webm, storyboard frames, visual validation)
 - Phase 4: economy, skill tree, stealth zones
