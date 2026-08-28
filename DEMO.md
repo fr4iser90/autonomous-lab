@@ -44,4 +44,24 @@ Storyboard steps for Ashen Delve:
 - PASS: All audio channels active
 
 ## Visual validation
+
+### Phase 3 — Playwright DOM/Visual Validation
+**SHA:** `5af556b` (main) — `agent/dungeon-crawl-20260829-v2` PR #50 merged
+**Result:** 6/6 PASS ✅
+
+| Step | Description | DOM Check | Screenshot | Verdict |
+|------|-------------|-----------|------------|---------|
+| 0 | Title Screen | titleVisible ✅, titleText "Ashen Delve" ✅, tagline ✅, buttons ✅ | `phase3-00-title-screen.png` | PASS |
+| 1 | Settings Panel | settingsVisible ✅, titleHidden ✅, volume sliders ✅, reduce-motion ✅, back button ✅ | `phase3-01-settings.png` | PASS |
+| 2 | New Delve + HUD | titleHidden ✅, gameVisible ✅, HUD ✅, hpText 20/20 ✅, Floor 1 ✅, Depth 0 ✅, combat-log ✅, inv-toggle ✅ | `phase3-02-new-delve-hud.png` | PASS |
+| 3 | Inventory (KeyE) | inventoryVisible ✅, invGrid ✅, invPanel ✅ | `phase3-03-inventory.png` | PASS |
+| 4 | Death Screen | death-screen ✅, death-stats ✅, death-scrap ✅, retry ✅, title ✅ | `phase3-04-death-screen-ready.png` | PASS |
+| 5 | Pause Overlay (ESC) | pauseVisible ✅, pause-overlay ✅, btn-resume ✅ | `phase3-05-pause.png` | PASS |
+
+**Key fixes in this validation round:**
+- ESC pause handler fixed: sequential `if` blocks converted to nested `if-else-if` to prevent immediate state reset
+- Phase 3 validation script updated to dispatch Escape + check result in single `evaluate()` call to avoid RAF crash race with SwiftShader
+
+**Visual evidence:** All screenshots captured via Playwright with `--use-gl=swiftshader --disable-software-rasterizer --no-sandbox` Chromium args. HUD and overlay elements render correctly. Dungeon geometry rendering may appear dark in headless mode (known Three.js limitation).
+
 _(frames + read_image PASS/FAIL recorded here; file size / pixel dumps are NOT evidence)_

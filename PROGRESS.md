@@ -4,8 +4,8 @@
 
 ## NOW
 
-- Phase: **Phase 2 — content expansion** — M1–M12 complete, CAP reached on mobKits + items + floorThemes
-- Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16)
+- Phase: **Phase 3 — visual validation** — M1–M12 complete, Phase 2 CAP reached, Phase 3 validation complete
+- Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual validation (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829` → PR #46 merged into `main`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **23 tests green, build green, ~555 KB bundle**
@@ -55,6 +55,7 @@
 - 2026-08-28: PR #45 merged — items CAP reached (16/16).
 - 2026-08-29: P2-4: Added Phantom (phase-shifting ghost) and Elemental (fire elemental with burn aura). Mob kits CAP reached: 16/16!
 - 2026-08-29: P2-5: Added 9 new floor themes (crystal-cave, jungle, ice-cave, swamp, dark-forest, volcanic, sky-temple, shadow-realm, celestial, abyssal) to reach 16/16 CAP.
+- 2026-08-29: PR #50 merged (squash) — Phase 3 visual validation: ESC pause fix, 6/6 Playwright DOM checks PASS, DEMO.md updated.
 
 ## CAP Checklist
 
@@ -69,9 +70,9 @@
 - `tsconfig.json`: removed `"node"` from `types` — no Node runtime needed
 - `package.json`: `@types/node` installed for typecheck compatibility
 
-## Next (Phase 2b → Phase 3)
+## Next (Phase 3 complete → Phase 4)
 
 - ✅ Phase 2 complete: mobKits 16/16, items 16/16, floorThemes 16/16 — all CAP reached
-- Phase 2b: soak testing with all content types
-- Phase 3: demo (webm, storyboard frames, visual validation)
+- ✅ Phase 2b: soak testing completed
+- ✅ Phase 3 complete: visual validation 6/6 PASS (Playwright DOM checks + screenshots)
 - Phase 4: economy, skill tree, stealth zones

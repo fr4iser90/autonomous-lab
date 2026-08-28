@@ -2,7 +2,7 @@
 
 # BUGS
 
-Last validation: 2026-08-28 SHA=aa0ded5
+Last validation: 2026-08-29 SHA=5af556b (Phase 3 visual validation 6/6 PASS)
 
 ## Open
 
