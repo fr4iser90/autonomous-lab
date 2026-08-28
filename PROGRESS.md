@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 5 — item functionality** — P5-1+P5-2 shipped, P5-3 PR#64, P5-4 sealed doors
+- Phase: **Phase 5 — item functionality** — P5-1+P5-2 shipped, P5-3 PR#64, P5-4 sealed doors, P5-5 stairs descent
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-4 merged ✅ (PR#60)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
@@ -91,3 +91,4 @@
 - ✅ P5-2: LootDrop system shipped (weighted drops, 3D collectibles, auto-pickup, PR#62)
 - 🔄 P5-3: Rarity UI + loot toast feedback (PR#64) — color-coded slots, toast with rarity variants, auto-pickup feedback
 - 🔄 P5-4: Sealed doors — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.
+- 🔄 P5-5: Stairs descent — floor progression. DungeonPCG: isOnStairs. GameLoop: stairs detection + cooldown. main.ts: advanceToFloor (regenerate dungeon, clear scene, respawn mobs, move to spawn), showFloorToast. 9 new tests. PR#66.

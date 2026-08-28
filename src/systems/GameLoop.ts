@@ -14,7 +14,7 @@ import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
 import { SkillTree } from './SkillTree'
-import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt } from './DungeonPCG'
+import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs } from './DungeonPCG'
 import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
 
@@ -32,6 +32,7 @@ let _combatLogEntries: string[] = []
 let _lastGrowlTime = 0
 let _trapHitTimer = 0
 let _lastTrapType: string | null = null
+let _stairsCooldown = 0
 
 // Systems (injected at init)
 let _renderer: GameRenderer | null = null
@@ -52,6 +53,12 @@ let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void)
 let _onDoorOpened: ((msg: string) => void) | null = null
 export function setDoorOpenedCallback(cb: (msg: string) => void): void {
   _onDoorOpened = cb
+}
+
+// Floor advanced callback (set from main.ts)
+let _onFloorAdvanced: ((floor: number) => void) | null = null
+export function setFloorAdvancedCallback(cb: (floor: number) => void): void {
+  _onFloorAdvanced = cb
 }
 
 // Game state (injected)
@@ -181,6 +188,16 @@ export function gameLoop(timestamp = 0): number {
       _playerX += moveX
       _playerZ += moveZ
       _player.setPosition(_playerX, 0, _playerZ)
+    }
+
+    // P5-5: Stairs detection — advance to next floor when standing on stairs
+    if (_dungeon && (inp.forward !== 0 || inp.right !== 0) && _onFloorAdvanced) {
+      _stairsCooldown -= dt
+      if (_stairsCooldown <= 0 && isOnStairs(_dungeon, _playerX, _playerZ)) {
+        _playerFloor += 1
+        _onFloorAdvanced(_playerFloor)
+        _stairsCooldown = 2.0 // prevent repeated triggers
+      }
     }
 
     // P4-4: Trap detection — deal damage when player steps on a trap

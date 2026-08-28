@@ -8,22 +8,6 @@ import { PlayerKit } from './kits/playerKit'
 import { generateDungeon, buildScene, isOnStealthTile } from './systems/DungeonPCG'
 import type { DungeonData } from './systems/DungeonPCG'
 import { getThemeForFloor } from './data/floors'
-import { Goblin } from './entities/Goblin'
-import { Shade } from './entities/Shade'
-import { Stalker } from './entities/Stalker'
-import { Skeleton } from './entities/Skeleton'
-import { Bat } from './entities/Bat'
-import { Ogre } from './entities/Ogre'
-import { Mummy } from './entities/Mummy'
-import { Spider } from './entities/Spider'
-import { Wolf } from './entities/Wolf'
-import { Zombie } from './entities/Zombie'
-import { Harpy } from './entities/Harpy'
-import { Troll } from './entities/Troll'
-import { Lich } from './entities/Lich'
-import { Phantom } from './entities/Phantom'
-import { Elemental } from './entities/Elemental'
-import { Boss } from './entities/Boss'
 import { ChaseAI } from './systems/ChaseAI'
 import { CombatEngine } from './systems/CombatEngine'
 import { Inventory } from './systems/Inventory'
@@ -35,6 +19,8 @@ import { getItemById } from './data/items'
 import { Economy } from './systems/Economy'
 import { SkillTree, getSkillsForFloor, getSkillDefById } from './systems/SkillTree'
 import { LootDropManager } from './systems/LootDrop'
+import { showFloorToast, advanceToFloor, spawnMobs, spawnBoss } from './systems/Transition'
+import type { TransitionDeps } from './systems/Transition'
 import * as GL from './systems/GameLoop'
 const titleScreen = document.getElementById('title-screen')!
 const gameScreen = document.getElementById('game-screen')!
@@ -412,17 +398,8 @@ function startGame(seed: number): void {
   const dungeon = generateDungeon(seed, 1, theme)
   currentDungeon = dungeon
   buildScene(renderer, dungeon)
-  // Spawn mobs
-  const mobKinds = [() => new Goblin(renderer!), () => new Shade(renderer!), () => new Stalker(renderer!), () => new Skeleton(renderer!), () => new Bat(renderer!), () => new Ogre(renderer!), () => new Mummy(renderer!), () => new Spider(renderer!), () => new Wolf(renderer!), () => new Zombie(renderer!), () => new Harpy(renderer!), () => new Troll(renderer!), () => new Lich(renderer!), () => new Phantom(renderer!), () => new Elemental(renderer!)]
-  for (let i = 1; i < dungeon.rooms.length; i++) {
-    const r = dungeon.rooms[i], mob = mobKinds[i % mobKinds.length]()
-    mob.setPosition(r.cx - dungeon.width / 2 + (Math.random() - 0.5) * 2, 0, r.cy - dungeon.height / 2 + (Math.random() - 0.5) * 2)
-    mobs.push(mob)
-  }
-  if (playerFloor >= 4 && dungeon.rooms.length > 2) {
-    const br = dungeon.rooms[dungeon.rooms.length - 1], boss = new Boss(renderer!)
-    boss.setPosition(br.cx - dungeon.width / 2, 0, br.cy - dungeon.height / 2); mobs.push(boss)
-  }
+  spawnMobs(renderer, dungeon, mobs)
+  spawnBoss(renderer!, playerFloor, dungeon, mobs)
   // Player
   player = new PlayerKit(renderer!)
   playerX = dungeon.spawnX - dungeon.width / 2
@@ -440,6 +417,12 @@ function startGame(seed: number): void {
   GL.setInventory(inventory)
   GL.setDungeonData(dungeon)
   GL.setDoorOpenedCallback(showDoorToast)
+  GL.setFloorAdvancedCallback((floor: number) => {
+    showFloorToast(floor, addCombatLog)
+    if (!renderer || !player) return
+    const deps: TransitionDeps = { renderer, player, dungeonSeed, playerHP, playerMaxHP, playerX, playerZ, playerFloor, mobs, combatLogEntries, minimap: minimap || null }
+    advanceToFloor(floor, deps, addCombatLog)
+  })
   GL.setLootSpawn((_mobType, x, z, item) => {
     if (lootManager) lootManager.spawn(item, x, z)
   })
