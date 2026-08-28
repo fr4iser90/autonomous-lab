@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 6 — bugfix + validation** — B-9 through B-13b fixed, B-7 + B-8 fixed, P5-1–P5-5 all shipped
+- Phase: **Phase 6 — bugfix + validation** — B-9 through B-13b fixed, B-7 + B-8 fixed, B-14 fix PR pending, P5-1–P5-5 all shipped
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)

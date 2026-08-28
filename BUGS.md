@@ -17,7 +17,7 @@ _(none — all bugs resolved)_
 - **B-12**: No attack key for keyboard — attack was mouse-click only with no HUD indicator. **Fixed**: Space bar now triggers attack; HUD shows "Space Attack" in controls hint.
 - **B-13**: HUD control hints missing — HUD showed [E] Inventory but no WASD/attack indicators. **Fixed**: Added `controls-hint` element to HUD with full key mapping.
 - **B-13b**: HUD typo: "I Inventory" → fixed to "E Inventory".
-- **B-14**: `sync-agent` step skipped in `automerge-agent.yml` when PR uses squash-merge (clean merge). Pages workflow requires `sync-agent.success` to decide deploy → Pages stayed stale, serving content from before Phase 6 merge. **Fix in progress**: Investigating `merge-to-main` job `finalize` output propagation.
+- **B-14**: `sync-agent` step skipped in `automerge-agent.yml` when PR uses squash-merge (clean merge). Pages workflow requires `sync-agent.success` to decide deploy → Pages stayed stale, serving content from before Phase 6 merge. **Fix in progress**: sync-agent now always runs on Automerge success; pages.yml deploys on any successful Automerge run (PR pending).
 
 ## Closed
 
