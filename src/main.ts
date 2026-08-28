@@ -141,24 +141,26 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (currentScreen === 'game' && gameState === 'playing' && input) {
     input.onKeyDown(e)
   }
-  if (currentScreen === 'game' && gameState === 'playing') {
-    if (e.key === 'e' || e.key === 'E') {
-      if (inventoryPanel.style.display === 'none') {
-        inventoryPanel.style.display = 'block'
-        updateInventoryUI()
-      } else {
-        inventoryPanel.style.display = 'none'
+  if (currentScreen === 'game') {
+    if (gameState === 'playing') {
+      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+        e.preventDefault()
+        gameState = 'paused'
+        pauseOverlay.style.display = 'flex'
+      } else if (e.key === 'e' || e.key === 'E') {
+        if (inventoryPanel.style.display === 'none') {
+          inventoryPanel.style.display = 'block'
+          updateInventoryUI()
+        } else {
+          inventoryPanel.style.display = 'none'
+        }
       }
-    }
-    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-      gameState = 'paused'
-      pauseOverlay.style.display = 'flex'
-    }
-  }
-  if (currentScreen === 'game' && gameState === 'paused') {
-    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-      gameState = 'playing'
-      pauseOverlay.style.display = 'none'
+    } else if (gameState === 'paused') {
+      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+        e.preventDefault()
+        gameState = 'playing'
+        pauseOverlay.style.display = 'none'
+      }
     }
   }
 })
