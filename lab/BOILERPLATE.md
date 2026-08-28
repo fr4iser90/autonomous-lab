@@ -20,7 +20,10 @@ Files and dirs are tagged:
 
 ## BOILERPLATE_OWNED (never touch on agent branches)
 
-- `.github/workflows/**`
+- `.github/workflows/**` — **human-only.** Suspected CI/Pages/Automerge bugs →
+  one `BUGS.md` line (`human` / boilerplate), then continue the game. Never
+  patch, commit, or push workflows; never request `workflow` PAT scope. Full
+  law: `lab/AGENTS.md` → **CI / Pages / Automerge — human-only**.
 - **`lab/**`** (AGENTS, BOILERPLATE, SETUP, MODEL_STACKS, `roles/`, `examples/`)
 - Root stubs `AGENTS.md` / `BOILERPLATE.md` (redirects into `lab/` only)
 - `scripts/new-run.sh`

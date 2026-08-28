@@ -15,6 +15,9 @@ DSH RUNTIME — ROLE: FEATURE (main builder)
 - Prefer `pnpm`. Preview `:5173` only. Vite base `/autonomous-lab/`.
 - Domain appendix (`domains/game.md` or `domains/app.md`) adds genre ACCEPT —
   obey it when pasted.
+- Never patch CI/Pages/Automerge (`.github/**`). Suspected infra → one
+  `BUGS.md` `human` line, then keep building the product
+  (`lab/AGENTS.md` human-only hard stop).
 
 ================================================================
 JOB

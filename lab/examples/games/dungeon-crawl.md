@@ -193,16 +193,50 @@ PLAY CHECK (builder-owned — do not skip)
 ================================================================
 
 **Phase 4:** every **5** cycles (N divisible by 5 — at **P4-0** before P4-1):
-1. Boot `pnpm run dev` → `/autonomous-lab/` → **New Delve** (zero pageerror).
-2. **~45–60s in-dungeon:** move (WASD), look, attack ≥1 enemy if present, pick
-   loot if any, open inventory if built.
-3. Screenshot `demo/play-check/cycle-N.png` (WebGL dungeon + HUD readable).
+1. Boot `pnpm run dev` → `/autonomous-lab/` → prefer **Tutorial** if present,
+   else **New Delve** (zero pageerror).
+2. **~45–60s:** if Tutorial — complete or advance ≥3 scripted steps; else
+   in-dungeon move (WASD), look, attack ≥1 enemy if present, pick loot if any,
+   open inventory if built.
+3. Screenshot `demo/play-check/cycle-N.png` (WebGL dungeon + HUD readable;
+   tutorial overlay OK if text readable).
 4. **`read_image`** → PASS/FAIL (not black canvas, not title-only, not error).
 5. FAIL → BUGS ## Open + FIX-ONLY — no P4-1 until PASS.
 6. PASS → log `PLAY_CHECK: cycle-N PASS` in PROGRESS NOW.
 
 **Phase 2:** every **10** content cycles (C10, C20, …) — same; path
 `demo/play-check/C<N>.png`.
+
+================================================================
+TUTORIAL MODE (basics only — not every feature)
+================================================================
+
+**Goal:** one **Tutorial** entry from the title screen that teaches the **core
+loop** and doubles as the primary smoke path for Validate / Demo / PLAY CHECK.
+
+**In scope (once, early):** move, look/camera, attack, open inventory, one
+combat or dummy target, how to pause / die-retry or reach stairs — whatever the
+shipped basics are. Short (≤~2 min), skippable, replayable from title.
+
+**Out of scope:** per-kit, per-item, per-theme, per-Phase-2-content tutorials.
+New CAP content is proven via CONTENT VISUAL + Demo cadence — **not** by
+growing the tutorial script every cycle.
+
+**Implement when:** after **M7** (player + combat + inventory exist). Must be
+**ACCEPT before M8** (or immediately as M7.5 — do not defer to M12).
+
+**ACCEPT:**
+1. Title shows **Tutorial** (or New Delve → first-run forces tutorial once).
+2. Scripted steps with readable on-screen hints (not a wall of markdown).
+3. Completing tutorial leaves player in a real delve or back at title with
+   `meta.tutorialDone` (or equivalent) in SaveService.
+4. Playwright (or demo script) can drive the tutorial path; UI smoke may call it.
+5. `demo/frames/` or `demo/tutorial/` ≥3 frames + **`read_image` PASS** in
+   DEMO.md (slice: tutorial-basics).
+6. FEATURES.md lists Tutorial as shipped; PROGRESS logs `TUTORIAL: PASS`.
+
+Validate / Demo / PLAY CHECK **prefer** the tutorial path when it exists.
+If tutorial broken → `playability` blocker — FIX before new kits/themes.
 
 ================================================================
 CONTENT CAP CONSTANT — HUMAN: set before overnight
@@ -391,6 +425,11 @@ M6  **CombatEngine:** click/melee or auto-swing; damage numbers or flash;
 
 M7  **Loot + inventory** (≥4 items in data). Chest or drop on kill. Inventory UI (E).
     ACCEPT: vitest: pickup adds item; Playwright: inventory opens with icon/label.
+
+M7.5 **Tutorial mode (basics only)** — see **TUTORIAL MODE** section. Title entry,
+    scripted core-loop teach, skippable, SaveService flag, demo frames +
+    `read_image` PASS. Prefer this path for later PLAY CHECK / Validate / Demo.
+    ACCEPT: all TUTORIAL MODE ACCEPT bullets. **Do not start M8 without this.**
 
 M8  Floor themes (≥2): palette swap + prop set (crypt vs ash). Stairs → next floor
     new seed/depth. Meta: deepest floor in save.
