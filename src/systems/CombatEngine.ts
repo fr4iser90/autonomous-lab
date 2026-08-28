@@ -7,6 +7,7 @@ export interface CombatHit {
   attackerName: string
   targetName: string
   isCritical: boolean
+  scrapReward?: number // scrap dropped when target dies
 }
 
 export interface Entity {
@@ -17,6 +18,7 @@ export interface Entity {
   isDead: boolean
   x: number
   z: number
+  scrapReward?: number // scrap dropped on death
 }
 
 export interface CombatLog {
@@ -47,9 +49,10 @@ export class CombatEngine {
       attackerName: attacker.name,
       targetName: target.name,
       isCritical,
+      scrapReward: target.isDead ? target.scrapReward ?? 0 : undefined,
     }
 
-    this.addLog(`${isCritical ? '💥 CRIT! ' : ''}${attacker.name} hits ${target.name} for ${damage} damage${target.isDead ? ' — KILLED!' : ''}`)
+    this.addLog(`${isCritical ? '💥 CRIT! ' : ''}${attacker.name} hits ${target.name} for ${damage} damage${target.isDead ? ` — KILLED! (+${target.scrapReward ?? 0} scrap)` : ''}`)
 
     return hit
   }

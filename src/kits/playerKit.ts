@@ -8,6 +8,7 @@ import type { GameRenderer } from '../render/GameRenderer'
 export class PlayerKit {
   readonly mesh: THREE.Group
   readonly position = new THREE.Vector3(0, 0, 0)
+  scrap: number = 0
   private readonly bodyMesh: THREE.Mesh
   private readonly headMesh: THREE.Mesh
   private readonly cloakMesh: THREE.Mesh
