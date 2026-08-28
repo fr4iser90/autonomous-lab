@@ -10,6 +10,7 @@ import type { MobKit } from '../entities/MobKit'
 import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
+import { SkillTree } from './SkillTree'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -32,6 +33,7 @@ let _input: InputManager | null = null
 let _minimap: Minimap | null = null
 let _chaseAI: ChaseAI | null = null
 let _audio: AudioEngine | null = null
+let _skillTree: SkillTree | null = null
 
 // Game state (injected)
 let _currentScreen: 'title' | 'game' | 'settings' = 'title'
@@ -78,6 +80,10 @@ export function resetGameTime(): void {
   _lastGrowlTime = 0
 }
 
+export function setSkillTree(st: SkillTree | null): void {
+  _skillTree = st
+}
+
 export function updateGameVars(
   playerHP: number,
   playerMaxHP: number,
@@ -112,7 +118,8 @@ export function gameLoop(timestamp = 0): number {
 
   // Move player
   if (_player && _renderer) {
-    const speed = 4
+    const effects = _skillTree?.getActiveEffects() ?? { damageBonus: 0, hpBonus: 0, speedBonus: 0, critChanceBonus: 0 }
+    const speed = 4 + effects.speedBonus
     const moveX = (Math.sin(_playerYaw) * inp.forward + Math.cos(_playerYaw) * inp.right) * speed * dt
     const moveZ = (Math.cos(_playerYaw) * inp.forward - Math.sin(_playerYaw) * inp.right) * speed * dt
 
@@ -139,7 +146,10 @@ export function gameLoop(timestamp = 0): number {
       _mobs.forEach(mob => {
         const dist = mob.distanceTo(_playerX, _playerZ)
         if (dist <= 2.0 && mob.state.alive) {
-          const dmg = 2 + Math.floor(Math.random() * 3)
+          const effects = _skillTree?.getActiveEffects() ?? { damageBonus: 0, hpBonus: 0, speedBonus: 0, critChanceBonus: 0 }
+          const baseDmg = 2 + Math.floor(Math.random() * 3) + effects.damageBonus
+          const isCrit = Math.random() < (0.15 + effects.critChanceBonus)
+          const dmg = isCrit ? baseDmg * 2 : baseDmg
           mob.takeDamage(dmg)
           // Credit scrap when mob dies
           if (!mob.state.alive && _player) {
@@ -283,3 +293,4 @@ export function setPlayerMaxHP(v: number) { _playerMaxHP = v }
 export function getGameLog(): string[] { return _combatLogEntries }
 export function getMobs(): MobKit[] { return _mobs }
 export function getPlayerFloor(): number { return _playerFloor }
+export function setBaseHP(baseHP: number): void { _playerMaxHP = baseHP }
