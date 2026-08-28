@@ -10,6 +10,7 @@ export interface ChaseAIConfig {
   attackRange: number
   attackCooldown: number
   moveSpeed: number
+  stealthMultiplier: number // aggro range multiplier when player is in stealth (P4-3)
 }
 
 export class ChaseAI {
@@ -21,12 +22,17 @@ export class ChaseAI {
     this.config = config
   }
 
-  /** Decide action based on distance to player */
-  decide(mob: MobKit, playerX: number, playerZ: number, dt: number): { action: 'idle' | 'chase' | 'attack'; targetX: number; targetZ: number } {
+  /** Decide action based on distance to player (P4-3: stealth-aware) */
+  decide(mob: MobKit, playerX: number, playerZ: number, dt: number, playerIsInStealth = false): { action: 'idle' | 'chase' | 'attack'; targetX: number; targetZ: number } {
     const dist = mob.distanceTo(playerX, playerZ)
 
     this.cooldownTimer -= dt
     if (this.cooldownTimer < 0) this.cooldownTimer = 0
+
+    // Effective aggro range shrinks when player is in stealth
+    const effectiveAggro = playerIsInStealth
+      ? this.config.aggroRange * this.config.stealthMultiplier
+      : this.config.aggroRange
 
     // Attack if in range and cooldown ready
     if (dist <= this.config.attackRange && this.cooldownTimer <= 0) {
@@ -35,7 +41,7 @@ export class ChaseAI {
     }
 
     // Chase if in aggro range and not too close
-    if (dist <= this.config.aggroRange && dist > this.config.attackRange + 0.5) {
+    if (dist <= effectiveAggro && dist > this.config.attackRange + 0.5) {
       this.isChasing = true
       const dx = playerX - mob.position.x
       const dz = playerZ - mob.position.z

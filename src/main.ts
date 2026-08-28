@@ -1,14 +1,15 @@
 /**
  * Ashen Delve — Main entry point
- * M1-M12 + P2: Full game with Three.js, 16 mob kits + boss, combat, inventory, minimap, audio
+ * M1-M12 + P4: Full game with Three.js, stealth zones, skill tree, economy
  */
 import { loadSave, saveSave } from './services/SaveService'
-import { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
+import { updateHP, updateFloor, updateDepth, updateStealth } from './app/uiHelpers'
 import { GameRenderer } from './render/GameRenderer'
 import { FollowCamera } from './render/camera'
 import { InputManager } from './systems/input'
 import { PlayerKit } from './kits/playerKit'
-import { generateDungeon, buildScene } from './systems/DungeonPCG'
+import { generateDungeon, buildScene, isOnStealthTile } from './systems/DungeonPCG'
+import type { DungeonData } from './systems/DungeonPCG'
 import { getThemeForFloor } from './data/floors'
 import { Goblin } from './entities/Goblin'
 import { Shade } from './entities/Shade'
@@ -71,7 +72,7 @@ let playerZ = 0
 let dungeonSeed = 0
 let mobs: MobKit[] = []
 let combatLogEntries: string[] = []
-
+let currentDungeon: DungeonData | null = null
 // Systems
 let combatEngine: CombatEngine | null = null
 let inventory: Inventory | null = null
@@ -392,7 +393,7 @@ function startGame(seed: number): void {
   inventory = new Inventory()
   economy = new Economy()
   skillTree = new SkillTree()
-  chaseAI = new ChaseAI({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5 })
+  chaseAI = new ChaseAI({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5, stealthMultiplier: 0.35 })
 
   initThreeScene(seed)
 }
@@ -410,8 +411,8 @@ function initThreeScene(seed: number): void {
 
   const theme = getThemeForFloor(1)
   const dungeon = generateDungeon(seed, 1, theme)
+  currentDungeon = dungeon
   buildScene(renderer, dungeon)
-
   // Spawn mobs
   const mobKinds = [
     () => new Goblin(renderer!), () => new Shade(renderer!), () => new Stalker(renderer!),
@@ -426,7 +427,6 @@ function initThreeScene(seed: number): void {
     mob.setPosition(room.cx - dungeon.width / 2 + (Math.random() - 0.5) * 2, 0, room.cy - dungeon.height / 2 + (Math.random() - 0.5) * 2)
     mobs.push(mob)
   }
-
   // Boss room
   if (playerFloor >= 4 && dungeon.rooms.length > 2) {
     const bossRoom = dungeon.rooms[dungeon.rooms.length - 1]
@@ -434,7 +434,6 @@ function initThreeScene(seed: number): void {
     boss.setPosition(bossRoom.cx - dungeon.width / 2, 0, bossRoom.cy - dungeon.height / 2)
     mobs.push(boss)
   }
-
   // Player
   player = new PlayerKit(renderer!)
   playerX = dungeon.spawnX - dungeon.width / 2
@@ -442,7 +441,6 @@ function initThreeScene(seed: number): void {
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
   minimap = new Minimap(dungeon)
-
   if (audio && !audio['enabled']) { audio.init(); audio.startAmbient() }
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
 
@@ -450,6 +448,7 @@ function initThreeScene(seed: number): void {
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
   GL.setSkillTree(skillTree)
+  GL.setDungeonData(dungeon)
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
 
@@ -473,6 +472,9 @@ function gameLoop(timestamp = 0): void {
 
   // Update scrap UI
   updateScrapUI()
+
+  // P4-3: stealth HUD
+  if (currentDungeon) { updateStealth(isOnStealthTile(currentDungeon, playerX, playerZ)); document.getElementById('stealth-label')!.style.display = '' }
 
   // Check player death
   GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0)

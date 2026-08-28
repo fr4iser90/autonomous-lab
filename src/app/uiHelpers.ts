@@ -25,3 +25,12 @@ export function updateDepth(depth: number): void {
     label.textContent = `Depth: ${depth}`
   }
 }
+
+/** P4-3: Update stealth zone indicator */
+export function updateStealth(inStealth: boolean): void {
+  const label = document.getElementById('stealth-label')
+  if (label) {
+    label.textContent = inStealth ? 'Stealth: Hidden' : 'Stealth: Visible'
+    label.style.color = inStealth ? '#66aaff' : '#e8dcc8'
+  }
+}

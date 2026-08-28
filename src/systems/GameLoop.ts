@@ -11,6 +11,8 @@ import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
 import { SkillTree } from './SkillTree'
+import { isOnStealthTile } from './DungeonPCG'
+import type { DungeonData } from './DungeonPCG'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -34,6 +36,7 @@ let _minimap: Minimap | null = null
 let _chaseAI: ChaseAI | null = null
 let _audio: AudioEngine | null = null
 let _skillTree: SkillTree | null = null
+let _dungeon: DungeonData | null = null
 
 // Game state (injected)
 let _currentScreen: 'title' | 'game' | 'settings' = 'title'
@@ -74,6 +77,10 @@ export function setRuntimeState(
   _minimap = minimap
   _chaseAI = chaseAI
   _audio = audio
+}
+
+export function setDungeonData(dungeon: DungeonData | null): void {
+  _dungeon = dungeon
 }
 
 export function resetGameTime(): void {
@@ -186,8 +193,9 @@ export function gameLoop(timestamp = 0): number {
         continue
       }
 
-      // Update AI
-      const decision = _chaseAI.decide(mob, _playerX, _playerZ, dt)
+      // Update AI (P4-3: pass stealth status)
+      const playerStealth = _dungeon ? isOnStealthTile(_dungeon, _playerX, _playerZ) : false
+      const decision = _chaseAI.decide(mob, _playerX, _playerZ, dt, playerStealth)
       if (decision.action === 'chase') {
         mob.setPosition(decision.targetX, mob.position.y, decision.targetZ)
         mob.update(dt, _playerX, _playerZ)

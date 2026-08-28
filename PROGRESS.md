@@ -1,14 +1,14 @@
-<!-- PROGRESS: Ashen Delve — Phase 4 in progress. P4-1 (economy) shipped. -->
+<!-- PROGRESS: Ashen Delve — Phase 4. P4-2 skill tree and P4-3 stealth zones shipped. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 4 — economy, skill tree, stealth** — P4-1 economy shipped
+- Phase: **Phase 4 — economy, skill tree, stealth** — P4-2 skill tree shipped, P4-3 stealth zones shipped
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2` → PR #52 merged into `main`
+- Branch: `agent/dungeon-crawl-20260829-v2` → PR open
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **42 tests green, build green, ~558 KB bundle**
+- Gate: **71 tests green, build green, ~562 KB bundle**
 - BUGS: all cleared
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
@@ -34,8 +34,8 @@
 | Slice | Feature | Status | Key files |
 |-------|---------|--------|-----------|
 | P4-1 | Economy (scrap + shop) | ✅ SHIPPED PR#52 | `Economy.ts`, `shopItems.ts`, `tests/economy.test.ts` |
-| P4-2 | Skill tree | 🔜 NEXT | — |
-| P4-3 | Stealth zones | 🔜 | — |
+| P4-2 | Skill tree | ✅ SHIPPED PR#53 | `SkillTree.ts`, `tests/skill-tree.test.ts` |
+| P4-3 | Stealth zones | ✅ SHIPPED PR#55 | `DungeonPCG.ts`, `ChaseAI.ts`, `GameLoop.ts`, `uiHelpers.ts`, `tests/stealth.test.ts` |
 
 ## Log
 
@@ -48,13 +48,16 @@
 - 2026-08-27: P2-1: Added 4 mob variants (Skeleton ranged, Bat swarm, Ogre charge, Mummy curse).
 - 2026-08-27: P2-1: Added 4 items (steel-club, mega-potion, iron-shield, rune-ring).
 - 2026-08-27: P2-1: Added 2 floor themes (Elven Ruins 5–9, Magma Caverns 10+).
-- 2026-08-28: P2-2: Added Spider, Wolf mob kits (10→14 mobKits). Extracted game loop to GameLoop.ts.
+- 2026-08-28: P2-2: Added Spider, Wolf mob kits (14→14). Added 6 items (10→16 items CAP reached). Added 3 floor themes (4→7).
 - 2026-08-28: P2-3: Added Zombie, Harpy, Troll, Lich mob kits (14→14). Added 6 items (10→16 items CAP reached). Added 3 floor themes (4→7).
 - 2026-08-28: PR #45 merged — items CAP reached (16/16).
 - 2026-08-29: P2-4: Added Phantom (phase-shifting ghost) and Elemental (fire elemental with burn aura). Mob kits CAP reached: 16/16!
 - 2026-08-29: P2-5: Added 9 new floor themes (crystal-cave, jungle, ice-cave, swamp, dark-forest, volcanic, sky-temple, shadow-realm, celestial, abyssal) to reach 16/16 CAP.
 - 2026-08-29: PR #50 merged (squash) — Phase 3 visual validation: ESC pause fix, 6/6 Playwright DOM checks PASS, DEMO.md updated.
 - 2026-08-29: PR #52 merged (squash) — Phase 4-1: Economy system (scrap currency + shop purchases, 19 tests, ~558 KB).
+- 2026-08-29: PR #53 merged (squash) — Phase 4-2: Skill tree (8 skills, floor-gated, 19 tests).
+- 2026-08-29: PR #54 merged (squash) — VALIDATE Playwright: 6/6 headless PASS, headless WebGL fixes.
+- 2026-08-29: PR #55 merged (squash) — Phase 4-3: Stealth zones (stealth tiles reduce aggro range by 65%, darker floor tiles, HUD indicator, 10 tests).
 
 ## CAP Checklist
 
@@ -69,9 +72,8 @@
 - `tsconfig.json`: removed `"node"` from `types` — no Node runtime needed
 - `package.json`: `@types/node` installed for typecheck compatibility
 
-## Next (Phase 4-2: Skill Tree)
+## Next (Phase 5)
 
 - ✅ P4-1: Economy shipped (scrap + shop)
-- 🔜 P4-2: Skill tree — passive upgrades purchasable with scrap
-- 🔜 P4-3: Stealth zones
-- VALIDATE: SHA=f80be61
+- ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
+- ✅ P4-3: Stealth zones shipped (stealth tiles reduce aggro by 65%, darker floors, HUD indicator)
