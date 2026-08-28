@@ -4,12 +4,12 @@
 
 ## NOW
 
-- Phase: **Phase 5 — item functionality** — all 5 slices shipped and merged
+- Phase: **Phase 6 — bugfix + validation** — B-7 fix merged, P5-1–P5-5 all shipped
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 all merged (PR#52,53,55,60,61,62,64,65,66)
+- Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 fix (PR#69)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **126 tests green, build green, ~577 KB bundle**
-- BUGS: all cleared
+- BUGS: 1 open (B-8 trivial, no impact)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
@@ -88,6 +88,8 @@
 
 ## Next (Phase 6)
 
+- ✅ B-7: Settings-back navigation fixed — returns to origin context. PR#69 merged.
+
 - ✅ P4-1: Economy shipped (scrap + shop)
 - ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
 - ✅ P4-3: Stealth zones shipped (stealth tiles reduce aggro by 65%, darker floors, HUD indicator)
@@ -98,3 +100,4 @@
 - ✅ P5-4: Sealed doors shipped — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.
 - ✅ P5-5: Stairs descent shipped — floor progression. DungeonPCG: isOnStairs. GameLoop: stairs detection + cooldown. Transition.ts: spawnMobs/spawnBoss/advanceToFloor/showFloorToast. main.ts: wired callback (481 lines). GameRenderer.ts: clearScene(). 9 new tests. PR#66.
 - 🔧 P5-5 validate: Fixed `updateGameVars` floor param + duplicate combat log. PR#67 (gate green, 126/126 tests).
+- 🔧 B-7 fix (Phase 6): Settings-back button now returns to origin context — from title → title, from pause → game. `main.ts` settings-back handler checks `gameState`: 'menu'/'dead' → title, 'playing' → game. PR#69.
