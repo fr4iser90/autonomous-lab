@@ -4,11 +4,11 @@
 
 ## NOW
 
-- Phase: **Phase 5 — item functionality** — P5-1+P5-2 shipped, P5-3 PR#64, P5-4 sealed doors, P5-5 stairs descent
+- Phase: **Phase 5 — item functionality** — all 5 slices shipped and merged
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2` → P4-4 merged ✅ (PR#60)
+- Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 all merged (PR#52,53,55,60,61,62,64,65,66)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **117 tests green, build green, ~576 KB bundle**
+- Gate: **126 tests green, build green, ~577 KB bundle**
 - BUGS: all cleared
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
@@ -36,11 +36,12 @@
 | P4-1 | Economy (scrap + shop) | ✅ SHIPPED PR#52 | `Economy.ts`, `shopItems.ts`, `tests/economy.test.ts` |
 | P4-2 | Skill tree | ✅ SHIPPED PR#53 | `SkillTree.ts`, `tests/skill-tree.test.ts` |
 | P4-3 | Stealth zones | ✅ SHIPPED PR#55 | `DungeonPCG.ts`, `ChaseAI.ts`, `GameLoop.ts`, `uiHelpers.ts`, `tests/stealth.test.ts` |
-| P4-4 | Floor traps | 🔄 PR#60 WIP | `traps.ts`, `DungeonPCG.ts` (trap gen/render), `GameLoop.ts` (trap damage), `uiHelpers.ts`, `index.html`, `tests/traps.test.ts` |
+| P4-4 | Floor traps | ✅ SHIPPED PR#60 | `traps.ts`, `DungeonPCG.ts` (trap gen/render), `GameLoop.ts` (trap damage), `uiHelpers.ts`, `index.html`, `tests/traps.test.ts` |
 | P5-1 | Item rarity on all 16 | ✅ SHIPPED PR#61 | `items.ts` (Rarity type on all 16 defs) |
 | P5-2 | LootDrop system | ✅ SHIPPED PR#62 | `LootDrop.ts` (weighted drops, 3D collectibles, auto-pickup) |
-| P5-3 | Rarity UI + loot toast | 🔄 PR#64 WIP | `main.ts` (rarity class/label helpers, showLootToast, updateInventoryUI, updateShopUI), `styles.css` (rarity colors), `index.html` (loot-toast HUD) |
-| P5-4 | Sealed doors + key consumption | ✅ IN-PR PR#65 | `Inventory.ts` (getKeyCount, addKeys, consumeKey), `DungeonPCG.ts` (getGridPosition, isSealedDoor, openDoorAt), `GameLoop.ts` (door collision block), `main.ts` (key count HUD, door toast), `styles.css` (key HUD + door toast), `index.html` (key-count + door-toast elements), `tests/sealed-doors.test.ts` (8 tests), `Inventory.test.ts` (5 key tests) |
+| P5-3 | Rarity UI + loot toast | ✅ SHIPPED PR#64 | `main.ts` (rarity class/label helpers, showLootToast, updateInventoryUI, updateShopUI), `styles.css` (rarity colors), `index.html` (loot-toast HUD) |
+| P5-4 | Sealed doors + key consumption | ✅ SHIPPED PR#65 | `Inventory.ts` (getKeyCount, addKeys, consumeKey), `DungeonPCG.ts` (getGridPosition, isSealedDoor, openDoorAt), `GameLoop.ts` (door collision block), `main.ts` (key count HUD, door toast), `styles.css` (key HUD + door toast), `index.html` (key-count + door-toast elements), `tests/sealed-doors.test.ts` (8 tests), `Inventory.test.ts` (5 key tests) |
+| P5-5 | Stairs descent + floor progression | ✅ SHIPPED PR#66 | `Transition.ts` (spawnMobs/spawnBoss/advanceToFloor/showFloorToast), `main.ts` (wired callback, 481 lines), `GameRenderer.ts` (clearScene), `DungeonPCG.ts` (isOnStairs), `tests/floor-advance.test.ts` (9 tests) |
 
 ## Log
 
@@ -67,6 +68,7 @@
 - 2026-08-29: P5-1: Item rarity — added Rarity type to all 16 ItemDefs. PR#61.
 - 2026-08-29: P5-2: LootDrop system — weighted mob drops, 3D floating collectibles, auto-pickup via manager, `LootDropManager.update()` returns collected items. PR#62.
 - 2026-08-29: P5-3: Rarity UI polish — color-coded inventory slots (green/blue/gold for common/uncommon/rare), loot collection toast with fade-out, shop rarity labels, auto-pickup toast in game loop. PR#64.
+- 2026-08-29: P5-5: Stairs descent — floor progression on stairs tiles. New Transition.ts module (spawnMobs/spawnBoss/advanceToFloor/showFloorToast), GameRenderer.clearScene(), DungeonPCG.isOnStairs(), stairs cooldown in GameLoop. 9 new tests. PR#66.
 
 ## CAP Checklist
 
@@ -86,9 +88,9 @@
 - ✅ P4-1: Economy shipped (scrap + shop)
 - ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
 - ✅ P4-3: Stealth zones shipped (stealth tiles reduce aggro by 65%, darker floors, HUD indicator)
-- 🔄 P4-4: Floor traps (spike/poison/fire — 3 types, 12 tests, PR#60)
+- ✅ P4-4: Floor traps shipped (spike/poison/fire — 3 types, 12 tests, PR#60)
 - ✅ P5-1: Item rarity on all 16 items shipped (PR#61)
 - ✅ P5-2: LootDrop system shipped (weighted drops, 3D collectibles, auto-pickup, PR#62)
-- 🔄 P5-3: Rarity UI + loot toast feedback (PR#64) — color-coded slots, toast with rarity variants, auto-pickup feedback
-- 🔄 P5-4: Sealed doors — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.
-- 🔄 P5-5: Stairs descent — floor progression. DungeonPCG: isOnStairs. GameLoop: stairs detection + cooldown. main.ts: advanceToFloor (regenerate dungeon, clear scene, respawn mobs, move to spawn), showFloorToast. 9 new tests. PR#66.
+- ✅ P5-3: Rarity UI + loot toast feedback shipped (PR#64) — color-coded slots, toast with rarity variants, auto-pickup feedback
+- ✅ P5-4: Sealed doors shipped — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.
+- ✅ P5-5: Stairs descent shipped — floor progression. DungeonPCG: isOnStairs. GameLoop: stairs detection + cooldown. Transition.ts: spawnMobs/spawnBoss/advanceToFloor/showFloorToast. main.ts: wired callback (481 lines). GameRenderer.ts: clearScene(). 9 new tests. PR#66.

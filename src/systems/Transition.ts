@@ -76,8 +76,8 @@ export function spawnBoss(renderer: GameRenderer, floor: number, dungeon: Dungeo
   }
 }
 
-export function advanceToFloor(floor: number, deps: TransitionDeps, addCombatLog: (msg: string) => void): void {
-  const { renderer, player, dungeonSeed, playerHP, playerMaxHP, playerFloor, mobs: mobsArr, combatLogEntries } = deps
+export function advanceToFloor(floor: number, deps: TransitionDeps): void {
+  const { renderer, player, dungeonSeed, playerHP, playerMaxHP, mobs: mobsArr, combatLogEntries } = deps
   const theme = getThemeForFloor(floor)
   const newDungeon = generateDungeon(dungeonSeed, floor, theme)
   renderer.clearScene()
@@ -91,7 +91,6 @@ export function advanceToFloor(floor: number, deps: TransitionDeps, addCombatLog
   player.setPosition(px, 0, pz)
   deps.minimap = new Minimap(newDungeon)
   GL.setDungeonData(newDungeon)
-  GL.updateGameVars(playerHP, playerMaxHP, px, pz, 0, playerFloor, mobsArr, combatLogEntries)
-  addCombatLog(`⬇ Descended to Floor ${floor}`)
+  GL.updateGameVars(playerHP, playerMaxHP, px, pz, 0, floor, mobsArr, combatLogEntries)
   updateFloor(floor)
 }

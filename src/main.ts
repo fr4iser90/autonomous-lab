@@ -421,7 +421,7 @@ function startGame(seed: number): void {
     showFloorToast(floor, addCombatLog)
     if (!renderer || !player) return
     const deps: TransitionDeps = { renderer, player, dungeonSeed, playerHP, playerMaxHP, playerX, playerZ, playerFloor, mobs, combatLogEntries, minimap: minimap || null }
-    advanceToFloor(floor, deps, addCombatLog)
+    advanceToFloor(floor, deps)
   })
   GL.setLootSpawn((_mobType, x, z, item) => {
     if (lootManager) lootManager.spawn(item, x, z)
