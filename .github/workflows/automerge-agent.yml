@@ -279,8 +279,10 @@ jobs:
           fi
 
           echo "Running gate on merged main tree before push"
-          npm ci
-          npm run gate
+          corepack enable
+          corepack prepare pnpm@9 --activate
+          pnpm install --frozen-lockfile
+          pnpm run gate
 
           git push origin main
           echo "Pushed main — Pages should rebuild"
