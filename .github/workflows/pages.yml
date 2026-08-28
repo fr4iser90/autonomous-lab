@@ -18,8 +18,10 @@ permissions:
   id-token: write
 
 concurrency:
+  # Do not cancel: a noop workflow_run (no land) used to cancel an in-flight
+  # push/workflow_dispatch deploy and leave Pages stale.
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   decide:
