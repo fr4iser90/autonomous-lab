@@ -142,6 +142,52 @@ button:active {
   gap: 0.25rem;
 }
 
+.status-effects-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.25rem 0.4rem;
+  background: var(--ash-ui-bg);
+  border: 1px solid var(--ash-ui-muted);
+  border-radius: 3px;
+  min-height: 2rem;
+}
+
+.status-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-family: "Cinzel", serif;
+  color: var(--ash-text);
+}
+
+.status-effect-emoji {
+  font-size: 0.9rem;
+}
+
+.status-effect-name {
+  font-weight: 600;
+}
+
+.status-effect-timer {
+  color: var(--ash-text-muted);
+  font-size: 0.65rem;
+}
+
+.status-effect-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--ash-ui-bg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.status-effect-fill {
+  height: 100%;
+  transition: width 0.1s linear;
+}
+
 .hp-bar {
   display: flex;
   align-items: center;

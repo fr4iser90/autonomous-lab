@@ -4,11 +4,13 @@
  */
 import * as THREE from 'three'
 import type { GameRenderer } from '../render/GameRenderer'
+import type { StatusEffect } from '../data/statusEffects'
 
 export class PlayerKit {
   readonly mesh: THREE.Group
   readonly position = new THREE.Vector3(0, 0, 0)
   scrap: number = 0
+  statusEffects: StatusEffect[] = [] // active status effects
   private readonly bodyMesh: THREE.Mesh
   private readonly headMesh: THREE.Mesh
   private readonly cloakMesh: THREE.Mesh

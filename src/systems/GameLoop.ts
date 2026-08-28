@@ -17,6 +17,7 @@ import { SkillTree } from './SkillTree'
 import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs } from './DungeonPCG'
 import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
+import { poison, burn, freeze } from '../data/statusEffects'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -165,7 +166,12 @@ export function gameLoop(timestamp = 0): number {
   // Move player
   if (_player && _renderer) {
     const effects = _skillTree?.getActiveEffects() ?? { damageBonus: 0, hpBonus: 0, speedBonus: 0, critChanceBonus: 0 }
-    const speed = 4 + effects.speedBonus
+    let speed = 4 + effects.speedBonus
+    // P7-1: Apply freeze slow factor
+    const playerFreeze = _player.statusEffects.find(e => e.type === 'freeze')
+    if (playerFreeze) {
+      speed *= playerFreeze.slowFactor
+    }
     const moveX = (Math.sin(_playerYaw) * inp.forward + Math.cos(_playerYaw) * inp.right) * speed * dt
     const moveZ = (Math.cos(_playerYaw) * inp.forward - Math.sin(_playerYaw) * inp.right) * speed * dt
 
@@ -206,7 +212,11 @@ export function gameLoop(timestamp = 0): number {
       const trapType = getTrapAt(_dungeon, _playerX, _playerZ)
       if (trapType && _trapHitTimer <= 0) {
         const trapDef = TRAP_DEFS[trapType]
-        const damage = trapDef.damage + Math.floor(_playerFloor * 0.5) // +0.5 damage per floor
+        let damage = trapDef.damage + Math.floor(_playerFloor * 0.5) // +0.5 damage per floor
+        // P7-1: Shield reduction
+        const playerShield = _player?.statusEffects.find(e => e.type === 'shield')
+        const shieldRed = playerShield?.damageReduction ?? 0
+        damage = Math.max(1, damage - shieldRed)
         _playerHP = Math.max(0, _playerHP - damage)
         _combatLogEntries.push(`${trapDef.label} trap! -${damage} HP`)
         _trapHitTimer = 0.5 // 0.5s cooldown to prevent repeated triggers
@@ -295,7 +305,10 @@ export function gameLoop(timestamp = 0): number {
             if (dist < 0.8 && !fb.hit) {
               fb.hit = true
               const armor = _inventory?.getEquippedArmor() ?? 0
-              const netDmg = Math.max(1, fb.damage - armor)
+              // P7-1: Shield reduction
+              const playerShield = _player?.statusEffects.find(e => e.type === 'shield')
+              const shieldRed = playerShield?.damageReduction ?? 0
+              const netDmg = Math.max(1, fb.damage - armor - shieldRed)
               _playerHP = Math.max(0, _playerHP - netDmg)
               if (_audio) _audio.hit()
               // Remove hit fireball
@@ -319,7 +332,10 @@ export function gameLoop(timestamp = 0): number {
             if (dist < zone.radius && zone.life > 0.5) { // Only damage during first half of animation
               zone.hit = true
               const armor = _inventory?.getEquippedArmor() ?? 0
-              const netDmg = Math.max(1, zone.damage - armor)
+              // P7-1: Shield reduction
+              const playerShield = _player?.statusEffects.find(e => e.type === 'shield')
+              const shieldRed = playerShield?.damageReduction ?? 0
+              const netDmg = Math.max(1, zone.damage - armor - shieldRed)
               _playerHP = Math.max(0, _playerHP - netDmg)
               if (_audio) _audio.hit()
             }
@@ -383,9 +399,25 @@ export function gameLoop(timestamp = 0): number {
       const attackCooldown = mob.state.stats.attackCooldown ?? 1.0
       if (dist <= 1.2 && (time - mob.lastAttackTime) >= attackCooldown && mob.state.stats.damage > 0) {
         const armor = _inventory?.getEquippedArmor() ?? 0
-        const netDmg = Math.max(1, mob.state.stats.damage - armor)
+        // P7-1: Apply shield damage reduction
+        const playerShield = _player?.statusEffects.find(e => e.type === 'shield')
+        const shieldReduction = playerShield?.damageReduction ?? 0
+        const netDmg = Math.max(1, mob.state.stats.damage - armor - shieldReduction)
         _playerHP = Math.max(0, _playerHP - netDmg)
         mob.recordAttack(time)
+        // P7-1: Status effects on hit
+        if (_player) {
+          const type = mob.state.type
+          if (type === 'mummy') {
+            _player.statusEffects.push(poison(4, 3)) // curse = poison
+          } else if (type === 'spider') {
+            _player.statusEffects.push(freeze(1.5, 0.4)) // web = freeze
+          } else if (type === 'elemental') {
+            _player.statusEffects.push(burn(3, 4)) // fire = burn
+          } else if (type === 'stalker') {
+            _player.statusEffects.push(poison(2, 2)) // poison dagger
+          }
+        }
         if (_audio) _audio.hit()
       }
     }
@@ -408,6 +440,61 @@ export function gameLoop(timestamp = 0): number {
 
   // P6: Boss UI updates (HP bar, warning flash)
   updateBossUI()
+
+  // P7-1: Tick player status effects (DOT damage)
+  if (_player) {
+    for (let i = _player.statusEffects.length - 1; i >= 0; i--) {
+      const eff = _player.statusEffects[i]
+      eff.ticksLeft -= dt
+      // Apply DOT damage at intervals
+      if (eff.damagePerTick > 0 && _playerHP > 0) {
+        const ticksSinceLast = dt / eff.tickInterval
+        const ticksToApply = Math.floor(ticksSinceLast + (eff._lastTickCount || 0))
+        if (ticksToApply > 0) {
+          const dotDamage = eff.damagePerTick * ticksToApply
+          _playerHP = Math.max(0, _playerHP - dotDamage)
+          _combatLogEntries.push(`${eff.emoji} ${eff.label} deals ${dotDamage} damage`)
+          eff._lastTickCount = ticksToApply
+        }
+      }
+      // Remove expired effects
+      if (eff.ticksLeft <= 0) {
+        _player.statusEffects.splice(i, 1)
+        _combatLogEntries.push(`${_playerHP > 0 ? '✅' : '💀'} ${eff.label} effect ended`)
+      }
+    }
+  }
+
+  // P7-1: Tick mob status effects (DOT damage)
+  if (_chaseAI) {
+    for (const mob of _mobs) {
+      if (!mob.state.alive) continue
+      for (let i = mob.state.statusEffects.length - 1; i >= 0; i--) {
+        const eff = mob.state.statusEffects[i]
+        eff.ticksLeft -= dt
+        // Apply DOT damage at intervals
+        if (eff.damagePerTick > 0 && mob.state.stats.hp > 0) {
+          const ticksSinceLast = dt / eff.tickInterval
+          const ticksToApply = Math.floor(ticksSinceLast + (eff._lastTickCount || 0))
+          if (ticksToApply > 0) {
+            const dotDamage = eff.damagePerTick * ticksToApply
+            mob.state.stats.hp = Math.max(0, mob.state.stats.hp - dotDamage)
+            if (mob.state.stats.hp <= 0) {
+              mob.state.alive = false
+              _combatLogEntries.push(`${eff.emoji} ${mob.state.type} burned to ash!`)
+            } else {
+              _combatLogEntries.push(`${eff.emoji} ${mob.state.type} takes ${dotDamage} ${eff.label} damage`)
+            }
+            eff._lastTickCount = ticksToApply
+          }
+        }
+        // Remove expired effects
+        if (eff.ticksLeft <= 0) {
+          mob.state.statusEffects.splice(i, 1)
+        }
+      }
+    }
+  }
 
   // Render
   _renderer?.render()

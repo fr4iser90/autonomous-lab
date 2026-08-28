@@ -1,7 +1,7 @@
 /** Ashen Delve — Main entry */
 import * as THREE from 'three'
 import { loadSave, saveSave } from './services/SaveService'
-import { updateHP, updateFloor, updateDepth, updateStealth, updateTrapHit } from './app/uiHelpers'
+import { updateHP, updateFloor, updateDepth, updateStealth, updateTrapHit, updateStatusEffects } from './app/uiHelpers'
 import { GameRenderer } from './render/GameRenderer'
 import { FollowCamera } from './render/camera'
 import { InputManager } from './systems/input'
@@ -51,9 +51,7 @@ let combatEngine: CombatEngine | null = null
 let inventory: Inventory | null = null
 let economy: Economy | null = null
 let skillTree: SkillTree | null = null
-let chaseAI: ChaseAI | null = null
-let audio: AudioEngine | null = null
-let lootManager: LootDropManager | null = null
+let chaseAI: ChaseAI | null = null, audio: AudioEngine | null = null, lootManager: LootDropManager | null = null
 
 function showScreen(screen: 'title' | 'game' | 'settings'): void {
   currentScreen = screen
@@ -461,6 +459,8 @@ function gameLoop(timestamp = 0): void {
   const trapEl = document.getElementById('trap-hit-label')!
   if (trapState.active) { trapEl.style.display = 'block'; updateTrapHit(true, trapState.trapType) } else { trapEl.style.display = 'none' }
 
+  // P7-1: Status effects HUD
+  if (player) updateStatusEffects(player.statusEffects)
   // Check player death
   GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0)
 
@@ -494,7 +494,7 @@ window.addEventListener('boss-summon', () => {
 })
 // Export for testing
 export { showScreen, gameState, currentScreen }
-export { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
+export { updateHP, updateFloor, updateDepth, updateStatusEffects } from './app/uiHelpers'
 export { playerHP, playerMaxHP, playerFloor }
 export { combatLogEntries, mobs }
 export { combatEngine, inventory, chaseAI, economy, skillTree, audio, lootManager, Boss }

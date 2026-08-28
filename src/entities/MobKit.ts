@@ -96,12 +96,15 @@ export interface MobStats {
   attackCooldown?: number // seconds between attacks (default 1.0)
 }
 
+import type { StatusEffect } from '../data/statusEffects'
+
 export interface MobState {
   type: MobType
   stats: MobStats
   alive: boolean
   scrapReward: number
   isBoss?: boolean
+  statusEffects: StatusEffect[] // active status effects
 }
 
 export abstract class MobKit {
@@ -113,7 +116,7 @@ export abstract class MobKit {
 
   constructor(renderer: GameRenderer, type: MobType, stats: MobStats, scrapReward: number = 0) {
     this.renderer = renderer
-    this.state = { type, stats, alive: true, scrapReward }
+    this.state = { type, stats, alive: true, scrapReward, statusEffects: [] }
     this.mesh = new THREE.Group()
     this.buildMesh(renderer, type)
     renderer.scene.add(this.mesh)

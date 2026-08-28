@@ -9,7 +9,7 @@
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **126 tests green, build green, ~585 KB bundle**
-- BUGS: **all drained** (B-7 through B-13 fixed)
+- BUGS: **game bugs drained** (B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 
 ## Milestones
