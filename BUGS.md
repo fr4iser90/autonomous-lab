@@ -2,37 +2,17 @@
 
 # BUGS
 
-Last validation: (ci-fail-bugs bot) SHA=6962d2b
+Last validation: 2026-08-28 SHA=aa0ded5
 
 ## Open
-
-### B-2: CI gate fail @ 6962d2b
-- Status: open
-- Severity: blocker
-- Found: 2026-08-27T23:51:12Z
-- Target: git  branch=agent/dungeon-crawl-20260827  SHA=6962d2b  full=6962d2b4779f04754189f541f07f3e9b16e48f4f
-- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33127710786 2) see job `protect-boilerplate` failed 3) FIX-ONLY until tip gate green on GitHub
-- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33127710786/job/98709701546
-- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
-- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
-
-### B-1: CI gate fail @ c9ba04a
-- Status: open
-- Severity: blocker
-- Found: 2026-08-27T23:06:13Z
-- Target: git  branch=agent/dungeon-crawl-20260827  SHA=c9ba04a  full=c9ba04afd36e850a07aaa1a50a84cd178b466c3e
-- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33125035646 2) see job `protect-boilerplate` failed 3) FIX-ONLY until tip gate green on GitHub
-- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33125035646/job/98700992563
-- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
-- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
 
 _(empty — validator / soak / UI smoke append here)_
 
 ## Fixed
 
+- B-2: CI gate fail @ 6962d2b — resolved by PR #42 merge (squash-merge to main)
+- B-1: CI gate fail @ c9ba04a — resolved by PR #42 merge (squash-merge to main)
 - B-6: CI gate fail @ 6962d2b — resolved by PR #42 merge (squash-merge to main)
 - B-5: CI gate fail @ c9ba04a — resolved by PR #42 merge (squash-merge to main)
 - B-4: False COMPLETE claim in PROGRESS.md (Phase 2 claimed done with mobKits 4/16, items 6/16, floorThemes 2/16) — fixed by P2-1 content expansion (8 mobs, 10 items, 4 themes)
 - B-3: CI gate fail @ 229745e — resolved by PR #34 merge (human resolved conflicts)
-- B-2: CI gate fail @ 13f961f — superseded by successful merge into main
-- B-1: CI gate fail @ daa966d — local gate green, CI re-runs on tip
