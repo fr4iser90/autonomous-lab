@@ -168,6 +168,13 @@ button:active {
   color: var(--ash-ui-muted);
 }
 
+.stealth-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.75rem;
+  color: #e8dcc8;
+  margin-top: 2px;
+}
+
 .inventory-toggle, .shop-toggle {
   font-family: "EB Garamond", serif;
   font-size: 0.85rem;

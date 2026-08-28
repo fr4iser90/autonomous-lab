@@ -14,6 +14,7 @@ export enum TileType {
   DOOR = 2,
   STAIRS = 3,
   SPAWN = 4,
+  STEALTH = 5,
 }
 
 export interface Room {
@@ -42,6 +43,7 @@ export interface DungeonData {
   seed: number
   theme: FloorTheme
   floorNumber: number
+  stealthTiles: Set<string>
 }
 
 const CELL_FLOOR = TileType.FLOOR
@@ -49,6 +51,7 @@ const CELL_WALL = TileType.WALL
 const CELL_DOOR = TileType.DOOR
 const CELL_STAIRS = TileType.STAIRS
 const CELL_SPAWN = TileType.SPAWN
+const CELL_STEALTH = TileType.STEALTH
 
 export function generateDungeon(seed: number, floorNumber: number = 1, theme: FloorTheme = FLOOR_THEMES[0]): DungeonData {
   const rng = createRng(hashSeed(seed))
@@ -121,6 +124,25 @@ export function generateDungeon(seed: number, floorNumber: number = 1, theme: Fl
   cells[spawnY * cols + spawnX].type = CELL_SPAWN
   cells[stairsY * cols + stairsX].type = CELL_STAIRS
 
+  // Generate stealth tiles — shadowy patches for P4-3 stealth zones
+  const stealthTiles = new Set<string>()
+  const stealthChance = 0.12 + floorNumber * 0.02 // more stealth on deeper floors
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = y * cols + x
+      const cell = cells[idx]
+      // Only mark non-spawn, non-stairs floor/door tiles as stealth
+      if ((cell.type === CELL_FLOOR || cell.type === CELL_DOOR) &&
+          !(x === spawnX && y === spawnY) &&
+          !(x === stairsX && y === stairsY)) {
+        if (rng() < stealthChance) {
+          cell.type = TileType.STEALTH
+          stealthTiles.add(`${x},${y}`)
+        }
+      }
+    }
+  }
+
   // Verify reachability via BFS
   const reachable = bfsReachable(cells, cols, rows, spawnX, spawnY)
   if (!reachable.has(stairsY * cols + stairsX)) {
@@ -140,6 +162,7 @@ export function generateDungeon(seed: number, floorNumber: number = 1, theme: Fl
     seed,
     theme,
     floorNumber,
+    stealthTiles,
   }
 }
 
@@ -208,7 +231,7 @@ function bfsReachable(cells: Cell[], cols: number, rows: number, sx: number, sy:
       const nidx = ny * cols + nx
       if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited.has(nidx)) {
         const ncell = cells[nidx]
-        if (ncell.type === CELL_FLOOR || ncell.type === CELL_DOOR || ncell.type === CELL_STAIRS || ncell.type === CELL_SPAWN) {
+        if (ncell.type === CELL_FLOOR || ncell.type === CELL_DOOR || ncell.type === CELL_STAIRS || ncell.type === CELL_SPAWN || ncell.type === CELL_STEALTH) {
           visited.add(nidx)
           queue.push(nidx)
         }
@@ -234,11 +257,12 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
       const worldX = x - width / 2
       const worldZ = y - height / 2
 
-      if (cell.type === CELL_FLOOR || cell.type === CELL_DOOR || cell.type === CELL_SPAWN || cell.type === CELL_STAIRS) {
-        // Floor tile
+      if (cell.type === CELL_FLOOR || cell.type === CELL_DOOR || cell.type === CELL_SPAWN || cell.type === CELL_STAIRS || cell.type === CELL_STEALTH) {
+        // Floor tile (stealth tiles rendered darker for shadowy effect)
         const tileGeo = new THREE.BoxGeometry(0.95, 0.1, 0.95)
+        const isStealth = cell.type === CELL_STEALTH
         const tileMat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(floorColor),
+          color: isStealth ? new THREE.Color(floorColor).multiplyScalar(0.55) : new THREE.Color(floorColor),
           roughness: 0.95,
         })
         const tile = new THREE.Mesh(tileGeo, tileMat)
@@ -302,3 +326,10 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
 // Re-export floor themes for convenience
 export { FLOOR_THEMES } from '../data/floors'
 export type { FloorTheme } from '../data/floors'
+
+/** Check if a world-space position is on a stealth tile */
+export function isOnStealthTile(dungeon: DungeonData, worldX: number, worldZ: number): boolean {
+  const gridX = Math.floor(worldX + dungeon.width / 2)
+  const gridY = Math.floor(worldZ + dungeon.height / 2)
+  return dungeon.stealthTiles.has(`${gridX},${gridY}`)
+}
