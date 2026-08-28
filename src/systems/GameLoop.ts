@@ -281,9 +281,51 @@ export function gameLoop(timestamp = 0): number {
     for (const mob of _mobs) {
       if (!mob.state.alive) continue
 
-      // Boss special behavior
-      if (mob.state.type === 'stalker' && mob.state.stats.maxHp === 60 && 'bossAttack' in mob) {
-        ;(mob as any).bossAttack(dt, _playerX, _playerZ)
+      // Boss special behavior (P6: special attacks, phases, summons)
+      if (mob.state.isBoss && 'bossAttack' in mob) {
+        const boss = mob as any
+        boss.bossAttack(dt, _playerX, _playerZ, time)
+
+        // P6: Check fireball proximity damage
+        if (boss.fireballs) {
+          for (const fb of boss.fireballs) {
+            const dx = _playerX - fb.mesh.position.x
+            const dz = _playerZ - fb.mesh.position.z
+            const dist = Math.sqrt(dx * dx + dz * dz)
+            if (dist < 0.8 && !fb.hit) {
+              fb.hit = true
+              const armor = _inventory?.getEquippedArmor() ?? 0
+              const netDmg = Math.max(1, fb.damage - armor)
+              _playerHP = Math.max(0, _playerHP - netDmg)
+              if (_audio) _audio.hit()
+              // Remove hit fireball
+              if (_renderer) {
+                _renderer.scene.remove(fb.mesh)
+                fb.mesh.geometry.dispose()
+                fb.mesh.material.dispose()
+              }
+              boss.fireballs.splice(boss.fireballs.indexOf(fb), 1)
+            }
+          }
+        }
+
+        // P6: Check ground slam proximity damage
+        if (boss.slamZones) {
+          for (const zone of boss.slamZones) {
+            if (zone.hit) continue
+            const dx = _playerX - zone.mesh.position.x
+            const dz = _playerZ - zone.mesh.position.z
+            const dist = Math.sqrt(dx * dx + dz * dz)
+            if (dist < zone.radius && zone.life > 0.5) { // Only damage during first half of animation
+              zone.hit = true
+              const armor = _inventory?.getEquippedArmor() ?? 0
+              const netDmg = Math.max(1, zone.damage - armor)
+              _playerHP = Math.max(0, _playerHP - netDmg)
+              if (_audio) _audio.hit()
+            }
+          }
+        }
+
         continue
       }
 
@@ -336,13 +378,14 @@ export function gameLoop(timestamp = 0): number {
         _lastGrowlTime = time
       }
 
-      // Check if mob attacks player
+      // Check if mob attacks player (cooldown-based, not damage-zeroing)
       const dist = mob.distanceTo(_playerX, _playerZ)
-      if (dist <= 1.2 && mob.state.stats.damage > 0) {
-        mob.state.stats.damage = 0
+      const attackCooldown = mob.state.stats.attackCooldown ?? 1.0
+      if (dist <= 1.2 && (time - mob.lastAttackTime) >= attackCooldown && mob.state.stats.damage > 0) {
         const armor = _inventory?.getEquippedArmor() ?? 0
         const netDmg = Math.max(1, mob.state.stats.damage - armor)
         _playerHP = Math.max(0, _playerHP - netDmg)
+        mob.recordAttack(time)
         if (_audio) _audio.hit()
       }
     }
@@ -362,6 +405,9 @@ export function gameLoop(timestamp = 0): number {
   if (_renderer) {
     _renderer.updateTorchFlicker(time)
   }
+
+  // P6: Boss UI updates (HP bar, warning flash)
+  updateBossUI()
 
   // Render
   _renderer?.render()
@@ -403,4 +449,59 @@ export function setBaseHP(baseHP: number): void { _playerMaxHP = baseHP }
 export function getTrapHitState(): { active: boolean; trapType: string | null } {
   const active = _trapHitTimer > 0
   return { active, trapType: active ? _lastTrapType : null }
+}
+
+// P6: Boss UI state
+let _lastBossPhase: string = ''
+
+/** Update boss HP bar and warning UI from boss state */
+export function updateBossUI(): void {
+  const bossMob = _mobs.find(m => m.state.isBoss && m.state.alive)
+  if (!bossMob) {
+    // Hide boss UI when no boss alive
+    const bossBar = document.getElementById('boss-hp-bar')
+    if (bossBar) bossBar.classList.remove('active')
+    const bossWarning = document.getElementById('boss-warning')
+    if (bossWarning) bossWarning.classList.remove('flash')
+    _lastBossPhase = ''
+    return
+  }
+
+  const boss = bossMob as any
+  const hpFill = Math.round((bossMob.state.stats.hp / bossMob.state.stats.maxHp) * 100)
+  const phase = boss.phase || 'normal'
+
+  // Show boss HP bar
+  const bossBar = document.getElementById('boss-hp-bar')
+  if (bossBar) {
+    bossBar.classList.add('active')
+    const fillEl = document.getElementById('boss-hp-fill')
+    if (fillEl) fillEl.style.width = hpFill + '%'
+  }
+
+  // Flash boss warning during special attacks
+  if (boss.isWarning && boss.warningType) {
+    const bossWarning = document.getElementById('boss-warning')
+    if (bossWarning) {
+      bossWarning.textContent = boss.warningType === 'fireball' ? '⚠ FIREBALL!' :
+        boss.warningType === 'slam' ? '⚠ GROUND SLAM!' : '⚠ MINION SUMMON!'
+      bossWarning.classList.add('flash')
+      // Remove class after animation
+      setTimeout(() => bossWarning.classList.remove('flash'), 600)
+    }
+  }
+
+  // Log phase transitions
+  if (phase !== _lastBossPhase) {
+    _lastBossPhase = phase
+    const phaseMessages: Record<string, string> = {
+      normal: '',
+      enrage: '🔥 Boss enrages!',
+      desperate: '⚡ Boss summons minions!',
+    }
+    if (phaseMessages[phase]) {
+      _combatLogEntries.unshift(phaseMessages[phase])
+      if (_combatLogEntries.length > 10) _combatLogEntries.pop()
+    }
+  }
 }

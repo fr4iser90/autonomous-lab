@@ -1,4 +1,5 @@
 /** Ashen Delve — Main entry */
+import * as THREE from 'three'
 import { loadSave, saveSave } from './services/SaveService'
 import { updateHP, updateFloor, updateDepth, updateStealth, updateTrapHit } from './app/uiHelpers'
 import { GameRenderer } from './render/GameRenderer'
@@ -473,9 +474,27 @@ initTitleScreen()
 initButtonHandlers()
 initVolumeSliders()
 
+// P6: Boss minion summoning event handler
+import { Boss } from './entities/Boss'
+window.addEventListener('boss-summon', () => {
+  if (!renderer || !player) return
+  const bossMob = mobs.find(m => m.state.isBoss && m.state.alive)
+  if (!bossMob) return
+  const angle = Math.random() * Math.PI * 2
+  const m = Boss.spawnMinionMob(renderer, new THREE.Vector3(
+    bossMob.position.x + Math.cos(angle) * 2, 0,
+    bossMob.position.z + Math.sin(angle) * 2,
+  ), mobs) as any
+  if (m && !m.initialized) {
+    m.initialized = true
+    m.buildMesh(renderer, 'goblin' as any)
+    m.mesh.position.set(m.position.x, 0, m.position.z)
+  }
+  addCombatLog('⚔️ Boss summons a goblin minion!')
+})
 // Export for testing
 export { showScreen, gameState, currentScreen }
 export { updateHP, updateFloor, updateDepth } from './app/uiHelpers'
 export { playerHP, playerMaxHP, playerFloor }
 export { combatLogEntries, mobs }
-export { combatEngine, inventory, chaseAI, economy, skillTree, audio, lootManager }
+export { combatEngine, inventory, chaseAI, economy, skillTree, audio, lootManager, Boss }

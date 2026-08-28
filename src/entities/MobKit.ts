@@ -93,6 +93,7 @@ export interface MobStats {
   speed: number
   aggroRange: number
   chaseSpeed: number
+  attackCooldown?: number // seconds between attacks (default 1.0)
 }
 
 export interface MobState {
@@ -100,6 +101,7 @@ export interface MobState {
   stats: MobStats
   alive: boolean
   scrapReward: number
+  isBoss?: boolean
 }
 
 export abstract class MobKit {
@@ -107,6 +109,7 @@ export abstract class MobKit {
   readonly state: MobState
   protected renderer: GameRenderer
   protected walkTime = 0
+  public lastAttackTime = 0 // track last attack time for cooldown
 
   constructor(renderer: GameRenderer, type: MobType, stats: MobStats, scrapReward: number = 0) {
     this.renderer = renderer
@@ -162,6 +165,11 @@ export abstract class MobKit {
         mat.opacity = 0.2
       }
     })
+  }
+
+  /** Set last attack time to current game time */
+  recordAttack(gameTime: number): void {
+    this.lastAttackTime = gameTime
   }
 
   dispose(): void {
