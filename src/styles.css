@@ -235,13 +235,86 @@ button:active {
   border: 1px solid var(--ash-ui-muted);
   border-radius: 0.35rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--ash-ui-muted);
   text-align: center;
   padding: 0.25rem;
+  cursor: default;
+  gap: 0.05rem;
 }
+
+/* P5-3: Item rarity glow borders */
+.rarity-common {
+  border-color: #88cc44;
+  box-shadow: 0 0 3px rgba(136, 204, 68, 0.25);
+}
+.rarity-uncommon {
+  border-color: #44aaff;
+  box-shadow: 0 0 5px rgba(68, 170, 255, 0.3);
+}
+.rarity-rare {
+  border-color: #ffaa22;
+  box-shadow: 0 0 7px rgba(255, 170, 34, 0.4);
+}
+
+.has-item {
+  color: var(--ash-ui-text);
+}
+
+.has-item .item-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.has-item .item-name {
+  font-size: 0.55rem;
+  color: var(--ash-ui-text);
+  line-height: 1.1;
+  word-break: break-word;
+}
+.has-item .item-rarity-label {
+  font-size: 0.45rem;
+  font-style: italic;
+  line-height: 1;
+}
+.has-item .item-action {
+  font-size: 0.5rem;
+  color: var(--ash-accent);
+  cursor: pointer;
+}
+.has-item .item-action:hover {
+  color: #ffcc66;
+  text-decoration: underline;
+}
+
+.rarity-common .item-rarity-label { color: #88cc44; }
+.rarity-uncommon .item-rarity-label { color: #44aaff; }
+.rarity-rare .item-rarity-label { color: #ffaa22; }
+
+/* P5-3: Loot collection toast */
+#loot-toast {
+  position: absolute;
+  bottom: 4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ash-ui-text);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+#loot-toast.visible {
+  opacity: 1;
+}
+#loot-toast.rarity-common { color: #88cc44; }
+#loot-toast.rarity-uncommon { color: #44aaff; }
+#loot-toast.rarity-rare { color: #ffaa22; text-shadow: 0 0 8px rgba(255, 170, 34, 0.5); }
 
 .shop-item {
   aspect-ratio: 1;

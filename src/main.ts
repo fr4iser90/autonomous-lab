@@ -1,7 +1,4 @@
-/**
- * Ashen Delve — Main entry point
- * M1-M12 + P4: Full game with Three.js, stealth zones, skill tree, economy
- */
+/** Ashen Delve — Main entry */
 import { loadSave, saveSave } from './services/SaveService'
 import { updateHP, updateFloor, updateDepth, updateStealth, updateTrapHit } from './app/uiHelpers'
 import { GameRenderer } from './render/GameRenderer'
@@ -39,8 +36,6 @@ import { Economy } from './systems/Economy'
 import { SkillTree, getSkillsForFloor, getSkillDefById } from './systems/SkillTree'
 import { LootDropManager } from './systems/LootDrop'
 import * as GL from './systems/GameLoop'
-
-// DOM refs
 const titleScreen = document.getElementById('title-screen')!
 const gameScreen = document.getElementById('game-screen')!
 const settingsPanel = document.getElementById('settings-panel')!
@@ -49,33 +44,22 @@ const inventoryPanel = document.getElementById('inventory-panel')!
 const deathScreen = document.getElementById('death-screen')!
 const pauseOverlay = document.getElementById('pause-overlay')!
 const combatLog = document.getElementById('combat-log')!
+const lootToast = document.getElementById('loot-toast')!
 const shopPanel = document.getElementById('shop-panel')!
 const skillPanel = document.getElementById('skill-panel')!
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
-
-// State
 let currentScreen: 'title' | 'game' | 'settings' = 'title'
 let gameState: 'menu' | 'playing' | 'paused' | 'dead' = 'menu'
-
-// Three.js game objects
 let renderer: GameRenderer | null = null
 let player: PlayerKit | null = null
 let camera: FollowCamera | null = null
 let input: InputManager | null = null
 let playerYaw = 0
 let minimap: Minimap | null = null
-
-// Game state
-let playerHP = 20
-let playerMaxHP = 20
-let playerFloor = 1
-let playerX = 0
-let playerZ = 0
-let dungeonSeed = 0
-let mobs: MobKit[] = []
-let combatLogEntries: string[] = []
+let playerHP = 20, playerMaxHP = 20, playerFloor = 1
+let playerX = 0, playerZ = 0, dungeonSeed = 0
+let mobs: MobKit[] = [], combatLogEntries: string[] = []
 let currentDungeon: DungeonData | null = null
-// Systems
 let combatEngine: CombatEngine | null = null
 let inventory: Inventory | null = null
 let economy: Economy | null = null
@@ -84,7 +68,6 @@ let chaseAI: ChaseAI | null = null
 let audio: AudioEngine | null = null
 let lootManager: LootDropManager | null = null
 
-// --- Screen Management ---
 function showScreen(screen: 'title' | 'game' | 'settings'): void {
   currentScreen = screen
   titleScreen.style.display = screen === 'title' ? 'flex' : 'none'
@@ -106,7 +89,6 @@ function showScreen(screen: 'title' | 'game' | 'settings'): void {
   }
 }
 
-// --- Title Screen ---
 function initTitleScreen(): void {
   const save = loadSave()
   const continueBtn = document.getElementById('btn-continue')!
@@ -118,7 +100,6 @@ function initTitleScreen(): void {
   showScreen('title')
 }
 
-// --- Settings ---
 function loadSettingsIntoUI(): void {
   const save = loadSave()
   const vm = document.getElementById('vol-master') as HTMLInputElement
@@ -149,7 +130,6 @@ function applySettingsFromUI(): void {
   })
 }
 
-// --- Keyboard Input ---
 document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (currentScreen === 'game' && gameState === 'playing' && input) {
     input.onKeyDown(e)
@@ -201,7 +181,6 @@ document.addEventListener('keyup', (e: KeyboardEvent) => {
   if (input) input.onKeyUp(e)
 })
 
-// Mouse
 canvas.addEventListener('mousedown', (e) => {
   if (input) input.onMouseDown()
   if (camera) camera.onPointerDown(e.clientX)
@@ -268,7 +247,21 @@ function initVolumeSliders(): void {
   })
 }
 
-// --- Inventory UI ---
+function rarityClass(rarity: import('./data/items').ItemRarity): string {
+  return `rarity-${rarity}`
+}
+function rarityLabel(rarity: import('./data/items').ItemRarity): string {
+  return rarity.charAt(0).toUpperCase() + rarity.slice(1)
+}
+
+let _lootToastTimer: ReturnType<typeof setTimeout> | undefined = undefined
+function showLootToast(item: import('./data/items').ItemDef): void {
+  if (_lootToastTimer) clearTimeout(_lootToastTimer)
+  lootToast.textContent = `${item.icon} ${item.name}`
+  lootToast.className = `rarity-${item.rarity} visible`
+  _lootToastTimer = setTimeout(() => { lootToast.className = '' }, 1500)
+}
+
 function updateInventoryUI(): void {
   if (!inventory) return
   const slotEls = inventoryPanel.querySelectorAll('.slot')
@@ -278,12 +271,12 @@ function updateInventoryUI(): void {
       const slot = slots[i]
       const equipped = slot.equipped ? ' [E]' : ''
       const label = slot.item.type === 'potion' ? '[U]se' : slot.equipped ? '[U]nequip' : '[E]quip'
-      ;(el as HTMLElement).innerHTML = `<span class="item-icon">${slot.item.icon}</span><span class="item-name">${slot.item.name}</span>${equipped}<br><span class="item-action" data-id="${slot.item.id}">${label}</span>`
-      ;(el as HTMLElement).classList.add('has-item')
+      ;(el as HTMLElement).innerHTML = `<span class="item-icon">${slot.item.icon}</span><span class="item-name">${slot.item.name}</span>${equipped}<br><span class="item-rarity-label">${rarityLabel(slot.item.rarity)}</span><br><span class="item-action" data-id="${slot.item.id}">${label}</span>`
+      ;(el as HTMLElement).className = `slot has-item ${rarityClass(slot.item.rarity)}`
       const actionEl = (el as HTMLElement).querySelector('.item-action')
       if (actionEl) actionEl.addEventListener('click', () => handleItemAction(slot))
     } else {
-      ;(el as HTMLElement).innerHTML = ''; (el as HTMLElement).classList.remove('has-item')
+      ;(el as HTMLElement).innerHTML = ''; (el as HTMLElement).className = 'slot'
     }
   })
 }
@@ -300,36 +293,38 @@ function handleItemAction(slot: { item: import('./data/items').ItemDef; equipped
   updateInventoryUI(); updateHP(playerHP, playerMaxHP)
 }
 
-// --- Scrap UI ---
 function updateScrapUI(): void {
   const el = document.getElementById('scrap-label')
   if (el) el.textContent = `Scrap: ${player?.scrap ?? 0}`
 }
 
-// --- Shop UI ---
 function updateShopUI(): void {
   if (!economy || !player) return
   const grid = document.getElementById('shop-grid')!
   const ec = economy
   const inv = inventory
-  getShopItemsForFloor(playerFloor).forEach(item => {
-    const canAfford = ec.scrap >= item.cost
+  getShopItemsForFloor(playerFloor).forEach(shopItem => {
+    const canAfford = ec.scrap >= shopItem.cost
+    const invItem = getItemById(shopIdToItemId(shopItem.id) ?? '')
+    const rarity = invItem?.rarity ?? 'common'
     const el = document.createElement('div')
-    el.className = `inv-slot shop-item ${canAfford ? '' : 'cant-afford'}`
-    el.dataset.id = item.id
-    el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-name">${item.name}</span><span class="item-cost">${item.cost} scrap</span>`
+    el.className = `inv-slot shop-item ${rarityClass(rarity)} ${canAfford ? '' : 'cant-afford'}`
+    el.dataset.id = shopItem.id
+    el.innerHTML = `<span class="item-icon">${shopItem.icon}</span><span class="item-name">${shopItem.name}</span><span class="item-rarity-label">${rarityLabel(rarity)}</span><span class="item-cost">${shopItem.cost} scrap</span>`
     el.addEventListener('click', () => {
-      if (!ec.purchase(item)) return addCombatLog('❌ Not enough scrap!')
-      addCombatLog(`🛒 Bought ${item.name} for ${item.cost} scrap`)
-      const itemId = shopIdToItemId(item.id), invItem = itemId ? getItemById(itemId) : null
-      if (invItem && inv?.addItem(invItem)) addCombatLog(`  → Added ${invItem.name} to inventory`)
+      if (!ec.purchase(shopItem)) return addCombatLog('❌ Not enough scrap!')
+      addCombatLog(`🛒 Bought ${shopItem.name} for ${shopItem.cost} scrap`)
+      const itemId = shopIdToItemId(shopItem.id), invItem2 = itemId ? getItemById(itemId) : null
+      if (invItem2 && inv?.addItem(invItem2)) {
+        addCombatLog(`  → Added ${invItem2.name} to inventory`)
+        showLootToast(invItem2)
+      }
       updateShopUI(); updateScrapUI()
     })
     grid.appendChild(el)
   })
 }
 
-// --- Skill UI ---
 function updateSkillUI(): void {
   if (!skillTree || !economy) return
   const grid = document.getElementById('skill-grid')!, st = skillTree, ec = economy
@@ -352,7 +347,6 @@ function updateSkillUI(): void {
   })
 }
 
-// --- Combat UI ---
 function addCombatLog(message: string): void {
   combatLogEntries.push(message)
   if (combatLogEntries.length > 10) combatLogEntries.shift()
@@ -362,7 +356,6 @@ function addCombatLog(message: string): void {
   ;(combatLog as any)._hideTimer = setTimeout(() => { combatLog.style.display = 'none' }, 5000)
 }
 
-// --- Game Start ---
 function startNewGame(): void {
   dungeonSeed = Date.now() % 100000
   startGame(dungeonSeed)
@@ -465,7 +458,8 @@ function gameLoop(timestamp = 0): void {
   // Update loot drops
   if (lootManager && frame) {
     const time = renderer?.getElapsedTime() ?? 0
-    lootManager.update(0.016, time, playerX, playerZ)
+    const collected = lootManager.update(0.016, time, playerX, playerZ)
+    if (collected.length > 0) showLootToast(collected[collected.length - 1])
   }
 
   // P4-3: stealth HUD
@@ -485,7 +479,6 @@ function gameLoop(timestamp = 0): void {
   }
 }
 
-// --- Init ---
 initTitleScreen()
 initButtonHandlers()
 initVolumeSliders()
