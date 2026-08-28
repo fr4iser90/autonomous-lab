@@ -198,7 +198,7 @@ function initButtonHandlers(): void {
   if (btnNew) btnNew.addEventListener('click', () => { dungeonSeed = Date.now() % 100000; startGame(dungeonSeed) })
   if (btnContinue) btnContinue.addEventListener('click', () => startGame(dungeonSeed || 12345))
   if (btnSettings) btnSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
-  if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen('title') })
+  if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen(gameState === 'menu' || gameState === 'dead' ? 'title' : 'game') })
   if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = 20; playerMaxHP = 20; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); if (skillTree) skillTree.reset(); GL.setBaseHP(20); updateScrapUI() })
   if (btnTitle) btnTitle.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
   if (btnResume) btnResume.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
