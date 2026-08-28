@@ -3,6 +3,7 @@
 # BUGS
 
 Last validation: 2026-08-29 SHA=03d549e (Phase 6 Play/smoke — 19/20 PASS, 2 bugs found)
+Next validation: 2026-08-29 SHA=aff5f2c (Phase 6 Pages validation — B-14 found: Pages stale)
 
 ## Open
 
@@ -15,6 +16,8 @@ _(none — all bugs resolved)_
 - **B-11**: S key conflict — `input.ts` uses S for backward movement AND `main.ts` uses S for skills toggle. **Fixed**: Skills now use T key (T for "Skill Tree").
 - **B-12**: No attack key for keyboard — attack was mouse-click only with no HUD indicator. **Fixed**: Space bar now triggers attack; HUD shows "Space Attack" in controls hint.
 - **B-13**: HUD control hints missing — HUD showed [E] Inventory but no WASD/attack indicators. **Fixed**: Added `controls-hint` element to HUD with full key mapping.
+- **B-13b**: HUD typo: "I Inventory" → fixed to "E Inventory".
+- **B-14**: `sync-agent` step skipped in `automerge-agent.yml` when PR uses squash-merge (clean merge). Pages workflow requires `sync-agent.success` to decide deploy → Pages stayed stale, serving content from before Phase 6 merge. **Fix in progress**: Investigating `merge-to-main` job `finalize` output propagation.
 
 ## Closed
 
