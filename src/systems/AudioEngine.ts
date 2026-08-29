@@ -2,12 +2,31 @@
  * AudioEngine — procedural audio via Web Audio API.
  * M10: Footsteps, mob growls, ambient dungeon, attack swoosh.
  * P8-2: critHit(), playerHit(), death() for combat audio feedback.
+ * P10-1: 3 ambient jukebox tracks with cycling.
  */
 export interface AudioSettings {
   masterVolume: number
   sfxVolume: number
   reduceMotion: boolean
 }
+
+/** Jukebox ambient track definitions. */
+export interface AmbientTrack {
+  /** Human-readable label */
+  name: string
+  /** Oscillator type */
+  oscType: OscillatorType
+  /** Base frequency in Hz */
+  freq: number
+  /** Harmonic frequency (0 = none) */
+  harmonics: { type: OscillatorType; freq: number }[]
+}
+
+export const AMBIENT_TRACKS: AmbientTrack[] = [
+  { name: 'Dungeon Drone', oscType: 'sine', freq: 55, harmonics: [] },
+  { name: 'Crypt Echo', oscType: 'triangle', freq: 73, harmonics: [{ type: 'sine', freq: 110 }] },
+  { name: 'Abyssal Hum', oscType: 'sawtooth', freq: 40, harmonics: [{ type: 'sine', freq: 82 }] },
+]
 
 export class AudioEngine {
   private ctx: AudioContext | null = null
@@ -164,29 +183,83 @@ export class AudioEngine {
     osc.stop(this.ctx.currentTime + 0.5)
   }
 
-  /** Play ambient dungeon drone */
-  startAmbient(): void {
+  /** Current ambient track index (0-based) */
+  currentAmbientTrack = 0
+
+  /** Play ambient dungeon drone for the given track index */
+  startAmbient(trackIndex?: number): void {
     if (!this.enabled || !this.ctx || !this.masterGain) return
-    // Low ambient drone
+    if (trackIndex !== undefined) {
+      this.currentAmbientTrack = trackIndex
+    }
+    const track = AMBIENT_TRACKS[this.currentAmbientTrack] ?? AMBIENT_TRACKS[0]
+    this._playAmbientTrack(track)
+  }
+
+  /** Restart ambient using the current track */
+  private _playAmbientTrack(track: AmbientTrack): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return
+    // Stop any existing oscillators
+    const prev = (this as any)._ambient as
+      | { oscillators: OscillatorNode[]; gains: GainNode[] }
+      | undefined
+    if (prev) {
+      prev.gains.forEach(g => {
+        try {
+          g.gain.exponentialRampToValueAtTime(0.001, this.ctx!.currentTime + 0.3)
+        } catch { /* ignore */ }
+      })
+      prev.oscillators.forEach(o => { try { o.stop(this.ctx!.currentTime + 0.4) } catch { /* ignore */ } })
+    }
+    // Create main oscillator
     const osc = this.ctx.createOscillator()
     const gain = this.ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.value = 55
+    osc.type = track.oscType
+    osc.frequency.value = track.freq
     gain.gain.value = 0.02 * this.settings.sfxVolume / 100
     osc.connect(gain)
     gain.connect(this.masterGain)
     osc.start()
-    ;(this as any)._ambient = { osc, gain }
+    // Harmonics
+    const oscillators = [osc]
+    const gains = [gain]
+    for (const h of track.harmonics) {
+      const hOsc = this.ctx.createOscillator()
+      const hGain = this.ctx.createGain()
+      hOsc.type = h.type
+      hOsc.frequency.value = h.freq
+      hGain.gain.value = 0.01 * this.settings.sfxVolume / 100
+      hOsc.connect(hGain)
+      hGain.connect(this.masterGain)
+      hOsc.start()
+      oscillators.push(hOsc)
+      gains.push(hGain)
+    }
+    ;(this as any)._ambient = { oscillators, gains }
   }
 
   /** Stop ambient drone */
   stopAmbient(): void {
-    const a = (this as any)._ambient as { osc: OscillatorNode; gain: GainNode } | undefined
+    const a = (this as any)._ambient as
+      | { oscillators: OscillatorNode[]; gains: GainNode[] }
+      | undefined
     if (a) {
-      a.gain.gain.exponentialRampToValueAtTime(0.001, this.ctx!.currentTime + 1)
-      a.osc.stop(this.ctx!.currentTime + 1.1)
+      a.gains.forEach(g => {
+        try { g.gain.exponentialRampToValueAtTime(0.001, this.ctx!.currentTime + 1) } catch { /* ignore */ }
+      })
+      a.oscillators.forEach(o => { try { o.stop(this.ctx!.currentTime + 1.1) } catch { /* ignore */ } })
       ;(this as any)._ambient = undefined
     }
+  }
+
+  /** Cycle to the next ambient track; returns track name or undefined if audio off */
+  cycleAmbientTrack(): string | undefined {
+    const wasEnabled = this.enabled
+    this.currentAmbientTrack = (this.currentAmbientTrack + 1) % AMBIENT_TRACKS.length
+    if (!wasEnabled || !this.ctx) return undefined
+    const newTrack = AMBIENT_TRACKS[this.currentAmbientTrack]
+    this._playAmbientTrack(newTrack)
+    return newTrack.name
   }
 
   dispose(): void {

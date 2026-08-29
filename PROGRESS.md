@@ -4,10 +4,11 @@
 
 ## NOW
 
-- Phase: **Phase 9 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting), P9-1 ✅ (Enhanced Death Recap + Run History), P9-2 ✅ (Quick-Use Hotbar + Consumable Cooldown). Bundle: 619.01 KB (<620 KB cap). 319 tests green (2 skipped).
-- P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`). `RunTracker.ts`, persistent best runs (top 5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets tick counter.
-- P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`). Bottom bar with 4 slots, number-key shortcuts (1-4), 1-second cooldown overlay. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown). 319 tests (313+6 P9-2).
-- Next: **VALIDATE cadence** — Phase 9 complete, next validate on Pages. Gate: 319 tests, 619.01 KB.
+- Phase: **Phase 9 complete** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95). P10-1 **IN PROGRESS** — Ambient Jukebox (3 tracks, J key, HUD + toast). Gate: 327 tests green (2 skipped), 620.31 KB bundle.
+- P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
+- P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`).
+- P10-1: Ambient Jukebox — **IN PROGRESS** — 3 `AmbientTrack` defs (`Dungeon Drone`, `Crypt Echo`, `Abyssal Hum`), `cycleAmbientTrack()` in `AudioEngine.ts`, saved via `settings.ambientTrack` in `SaveService`, UI via J key + HUD click on `#jukebox-label`, toast notification. 7 new unit tests. `ui.ts` refactored to 793 lines (under 800 cap).
+- Next: Commit P10-1 changes, push branch, open PR. Gate: 327 tests, 620.31 KB.
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
@@ -169,13 +170,21 @@
 | P9-1 | Enhanced Death Recap + Run History — persistent best runs, death stats (floor/scrap/mobs/duration/best), retry button | ✅ MERGED PR#94 (SHA `c695f6d`) | `RunTracker.ts`, `GameLoop.ts`, `ui.ts`, `index.html`, `styles.css` |
 | P9-2 | Quick-Use Hotbar + Consumable Cooldown — bottom bar, 4 slots, number keys 1-4, potion cooldown 1s | ✅ MERGED PR#95 (SHA `9710d52`) | `Inventory.ts` (cooldown Map, tryQuickUsePotion/Key, isOnCooldown), `ui.ts` (hotbar DOM, event delegation), `index.html`, `styles.css` |
 
+## P10 — Phase 10: Quality of Life
+
+| Slice | Feature | Status | Key files |
+|-------|---------|--------|-----------|
+| P10-1 | Ambient Jukebox — 3 track selector, J key cycle, HUD label, toast notification | 🔄 IN PROGRESS | `AudioEngine.ts` (AmbientTrack, cycleAmbientTrack), `SaveService.ts` (ambientTrack setting), `ui.ts` (cycleAmbientTrack, updateJukeboxUI, J key handler), `index.html` (#jukebox-label), `styles.css` (.jukebox-label) |
+
 ## Planned
 
 - ✅ **P8-1 shipped** — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
 - ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
 - ✅ **P8-3 shipped** — Toast polish: ToastSystem.ts with stacking (max 4), slide-in/out CSS animations, configurable duration/type, rarity-colored loot toasts. Loot/door toasts migrated from inline DOM manipulation to ToastSystem. Floor toast in Transition.ts uses ToastSystem. 8 unit tests. Gate: 300 tests (2 skipped), 618.03 KB bundle.
 - ✅ **P8-4 shipped** — Dynamic lighting: `lighting.ts` pure math module (`torchIntensity` with irrational freq ratios + draft bursts, `ambientIntensity` floor-depth falloff 0.7→0.25), `GameRenderer.ts` wrappers, `GameLoop.ts` floor wiring, 13 tests. Gate: 313 tests green, 618.39 KB. Phase 8 is now fully complete (P8-1 ✅ P8-2 ✅ P8-3 ✅ P8-4 ✅, PR#86 + #90 merged).
-- ✅ **P9-1 shipped (PR#94)** — Enhanced Death Recap + Run History: `RunTracker.ts` (40 lines, persistent best runs top-5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets run tick counter. Bundle: 619.67 KB. Gate: 313 tests green (2 skipped), 0 TS errors. — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
+- ✅ **P9-1 shipped (PR#94)** — Enhanced Death Recap + Run History: `RunTracker.ts` (40 lines, persistent best runs top-5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets run tick counter. Bundle: 619.67 KB. Gate: 313 tests green (2 skipped), 0 TS errors.
+- ✅ **P9-2 shipped (PR#95)** — Quick-Use Hotbar + Consumable Cooldown: Bottom bar with 4 slots, number-key shortcuts (1-4), 1-second cooldown overlay. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown). 319 tests (313+6 P9-2).
+- 🔄 **P10-1 in progress** — Ambient Jukebox: 3 `AmbientTrack` defs (`Dungeon Drone`, `Crypt Echo`, `Abyssal Hum`), `cycleAmbientTrack()` in `AudioEngine.ts`, saved via `settings.ambientTrack` in `SaveService.ts`, UI via J key + HUD click on `#jukebox-label`, toast notification. `ui.ts` refactored to 793 lines. 7 new unit tests. Gate: 327 tests green (2 skipped), 620.31 KB bundle.
 - ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
 - ✅ **P8-3 shipped** — Toast polish: ToastSystem.ts with stacking (max 4), slide-in/out CSS animations, configurable duration/type, rarity-colored loot toasts. Loot/door toasts migrated from inline DOM manipulation to ToastSystem. Floor toast in Transition.ts uses ToastSystem. 8 unit tests. Gate: 300 tests (2 skipped), 618.03 KB bundle.
 - ✅ **P8-4 shipped** — Dynamic lighting: `lighting.ts` pure math module (`torchIntensity` with irrational freq ratios + draft bursts, `ambientIntensity` floor-depth falloff 0.7→0.25), `GameRenderer.ts` wrappers, `GameLoop.ts` floor wiring, 13 tests. Gate: 313 tests green, 618.39 KB. Phase 8 is now fully complete (P8-1 ✅ P8-2 ✅ P8-3 ✅ P8-4 ✅, PR#86 + #90 merged).
