@@ -46,8 +46,9 @@ export class InputManager {
 
   onKeyDown(e: KeyboardEvent): void {
     this.keys.set(e.key, true)
-    // Prevent scrolling with space/arrows
-    if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    // Prevent scrolling/zooming with navigation keys + WASD
+    if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+         'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(e.key)) {
       e.preventDefault()
     }
   }
@@ -73,13 +74,31 @@ export class InputManager {
   /** Enable pointer-lock mouse-look on the given canvas (FP mode only). */
   setPointerLock(canvas: HTMLCanvasElement): void {
     this._pointerLockCanvas = canvas
+    // Remove stale listeners to avoid duplicates
+    canvas.removeEventListener('click', this._onPointerLockRequest)
+    document.removeEventListener('pointerlockchange', this._onPointerLockChange)
     // Request pointer lock on first click
-    canvas.addEventListener('click', this._onPointerLockRequest, { once: true })
+    canvas.addEventListener('click', this._onPointerLockRequest)
+    // Re-request when pointer lock is lost (e.g. pause, blur, Escape)
+    document.addEventListener('pointerlockchange', this._onPointerLockChange)
+    // Try to lock immediately (will request on click if not allowed yet)
+    if (document.pointerLockElement !== canvas) {
+      canvas.addEventListener('click', this._onPointerLockRequest, { once: true })
+    }
   }
 
   private _onPointerLockRequest = (): void => {
     if (!this._pointerLockCanvas) return
     this._pointerLockCanvas.requestPointerLock?.()
+  }
+
+  private _onPointerLockChange = (): void => {
+    if (!this._pointerLockCanvas) return
+    if (document.pointerLockElement !== this._pointerLockCanvas) {
+      // Pointer lock lost — re-attach click listener for next request
+      this._pointerLockCanvas.removeEventListener('click', this._onPointerLockRequest)
+      this._pointerLockCanvas.addEventListener('click', this._onPointerLockRequest)
+    }
   }
 
   /** Called from the game's document mousemove handler when pointer lock is active. */
