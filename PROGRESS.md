@@ -1,10 +1,11 @@
-<!-- PROGRESS: Ashen Delve — ALL PHASES COMPLETE. P12 merged PR#102. P13 VALIDATE merged PR#103. P14 VALIDATE PR#105 open. Gate: 341 tests, 619.89 KB. 0 open bugs. Awaiting human direction for Phase 14 scope. -->
+<!-- PROGRESS: Ashen Delve — ALL PHASES COMPLETE. P12 merged PR#102. P13 VALIDATE merged PR#103. P14 VALIDATE merged PR#105. P15 VALIDATE PR#106 open. Gate: 341 tests, 619.89 KB. 0 open bugs. Awaiting human direction for Phase 14 scope. -->
 
 # Progress
 
 ## NOW
 
 - Phase: **Phase 12 complete** — Boss Trophy Tracking: toast on boss defeat, boss kill counter in HUD (👑), boss kill stat on death screen, RunTracker integration with persistent `_totalBossKills`. Gate: 341 tests green (2 skipped), 619.89 KB bundle. PR#102 **MERGED** ✅.
+- **VALIDATE: 76a6973 PASS** — Playwright: 9/9 pass (3 smoke + 6 validation). Vitest: 341/343 pass (2 skipped). Build: 619.89 KB JS / 13.65 KB CSS. Screenshots: title/game/inventory/pause all PASS. No new bugs found.
 - **VALIDATE: 0f23bd4 PASS** — Playwright: 9/9 pass (3 smoke + 6 validation). Vitest: 341/343 pass (2 skipped). Build: 619.89 KB JS / 13.65 KB CSS. Screenshots: title/game/inventory/pause (pause artifact: inventory overlay). No new bugs found.
 - **VALIDATE: 499dfbb PASS** — Playwright: 9/9 pass (3 smoke + 6 validation). Vitest: 341/343 pass (2 skipped). Build: 619.89 KB JS / 13.65 KB CSS. Screenshots: title/game/inventory/pause all PASS. No new bugs found.
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
