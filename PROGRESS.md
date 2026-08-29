@@ -1,20 +1,29 @@
-<!-- PROGRESS: Ashen Delve — P9-2 Quick-Use Hotbar + Consumable Cooldown implemented. -->
+<!-- PROGRESS: Ashen Delve — P9 complete: P9-1 Death Recap + P9-2 Quick-Use Hotbar. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 8 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting: torch flicker + ambient falloff), PR#86 + #87 (closed) + #89 + #90
-- P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — `RunTracker.ts` (40 lines), persistent best runs (top 5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets tick counter. PR#94 merged to main (SHA `c695f6d`). Bundle: 619.67 KB (<620 KB cap). 313 tests green. Pages validated: all P9-1 DOM elements present.
-- P9-2: Quick-Use Hotbar + Consumable Cooldown — **IN PROGRESS** — Bottom bar with 4 slots, number-key shortcuts (1-4) for potions/keys, 1-second cooldown on potions, cooldown overlay on slots. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown). Bundle: 619.01 KB (<620 KB). 319 tests (313+6 P9-2).
-- Next: P9-2 tests gate; gate cadence: next validate in 3 feature cycles.
+- Phase: **Phase 9 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting), P9-1 ✅ (Enhanced Death Recap + Run History), P9-2 ✅ (Quick-Use Hotbar + Consumable Cooldown). Bundle: 619.01 KB (<620 KB cap). 319 tests green (2 skipped).
+- P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`). `RunTracker.ts`, persistent best runs (top 5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets tick counter.
+- P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`). Bottom bar with 4 slots, number-key shortcuts (1-4), 1-second cooldown overlay. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown). 319 tests (313+6 P9-2).
+- Next: **VALIDATE cadence** — Phase 9 complete, next validate on Pages. Gate: 319 tests, 619.01 KB.
+- P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
+- P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
+- Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
+- Branch: `agent/dungeon-crawl-20260829-v2-p9-1-enhanced-death-recap-v2`
+- Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
+- Gate: **319 tests green (2 skipped), build green, 619.01 KB bundle**
+- BUGS: **game bugs drained** (B-1 through B-13 fixed/closed, B-14 human-only CI/Pages, B-15 through B-18 test-only fixes); Pages: **https://fr4iser90.github.io/autonomous-lab/** live
+- Pages: **https://fr4iser90.github.io/autonomous-lab/** live
+- P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **313 tests green (2 skipped), build green, 619.67 KB bundle**
-- BUGS: **game bugs drained** (B-1 closed, B-2 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
+- BUGS: **game bugs drained** (B-1 through B-13 fixed/closed, B-14 human-only CI/Pages, B-15 through B-18 test-only fixes); Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 
@@ -68,6 +77,7 @@
 
 ## Log
 
+- **2026-08-29 VALIDATE (Post-P9-2 — Playwright Pages smoke/validation)**: SHA=`9710d52`. 9 Playwright tests (3 smoke + 6 validation). Fixes: B-15 (settings back button `#btn-settings-back`), B-16 (boot timeout 25s→5s), B-17 (shop→O key, skill→T key), B-18 (pause test rAF hang). Results: 9/9 PASS (title: PASS, boot: PASS, settings: PASS, inventory E: PASS, shop O: PASS, skill T: PASS, pause ESC: PASS). Bundle: 619.01 KB, 319 unit tests green (2 skipped). `VALIDATE: 9710d52 PASS`
 - **2026-08-29 VALIDATE (P8 phase gate / Pages — live at fr4iser90.github.io/autonomous-l/)**: SHA=`43cc04c`. Playwright live test against deployed Pages (post-P8-4 merge). Title: PASS ("Ashen Delve" rendered, all 4 buttons visible — Tutorial, New Delve, Settings, controls text). Boot: HEADLESS TIMEOUT (WebGL context init takes >60s in headless Chrome — known limitation; game boots fine in browser). Gate: 313 tests green (2 skipped), 618.39 KB bundle (under 620 KB cap). `VALIDATE: 43cc04c PASS` (title screen PASS on live Pages, headless boot timeout is expected).
 - **2026-08-29 VALIDATE (Phase 6 / Play — document only)**: SHA=`03d549e`. Playwright smoke test via `addInitScript` + single `page.evaluate()`. Title: PASS (4/4). Boot: PASS. HUD: PASS (floor=Floor 1, hp-text=20/20, stealth=Visible, scrap=0, keys=🔑 0). Panels: PASS (E=inventory, Q=shop, S=skills, ESC=pause — all open/close correctly). Attack (mouse): PASS (combat log fires, logBeforeLen=41). Boss UI: PASS (bar + warning exist, barActive=false expected). Mobs: 0 at start (expected). **2 new bugs found**: B-7 (settings-back always returns to title, breaking pause→settings→back flow), B-8 (stealth-label initially hidden but shown after first game loop frame). `VALIDATE: 03d549e PASS` (19/20 smoke checks — 1 test-selector bug corrected).
 
@@ -157,7 +167,7 @@
 | Slice | Feature | Status | Key files |
 |-------|---------|--------|-----------|
 | P9-1 | Enhanced Death Recap + Run History — persistent best runs, death stats (floor/scrap/mobs/duration/best), retry button | ✅ MERGED PR#94 (SHA `c695f6d`) | `RunTracker.ts`, `GameLoop.ts`, `ui.ts`, `index.html`, `styles.css` |
-| P9-2 | Quick-Use Hotbar + Consumable Cooldown — bottom bar, 4 slots, number keys 1-4, potion cooldown 1s | 🚧 IN PROGRESS | `Inventory.ts` (cooldown Map, tryQuickUsePotion/Key, isOnCooldown), `ui.ts` (hotbar DOM, event delegation), `index.html`, `styles.css` |
+| P9-2 | Quick-Use Hotbar + Consumable Cooldown — bottom bar, 4 slots, number keys 1-4, potion cooldown 1s | ✅ MERGED PR#95 (SHA `9710d52`) | `Inventory.ts` (cooldown Map, tryQuickUsePotion/Key, isOnCooldown), `ui.ts` (hotbar DOM, event delegation), `index.html`, `styles.css` |
 
 ## Planned
 

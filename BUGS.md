@@ -49,6 +49,11 @@ _(none — all bugs resolved)_
 
 ## Fixed (2026-08-29 validation round)
 
+- **B-15**: Playwright smoke test `#btn-close-settings` → actual ID is `#btn-settings-back` (in `src/app/ui.ts`). **Fixed**: Replaced selector in `tests/smoke.spec.ts:68`.
+- **B-16**: Playwright validation tests timed out (30s exceeded) — 7 of 9 failed. Root cause: internal `setTimeout(25000)` boot wait + 300ms key delay + 200ms resume delay ≈ 25.5s, too close to Playwright default. Game DOES boot (confirmed via page snapshots: HP 20/20, Floor 1, Stealth). **Fixed**: Reduced boot timeout from 25s → 5s in `tests/validation.spec.ts` (9 occurrences) and `tests/smoke.spec.ts` (1 occurrence).
+- **B-17**: Playwright shop/skill tests used wrong keys (Q/S) — actual key mappings are O (Shop) and T (Skills) per B-10 fix. **Fixed**: Updated test names and keyboard events in `tests/validation.spec.ts` to use `'o'/'KeyO'` and `'t'/'KeyT'`.
+- **B-18**: Playwright pause test used custom evaluate code instead of shared `runGameTest` pattern, causing rAF context hangs. **Fixed**: Simplified to `runGameTest` pattern.
+
 - **B-9**: `#controls-info` missing from title screen — player had no way to learn controls before starting. **Fixed**: Added controls text to title screen (WASD Move, Mouse Drag Rotate, Space/Click Attack, E Inventory, O Shop, T Skills, Esc/P Pause).
 - **B-10**: Key conflicts in input.ts — Q/E used for keyboard rotation AND main.ts Q/E used for shop/inventory toggles — both actions fire simultaneously on single keystroke. **Fixed**: Removed Q/E keyboard rotation (rotation via mouse drag only), repurposed O for Shop and T for Skills.
 - **B-11**: S key conflict — `input.ts` uses S for backward movement AND `main.ts` uses S for skills toggle. **Fixed**: Skills now use T key (T for "Skill Tree").
