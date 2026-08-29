@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), PR #86 + #87 (updated)
+- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), PR#86 + #87 (closed) + #89
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
@@ -137,7 +137,7 @@
 |-------|---------|--------|-----------|
 | P8-1 | HitEffects + ScreenShake — combat visual feedback | ✅ SHIPPED PR#86 | `HitEffects.ts` (damage numbers, burst particles, mesh flash), `ScreenShake.ts` (sin-based shake), `GameLoop.ts` (6 integration points), `camera.ts` (shakeOffset), 29 new tests |
 | P8-2 | Audio feedback on hits — crit, player damage, death sounds | ✅ SHIPPED PR#87 | `AudioEngine.ts` (critHit, playerHit, death methods), `GameLoop.ts` (6 audio integration points), `AudioEngine.test.ts` (14 tests) |
-| P8-3 | Toast system polish — stacked notifications, slide-in/out animations, configurable duration/type | ✅ SHIPPED PR#87 (updated) | `ToastSystem.ts`, `ui.ts`, `Transition.ts`, `index.html`, `styles.css`, `toast-system.test.ts` |
+| P8-3 | Toast system polish — stacked notifications, slide-in/out animations, configurable duration/type | ✅ SHIPPED PR#89 | `ToastSystem.ts`, `ui.ts`, `Transition.ts`, `index.html`, `styles.css`, `toast-system.test.ts` |
 
 ## Planned
 
