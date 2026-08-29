@@ -318,7 +318,7 @@ export function gameLoop(timestamp = 0): number {
         _combatLogEntries.push(`${trapDef.label} trap! -${damage} HP`)
         _trapHitTimer = 0.5 // 0.5s cooldown to prevent repeated triggers
         _lastTrapType = trapType
-        if (_audio) _audio.hit()
+        if (_audio) _audio.playerHit()
 
         // P8-1: Screen shake on trap damage
         if (_screenShake) {
@@ -374,6 +374,8 @@ export function gameLoop(timestamp = 0): number {
             const scrap = Math.ceil(mob.state.stats.maxHp / 4) + _playerFloor
             _player.scrap += scrap
           }
+          // P8-2: Mob death sound
+          if (!mob.state.alive && _audio) _audio.death()
           // Spawn loot drops on mob death
           if (!mob.state.alive && _lootSpawn) {
             const lootTable = getLootTable(mob.state.type)
@@ -386,7 +388,11 @@ export function gameLoop(timestamp = 0): number {
               }
             }
           }
-          if (_audio) _audio.hit()
+          // P8-2: Audio feedback — critHit() for criticals, hit() for normal
+          if (_audio) {
+            if (isCrit) _audio.critHit()
+            else _audio.hit()
+          }
 
           // P8-1: Visual feedback — hit flash, floating damage number, particles
           if (_hitEffects) {
@@ -435,11 +441,9 @@ export function gameLoop(timestamp = 0): number {
               // P7-1: Shield reduction
               const playerShield = _player?.statusEffects.find(e => e.type === 'shield')
               const shieldRed = playerShield?.damageReduction ?? 0
-              const netDmg = Math.max(1, fb.damage - armor - shieldRed)
+             const netDmg = Math.max(1, fb.damage - armor - shieldRed)
               _playerHP = Math.max(0, _playerHP - netDmg)
-              if (_audio) _audio.hit()
-
-              // P8-1: Screen shake on boss fireball hit
+              if (_audio) _audio.playerHit()
               if (_screenShake) {
                 _screenShake.trigger(0.25, 0.4)
               }
@@ -469,7 +473,7 @@ export function gameLoop(timestamp = 0): number {
               const shieldRed = playerShield?.damageReduction ?? 0
               const netDmg = Math.max(1, zone.damage - armor - shieldRed)
               _playerHP = Math.max(0, _playerHP - netDmg)
-              if (_audio) _audio.hit()
+              if (_audio) _audio.playerHit()
 
               // P8-1: Screen shake on boss slam hit
               if (_screenShake) {
@@ -555,9 +559,7 @@ export function gameLoop(timestamp = 0): number {
             _player.statusEffects.push(poison(2, 2)) // poison dagger
           }
         }
-        if (_audio) _audio.hit()
-
-        // P8-1: Screen shake on mob attack
+        if (_audio) _audio.playerHit()
         if (_screenShake) {
           _screenShake.trigger(0.15, 0.3)
         }
@@ -670,7 +672,7 @@ export function checkPlayerDeath(updateHP: (hp: number, maxHp: number) => void, 
   if (_playerHP <= 0) {
     _gameState = 'dead'
     _deathScreen.style.display = 'flex'
-    if (_audio) _audio.stopAmbient()
+   if (_audio) { _audio.stopAmbient(); _audio.death() }
     addCombatLog('💀 You have fallen!')
     const statsEl = document.getElementById('death-stats')
     const scrapEl = document.getElementById('death-scrap')

@@ -30,6 +30,7 @@ import { LootDropManager as LDMCls } from '../systems/LootDrop'
 import { InputManager as IMCls } from '../systems/input'
 import { HitEffects } from '../systems/HitEffects'
 import { ScreenShake } from '../systems/ScreenShake'
+import { showToast } from '../systems/ToastSystem'
 import { GameRenderer as GRCls } from '../render/GameRenderer'
 import { FollowCamera } from '../render/camera'
 import { PlayerKit } from '../kits/playerKit'
@@ -51,7 +52,6 @@ const inventoryPanel = document.getElementById('inventory-panel')!
 const deathScreen = document.getElementById('death-screen')!
 const pauseOverlay = document.getElementById('pause-overlay')!
 const combatLog = document.getElementById('combat-log')!
-const lootToast = document.getElementById('loot-toast')!
 const shrinePrompt = document.getElementById('shrine-prompt')!
 const shopPanel = document.getElementById('shop-panel')!
 const skillPanel = document.getElementById('skill-panel')!
@@ -81,8 +81,6 @@ export const tutorialState: TutorialState = createTutorialState()
 export let tutorialDummyMesh: THREE.Object3D | null = null
 export let tutorialStairsZ = 0
 export let playerLastX = 0, playerLastZ = 0, playerLastYaw = 0
-let _lootToastTimer: ReturnType<typeof setTimeout> | undefined = undefined
-
 export function showScreen(screen: 'title' | 'game' | 'settings'): void {
   currentScreen = screen
   titleScreen.style.display = screen === 'title' ? 'flex' : 'none'
@@ -109,20 +107,12 @@ export function rarityClass(rarity: ItemRarity): string { return `rarity-${rarit
 export function rarityLabel(rarity: ItemRarity): string { return rarity.charAt(0).toUpperCase() + rarity.slice(1) }
 
 export function showLootToast(item: ItemDef): void {
-  if (_lootToastTimer) clearTimeout(_lootToastTimer)
-  lootToast.textContent = `${item.icon} ${item.name}`
-  lootToast.className = `rarity-${item.rarity} visible`
-  _lootToastTimer = setTimeout(() => { lootToast.className = '' }, 1500)
+  const rarityClass = `rarity-${item.rarity}`
+  showToast(`${item.icon} ${item.name}`, { type: 'loot', duration: 2500, className: rarityClass })
 }
 
-let _doorToastTimer: ReturnType<typeof setTimeout> | undefined = undefined
 export function showDoorToast(msg: string): void {
-  if (_doorToastTimer) clearTimeout(_doorToastTimer)
-  const el = document.getElementById('door-toast')
-  if (!el) return
-  el.textContent = msg
-  el.className = 'door-toast visible'
-  _doorToastTimer = setTimeout(() => { el.className = 'door-toast' }, 1200)
+  showToast(msg, { type: 'door', duration: 2000 })
 }
 
 export function updateInventoryUI(): void {
