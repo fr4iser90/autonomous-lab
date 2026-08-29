@@ -17,6 +17,7 @@ import type { TutorialState } from '../systems/TutorialMode'
 import type { InputManager } from '../systems/input'
 import { Minimap } from '../render/Minimap'
 import { CombatEngine } from '../systems/CombatEngine'
+import * as RunTracker from '../systems/RunTracker'
 export { updateHP, updateFloor, updateDepth, updateStatusEffects } from './uiHelpers'
 import * as GL from '../systems/GameLoop'
 import { loadSave, saveSave } from '../services/SaveService'
@@ -278,7 +279,7 @@ export function initButtonHandlers(startGameFn: (seed: number) => void, startTut
   if (btnContinue) btnContinue.addEventListener('click', () => startGameFn(dungeonSeed || 12345))
   if (btnSettings) btnSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
   if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen(gameState === 'menu' || gameState === 'dead' ? 'title' : 'game') })
-  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = 20; playerMaxHP = 20; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); if (skillTree) skillTree.reset(); GL.setBaseHP(20); updateScrapUI() })
+  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = 20; playerMaxHP = 20; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); if (skillTree) skillTree.reset(); GL.setBaseHP(20); GL.resetTickCount(); updateScrapUI() })
   if (btnTitle) btnTitle.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
   if (btnResume) btnResume.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
   if (btnPauseSettings) btnPauseSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
@@ -479,6 +480,7 @@ export function startGame(seed: number): void {
   GL.setFloorAdvancedCallback((floor: number) => {
     showFloorToast(floor, addCombatLog)
     if (!renderer || !player) return
+    RunTracker.recordFloor(floor)
     const deps: TransitionDeps = { renderer, player, dungeonSeed, playerHP, playerMaxHP, playerX, playerZ, playerFloor, mobs, combatLogEntries, minimap: minimap || null }
     advanceToFloor(floor, deps)
   })
@@ -499,6 +501,9 @@ export function startGame(seed: number): void {
 
   // Start render loop
   gameLoop()
+
+  // P9-1: Start run tracking
+  RunTracker.startRun()
 }
 
 // ── Tutorial functions ──────────────────────────────────
@@ -560,6 +565,7 @@ export function startTutorialGame(seed: number): void {
   GL.setDoorOpenedCallback(showDoorToast)
   GL.setFloorAdvancedCallback((floor: number) => {
     showFloorToast(floor, addCombatLog)
+    RunTracker.recordFloor(floor)
   })
   GL.setLootSpawn((_mobType: string, x: number, z: number, item: ItemDef) => {
     if (lootManager) lootManager.spawn(item, x, z)
@@ -635,7 +641,19 @@ export function gameLoop(timestamp = 0): void {
   if (trapState.active) { trapEl.style.display = 'block'; updateTrapHit(true, trapState.trapType) } else { trapEl.style.display = 'none' }
 
   if (player) updateStatusEffects(player.statusEffects)
-  GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0)
+  GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0, (data) => {
+    const statsEl = document.getElementById('death-stats')
+    const scrapEl = document.getElementById('death-scrap')
+    const mobsEl = document.getElementById('mobs-killed')
+    const durationEl = document.getElementById('run-duration')
+    const bestEl = document.getElementById('best-run')
+
+    if (statsEl) statsEl.textContent = `Deepest Floor: ${data.floor}`
+    if (scrapEl) scrapEl.textContent = `Scrap Collected: ${data.scrap}`
+    if (mobsEl) { mobsEl.textContent = data.mobsKilled; mobsEl.style.display = '' }
+    if (durationEl) { durationEl.textContent = data.duration; durationEl.style.display = '' }
+    if (bestEl) { bestEl.textContent = data.bestRun; bestEl.style.display = data.bestRun ? '' : 'none' }
+  })
 
   // Tutorial tracking
   if (tutorialState?.active && input && frame) {

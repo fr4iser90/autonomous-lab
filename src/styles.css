@@ -665,6 +665,26 @@ button:active {
   margin-bottom: 0.5rem;
 }
 
+.death-stats-group {
+  margin-bottom: 1rem;
+}
+
+.death-mobs, .death-duration {
+  font-size: 0.95rem;
+  color: var(--ash-ui-muted);
+  margin-bottom: 0.3rem;
+}
+
+.best-run {
+  font-size: 0.9rem;
+  color: var(--ash-accent);
+  margin: 0.75rem 0 1rem;
+  text-align: center;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.05em;
+}
+
+
 /* Settings */
 #settings-panel {
   background: var(--ash-bg);

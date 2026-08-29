@@ -80,8 +80,13 @@
         </div>
         <div id="death-screen" class="overlay" style="display:none">
           <h2 class="death-title">You Have Fallen</h2>
-          <p class="death-stats" id="death-stats">Deepest Floor: 1</p>
-          <p class="death-scrap" id="death-scrap">Scrap Collected: 0</p>
+          <div class="death-stats-group">
+            <p class="death-stats" id="death-stats">Deepest Floor: 1</p>
+            <p class="death-scrap" id="death-scrap">Scrap Collected: 0</p>
+            <p class="death-mobs" id="mobs-killed">Mobs Slain: 0</p>
+            <p class="death-duration" id="run-duration">Run Duration: 0:00</p>
+          </div>
+          <div class="best-run" id="best-run"></div>
           <div class="menu-buttons">
             <button id="btn-retry" type="button">Retry</button>
             <button id="btn-title" type="button">Title</button>
