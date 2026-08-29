@@ -23,8 +23,8 @@ export class FollowCamera {
     this.settings = settings
   }
 
-  /** Update camera to follow the target */
-  update(renderer: GameRenderer, target: THREE.Vector3, yaw: number): void {
+  /** Update camera to follow the target (with optional shake offset) */
+  update(renderer: GameRenderer, target: THREE.Vector3, yaw: number, shakeOffset: THREE.Vector3 | null = null): void {
     const { distance, height, followLag } = this.settings
 
     // Target camera position based on yaw
@@ -37,6 +37,13 @@ export class FollowCamera {
     this.currentPos.x += (targetCamX - this.currentPos.x) * lag
     this.currentPos.y += (targetCamY - this.currentPos.y) * lag
     this.currentPos.z += (targetCamZ - this.currentPos.z) * lag
+
+    // Apply shake offset (P8-1: combat feedback)
+    if (shakeOffset) {
+      this.currentPos.x += shakeOffset.x
+      this.currentPos.y += shakeOffset.y
+      this.currentPos.z += shakeOffset.z
+    }
 
     // Look target
     const lookX = target.x

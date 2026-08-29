@@ -28,6 +28,8 @@ import { Economy as EcoCls } from '../systems/Economy'
 import { SkillTree as STCls } from '../systems/SkillTree'
 import { LootDropManager as LDMCls } from '../systems/LootDrop'
 import { InputManager as IMCls } from '../systems/input'
+import { HitEffects } from '../systems/HitEffects'
+import { ScreenShake } from '../systems/ScreenShake'
 import { GameRenderer as GRCls } from '../render/GameRenderer'
 import { FollowCamera } from '../render/camera'
 import { PlayerKit } from '../kits/playerKit'
@@ -472,6 +474,12 @@ export function startGame(seed: number): void {
   if (audio && !(audio as any)['enabled']) { audio.init(); audio.startAmbient() }
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
 
+  // P8-1: Init hit effects & screen shake
+  const hitEffects = new HitEffects()
+  const screenShake = new ScreenShake()
+  GL.setHitEffects(hitEffects)
+  GL.setScreenShake(screenShake)
+
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
   GL.setSkillTree(skillTree)
@@ -547,6 +555,13 @@ export function startTutorialGame(seed: number): void {
   minimap = new Minimap(currentDungeon)
   if (audio && !(audio as any)['enabled']) { audio.init(); audio.startAmbient() }
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
+
+  // P8-1: Init hit effects & screen shake
+  const hitEffects2 = new HitEffects()
+  const screenShake2 = new ScreenShake()
+  GL.setHitEffects(hitEffects2)
+  GL.setScreenShake(screenShake2)
+
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
   GL.setSkillTree(skillTree)

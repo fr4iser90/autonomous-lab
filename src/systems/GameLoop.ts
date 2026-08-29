@@ -19,6 +19,8 @@ import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
 import { poison, burn, freeze, shield } from '../data/statusEffects'
 import { SHRINE_DEFS } from '../data/shrines'
+import { HitEffects } from './HitEffects'
+import { ScreenShake } from './ScreenShake'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -47,6 +49,10 @@ let _audio: AudioEngine | null = null
 let _skillTree: SkillTree | null = null
 let _dungeon: DungeonData | null = null
 let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => number; getKeyCount: () => number; consumeKey: () => boolean } | null = null
+
+// P8-1: Hit effects (combat visual feedback)
+let _hitEffects: HitEffects | null = null
+let _screenShake: ScreenShake | null = null
 
 // Loot drop callback (set from main.ts)
 let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void) | null = null
@@ -133,6 +139,21 @@ export function setInventory(inv: { getEquippedDamage: () => number; getEquipped
 /** Set the loot-drop spawn callback */
 export function setLootSpawn(cb: (mobType: string, x: number, z: number, item: ItemDef) => void): void {
   _lootSpawn = cb
+}
+
+/** P8-1: Set hit effects system instance */
+export function setHitEffects(he: HitEffects): void {
+  _hitEffects = he
+}
+
+/** P8-1: Set screen shake system instance */
+export function setScreenShake(ss: ScreenShake): void {
+  _screenShake = ss
+}
+
+/** P8-1: Trigger screen shake on player damage */
+export function triggerPlayerDamageShake(intensity: number = 0.15, duration: number = 0.3): void {
+  _screenShake?.trigger(intensity, duration)
 }
 
 /** Apply healing to the player. Returns new HP. */
@@ -298,6 +319,11 @@ export function gameLoop(timestamp = 0): number {
         _trapHitTimer = 0.5 // 0.5s cooldown to prevent repeated triggers
         _lastTrapType = trapType
         if (_audio) _audio.hit()
+
+        // P8-1: Screen shake on trap damage
+        if (_screenShake) {
+          _screenShake.trigger(0.12, 0.25)
+        }
       }
     }
 
@@ -361,6 +387,14 @@ export function gameLoop(timestamp = 0): number {
             }
           }
           if (_audio) _audio.hit()
+
+          // P8-1: Visual feedback — hit flash, floating damage number, particles
+          if (_hitEffects) {
+            const hitColor = isCrit ? 0xff3333 : 0xffaa33
+            _hitEffects.triggerHitFlash(mob.mesh, hitColor)
+            _hitEffects.spawnDamageNumber(Math.round(dmg), mob.position.clone(), isCrit)
+            _hitEffects.spawnHitBurst(mob.position.clone(), isCrit ? 10 : 5, hitColor)
+          }
         }
       })
     }
@@ -404,6 +438,11 @@ export function gameLoop(timestamp = 0): number {
               const netDmg = Math.max(1, fb.damage - armor - shieldRed)
               _playerHP = Math.max(0, _playerHP - netDmg)
               if (_audio) _audio.hit()
+
+              // P8-1: Screen shake on boss fireball hit
+              if (_screenShake) {
+                _screenShake.trigger(0.25, 0.4)
+              }
               // Remove hit fireball
               if (_renderer) {
                 _renderer.scene.remove(fb.mesh)
@@ -431,6 +470,11 @@ export function gameLoop(timestamp = 0): number {
               const netDmg = Math.max(1, zone.damage - armor - shieldRed)
               _playerHP = Math.max(0, _playerHP - netDmg)
               if (_audio) _audio.hit()
+
+              // P8-1: Screen shake on boss slam hit
+              if (_screenShake) {
+                _screenShake.trigger(0.3, 0.5)
+              }
             }
           }
         }
@@ -512,6 +556,11 @@ export function gameLoop(timestamp = 0): number {
           }
         }
         if (_audio) _audio.hit()
+
+        // P8-1: Screen shake on mob attack
+        if (_screenShake) {
+          _screenShake.trigger(0.15, 0.3)
+        }
       }
     }
   }
@@ -521,9 +570,10 @@ export function gameLoop(timestamp = 0): number {
     _minimap.setPlayerPos(_playerX, _playerZ)
   }
 
-  // Update camera
+  // Update camera (P8-1: apply screen shake offset)
   if (_camera && _player && _renderer) {
-    _camera.update(_renderer, _player.position, _playerYaw)
+    const shakeOffset = _screenShake?.update(dt, _player.position) ?? null
+    _camera.update(_renderer, _player.position, _playerYaw, shakeOffset)
   }
 
   // Animate torch flicker
@@ -548,6 +598,11 @@ export function gameLoop(timestamp = 0): number {
           _playerHP = Math.max(0, _playerHP - dotDamage)
           _combatLogEntries.push(`${eff.emoji} ${eff.label} deals ${dotDamage} damage`)
           eff._lastTickCount = ticksToApply
+
+          // P8-1: Screen shake on DOT damage (subtle)
+          if (_screenShake && dotDamage > 0) {
+            _screenShake.trigger(0.06, 0.15)
+          }
         }
       }
       // Remove expired effects
@@ -595,6 +650,13 @@ export function gameLoop(timestamp = 0): number {
         }
       }
     }
+  }
+
+  // P8-1: Update and render hit effects
+  if (_renderer && _hitEffects) {
+    _hitEffects.update(time, dt, _renderer.scene)
+    _hitEffects.renderFloatingNumbers(_renderer.scene)
+    _hitEffects.renderParticles(_renderer.scene)
   }
 
   // Render
