@@ -2,7 +2,7 @@
 
 # BUGS
 
-Last validation: agent SHA=`c695f6d` — Pages deploy live, P9-1 DOM elements confirmed (death-stats, mobs-killed, run-duration, best-run, retry button). Gate: 313 tests, 619.67 KB, 0 errors.
+Last validation: agent SHA=`fef03b9` — Playwright: 6/6 validation + 3/3 smoke pass. Vitest: 327 pass (2 skipped). Build: 620.61 KB. No new bugs found.
 Next validation: 2026-08-29 SHA=6a84d4859e26dab558bd20d3383122c77d30b9e9 (B-CAM+B-LIGHT fixes + validate; Playwright WebGL capture limited — scene verified via HUD DOM + code inspection)
 
 ## Open
