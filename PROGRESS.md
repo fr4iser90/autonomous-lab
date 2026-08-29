@@ -4,17 +4,18 @@
 
 ## NOW
 
-- Phase: **Phase 9 complete** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95). P10-1 **MERGED** ✅ (PR#98). Gate: 327 tests green (2 skipped), 620.31 KB bundle.
+- Phase: **Phase 10 complete — PLAYABLE** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95), P10-1 ✅ (PR#98), B-MOVE/B-LAG fix ✅ (PR#99). Gate: 327 tests green (2 skipped), 620.35 KB bundle. M1–M12 all complete. All milestones shipped.
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
 - P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`).
 - P10-1: Ambient Jukebox — **MERGED** ✅ — PR#98 merged to main (SHA `17921f2`). 3 `AmbientTrack` defs, `cycleAmbientTrack()` in AudioEngine, saved via `settings.ambientTrack` in SaveService, J key cycle + HUD click + toast. `ui.ts` refactored to 793 lines (under 800 cap).
+- B-MOVE/B-LAG fix — **MERGED** ✅ — PR#99 merged to main (SHA `8df9580`). Single rAF driver, no stale position push, rotate delta clear, mouse-drag-only rotation. Gate: 327 tests green, 620.35 KB.
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2-p9-1-enhanced-death-recap-v2`
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **319 tests green (2 skipped), build green, 619.01 KB bundle**
-- BUGS: **game bugs drained** (B-1 through B-13 fixed/closed, B-14 human-only CI/Pages, B-15 through B-18 test-only fixes); Pages: **https://fr4iser90.github.io/autonomous-lab/** live
+- Gate: **327 tests green (2 skipped), build green, 620.35 KB bundle**
+- BUGS: **game bugs drained** (B-1 through B-20 fixed/closed, B-14 human-only CI/Pages); Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
