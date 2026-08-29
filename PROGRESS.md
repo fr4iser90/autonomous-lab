@@ -1,14 +1,14 @@
-<!-- PROGRESS: Ashen Delve — Phase 5 complete. P5-1 rarity, P5-2 lootDrop, P5-3 rarity UI, P5-4 sealed doors, P5-5 stairs descent. -->
+<!-- PROGRESS: Ashen Delve — Phase 7 complete. P7-1 status effects, P7-2 tutorial, P7-3 boss unit tests. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 7 — status effects + tutorial** — P7-1 (status effects) complete, P7-2 tutorial complete
+- Phase: **Phase 7 complete** — P7-1 ✅, P7-2 ✅, P7-3 ✅
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79)
+- Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **170 tests green, build green, ~604 KB bundle**
+- Gate: **249 tests green, build green, 604.13 KB bundle**
 - BUGS: **game bugs drained** (B-1 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
@@ -130,3 +130,5 @@
 - ✅ P7-3: Boss unit tests shipped — 79 unit tests covering phases (normal→enrage→desperate), special attacks (fireball/slam damage scaling 5/6/8 and 6/8/10), minion summoning, warning system, crown glow, mesh integrity, edge cases. Gate: 249 tests green, 604.13 KB. `tests/boss.test.ts`.
 
 ## Planned
+
+- **P8 — Phase 8: Polish & Quality-of-Life** — visual enhancements (particles, dynamic lighting), gameplay refinements (new mob types, skill upgrades), quality-of-life improvements. Starting with a code audit to identify the highest-impact improvements.
