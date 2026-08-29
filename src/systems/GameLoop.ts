@@ -21,6 +21,7 @@ import { poison, burn, freeze, shield } from '../data/statusEffects'
 import { SHRINE_DEFS } from '../data/shrines'
 import { HitEffects } from './HitEffects'
 import { ScreenShake } from './ScreenShake'
+import * as RunTracker from './RunTracker'
 
 // DOM refs (injected at init)
 let _deathScreen!: HTMLElement
@@ -53,6 +54,9 @@ let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => numbe
 // P8-1: Hit effects (combat visual feedback)
 let _hitEffects: HitEffects | null = null
 let _screenShake: ScreenShake | null = null
+
+// P9-1: Run tick counter (independent of RunTracker for display)
+let _runTickCount = 0
 
 // Loot drop callback (set from main.ts)
 let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void) | null = null
@@ -373,6 +377,8 @@ export function gameLoop(timestamp = 0): number {
           const isCrit = Math.random() < (0.15 + effects.critChanceBonus)
           const dmg = isCrit ? baseDmg * 2 : baseDmg
           mob.takeDamage(dmg)
+          // P9-1: Record mob kill
+          if (!mob.state.alive) RunTracker.recordMobKill(mob.state.type)
           // Credit scrap when mob dies
           if (!mob.state.alive && _player) {
             const scrap = Math.ceil(mob.state.stats.maxHp / 4) + _playerFloor
@@ -643,6 +649,8 @@ export function gameLoop(timestamp = 0): number {
             mob.state.stats.hp = Math.max(0, mob.state.stats.hp - dotDamage)
             if (mob.state.stats.hp <= 0) {
               mob.state.alive = false
+              // P9-1: Record mob kill from DOT
+              RunTracker.recordMobKill(mob.state.type)
               _combatLogEntries.push(`${eff.emoji} ${mob.state.type} burned to ash!`)
             } else {
               _combatLogEntries.push(`${eff.emoji} ${mob.state.type} takes ${dotDamage} ${eff.label} damage`)
@@ -667,21 +675,42 @@ export function gameLoop(timestamp = 0): number {
 
   // Render
   _renderer?.render()
+  _runTickCount++
+
   return _animFrame
 }
 
-export function checkPlayerDeath(updateHP: (hp: number, maxHp: number) => void, addCombatLog: (msg: string) => void, playerScrap = 0): void {
+export function checkPlayerDeath(
+  updateHP: (hp: number, maxHp: number) => void,
+  addCombatLog: (msg: string) => void,
+  playerScrap = 0,
+  renderDeathStats?: (data: { floor: number; scrap: number; mobsKilled: string; duration: string; bestRun: string }) => void,
+): void {
   if (_gameState !== 'playing') return
   updateHP(_playerHP, _playerMaxHP)
   if (_playerHP <= 0) {
     _gameState = 'dead'
     _deathScreen.style.display = 'flex'
-   if (_audio) { _audio.stopAmbient(); _audio.death() }
+    if (_audio) { _audio.stopAmbient(); _audio.death() }
     addCombatLog('💀 You have fallen!')
-    const statsEl = document.getElementById('death-stats')
-    const scrapEl = document.getElementById('death-scrap')
-    if (statsEl) statsEl.textContent = `Deepest Floor: ${_playerFloor}`
-    if (scrapEl) scrapEl.textContent = `Scrap Collected: ${playerScrap}`
+
+    // P9-1: Record run stats and end run tracking
+    const snapshot = RunTracker.endRun()
+    const best = RunTracker.getBestRun()
+
+    const mobsText = `Mobs Slain: ${snapshot?.mobsKilled ?? 0}`
+    const ticks = _runTickCount
+    const seconds = Math.floor(ticks / 60)
+    const minutes = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    const durationText = `Run Duration: ${minutes}:${secs.toString().padStart(2, '0')}`
+
+    let bestRun = ''
+    if (best) {
+      bestRun = `🏆 Best Run: Floor ${best.floor} · ${best.mobsKilled} mobs`
+    }
+
+    renderDeathStats?.({ floor: _playerFloor, scrap: playerScrap, mobsKilled: mobsText, duration: durationText, bestRun })
   }
 }
 
@@ -761,3 +790,5 @@ export function updateBossUI(): void {
     }
   }
 }
+
+export function resetTickCount(): void { _runTickCount = 0 }
