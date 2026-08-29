@@ -2,11 +2,15 @@
 
 const SAVE_KEY = 'ashen-delve-save-v1'
 
+export type CameraMode = 'first-person' | 'third-person'
+
 export interface GameSettings {
   masterVolume: number
   sfxVolume: number
   reduceMotion: boolean
   cameraSensitivity: number
+  /** Camera mode: first-person (ego) or third-person (chase). Defaults to first-person. */
+  cameraMode: CameraMode
   /** Current jukebox ambient track index (0-based) */
   ambientTrack: number
 }
@@ -37,6 +41,7 @@ const DEFAULT_SETTINGS: GameSettings = {
   sfxVolume: 80,
   reduceMotion: false,
   cameraSensitivity: 50,
+  cameraMode: 'first-person',
   ambientTrack: 0,
 }
 

@@ -132,3 +132,33 @@ test('pause overlay works with ESC', async ({ page }) => {
   await runGameTest(page, 'Escape', 'Escape', 'pause',
     "document.getElementById('pause-overlay')?.style.display")
 })
+
+test('settings panel shows camera mode select', async ({ page }) => {
+  await page.locator('#btn-settings').click()
+  await expect(page.locator('#settings-panel')).toBeVisible()
+  const cameraSelect = page.locator('#camera-mode')
+  await expect(cameraSelect).toBeVisible()
+  await expect(cameraSelect).toHaveValue('first-person')
+})
+
+test('camera mode toggle persists in settings', async ({ page }) => {
+  // Open settings on title screen (no game running, safe to interact)
+  await page.locator('#btn-settings').click()
+  await expect(page.locator('#settings-panel')).toBeVisible()
+  const select = page.locator('#camera-mode')
+  // Default is first-person
+  await expect(select).toHaveValue('first-person')
+  // Toggle to third-person
+  await select.selectOption('third-person')
+  await expect(select).toHaveValue('third-person')
+  // Click back
+  await page.locator('#btn-settings-back').click()
+  // Re-open settings to verify persistence (settings are saved in localStorage)
+  await page.locator('#btn-settings').click()
+  await expect(page.locator('#settings-panel')).toBeVisible()
+  await expect(select).toHaveValue('third-person')
+  // Toggle back to first-person
+  await select.selectOption('first-person')
+  await expect(select).toHaveValue('first-person')
+  await page.locator('#btn-settings-back').click()
+})

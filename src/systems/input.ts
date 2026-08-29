@@ -1,20 +1,29 @@
 /**
  * InputManager — collects WASD + mouse state each frame.
+ * Supports third-person (drag-rotate) and first-person (pointer-lock) mouse-look.
  */
 export interface InputState {
   forward: number
   right: number
-  rotate: number
+  rotate: number        // Third-person: accumulated yaw delta from mouse drag
   jump: boolean
   attack: boolean
+  /** First-person: yaw delta from pointer-lock mouse movement (per-frame) */
+  fpYawDelta: number
+  /** First-person: pitch delta from pointer-lock mouse movement (per-frame) */
+  fpPitchDelta: number
 }
 
 export class InputManager {
   private keys = new Map<string, boolean>()
   private mouseDown = false
-  private _state: InputState = { forward: 0, right: 0, rotate: 0, jump: false, attack: false }
+  private _state: InputState = { forward: 0, right: 0, rotate: 0, jump: false, attack: false, fpYawDelta: 0, fpPitchDelta: 0 }
   // Accumulates mouse deltas between update() calls — cleared each frame
   private _pendingRotate = 0
+  // First-person pointer-lock deltas — cleared each frame
+  private _pendingFpYaw = 0
+  private _pendingFpPitch = 0
+  private _pointerLockCanvas: HTMLCanvasElement | null = null
 
   getState(): InputState {
     return this._state
@@ -25,9 +34,14 @@ export class InputManager {
     this._state.right = (this.keys.get('d') || this.keys.get('D') ? 1 : 0) - (this.keys.get('a') || this.keys.get('A') ? 1 : 0)
     this._state.jump = false
     this._state.attack = this.mouseDown || !!this.keys.get(' ')
-    // Apply pending rotation delta then clear for next frame
+    // Third-person: apply pending rotation delta then clear
     this._state.rotate = this._pendingRotate
     this._pendingRotate = 0
+    // First-person: apply pointer-lock deltas then clear
+    this._state.fpYawDelta = this._pendingFpYaw
+    this._pendingFpYaw = 0
+    this._state.fpPitchDelta = this._pendingFpPitch
+    this._pendingFpPitch = 0
   }
 
   onKeyDown(e: KeyboardEvent): void {
@@ -43,7 +57,7 @@ export class InputManager {
   }
 
   onMouseMove(dx: number, _dy: number): void {
-    // Only accumulate rotation during mouse drag (primary button held)
+    // Third-person: only accumulate rotation during mouse drag (primary button held)
     if (!this.mouseDown) return
     this._pendingRotate -= dx * 0.01
   }
@@ -56,9 +70,30 @@ export class InputManager {
     this.mouseDown = false
   }
 
+  /** Enable pointer-lock mouse-look on the given canvas (FP mode only). */
+  setPointerLock(canvas: HTMLCanvasElement): void {
+    this._pointerLockCanvas = canvas
+    // Request pointer lock on first click
+    canvas.addEventListener('click', this._onPointerLockRequest, { once: true })
+  }
+
+  private _onPointerLockRequest = (): void => {
+    if (!this._pointerLockCanvas) return
+    this._pointerLockCanvas.requestPointerLock?.()
+  }
+
+  /** Called from the game's document mousemove handler when pointer lock is active. */
+  onPointerLockMove(dx: number, dy: number, sensitivity: number = 50): void {
+    const factor = 0.005 * (sensitivity / 50)
+    this._pendingFpYaw -= dx * factor
+    this._pendingFpPitch += dy * factor
+  }
+
   reset(): void {
     this.keys.clear()
     this.mouseDown = false
     this._pendingRotate = 0
+    this._pendingFpYaw = 0
+    this._pendingFpPitch = 0
   }
 }

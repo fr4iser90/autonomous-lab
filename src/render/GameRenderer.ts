@@ -189,6 +189,17 @@ export class GameRenderer {
     this.renderer.setSize(width, height)
   }
 
+  /** Set the perspective camera FOV in degrees. */
+  setFOV(fov: number): void {
+    this.camera.fov = fov
+    this.camera.updateProjectionMatrix()
+  }
+
+  /** Get the current camera FOV in degrees. */
+  getFov(): number {
+    return this.camera.fov
+  }
+
   render(): void {
     this.renderer.render(this.scene, this.camera)
   }

@@ -33,7 +33,7 @@ import { HitEffects } from '../systems/HitEffects'
 import { ScreenShake } from '../systems/ScreenShake'
 import { showToast } from '../systems/ToastSystem'
 import { GameRenderer as GRCls } from '../render/GameRenderer'
-import { FollowCamera } from '../render/camera'
+import { FollowCamera, FirstPersonCamera, type CameraMode } from '../render/camera'
 import { PlayerKit } from '../kits/playerKit'
 import { generateDungeon, buildScene, isOnStealthTile } from '../systems/DungeonPCG'
 import { spawnMobs, spawnBoss, showFloorToast, advanceToFloor } from '../systems/Transition'
@@ -106,7 +106,7 @@ export let playerX = 0, playerZ = 0, playerYaw = 0, dungeonSeed = 0
 export let minimap: Minimap | null = null
 export let player: PlayerKit | null = null
 export let renderer: GameRenderer | null = null
-export let camera: FollowCamera | null = null
+export let camera: FollowCamera | FirstPersonCamera | null = null
 export let input: InputManager | null = null
 export let mobs: MobKit[] = [], combatLogEntries: string[] = []
 export let currentDungeon: DungeonData | null = null
@@ -122,6 +122,22 @@ export const tutorialState: TutorialState = createTutorialState()
 export let tutorialDummyMesh: THREE.Object3D | null = null
 export let tutorialStairsZ = 0
 export let playerLastX = 0, playerLastZ = 0, playerLastYaw = 0
+
+/** Factory: create FollowCamera or FirstPersonCamera based on mode. */
+function _createCamera(mode: CameraMode): FollowCamera | FirstPersonCamera {
+  return mode === 'first-person'
+    ? new FirstPersonCamera({ FOV: 75, eyeHeight: 1.6 })
+    : new FollowCamera({ distance: 12, height: 5, FOV: 55, followLag: 0.10 })
+}
+/** Apply camera mode change to the running game (called from Settings). */
+function _applyCameraMode(mode: CameraMode): void {
+  if (!renderer || !input) return
+  camera?.reset()
+  camera = _createCamera(mode)
+  camera.syncYaw(playerYaw)
+  if (mode === 'first-person') input.setPointerLock(canvas)
+}
+
 export function showScreen(screen: 'title' | 'game' | 'settings'): void {
   currentScreen = screen
   titleScreen.style.display = screen === 'title' ? 'flex' : 'none'
@@ -141,17 +157,13 @@ export function showScreen(screen: 'title' | 'game' | 'settings'): void {
     if (audio) audio.stopAmbient()
   }
 }
-
 // ── UI helpers ──────────────────────────────────────────
-
 export function rarityClass(rarity: ItemRarity): string { return `rarity-${rarity}` }
 export function rarityLabel(rarity: ItemRarity): string { return rarity.charAt(0).toUpperCase() + rarity.slice(1) }
-
 export function showLootToast(item: ItemDef): void {
   const rarityClass = `rarity-${item.rarity}`
   showToast(`${item.icon} ${item.name}`, { type: 'loot', duration: 2500, className: rarityClass })
 }
-
 export function showDoorToast(msg: string): void {
   showToast(msg, { type: 'door', duration: 2000 })
 }
@@ -191,7 +203,6 @@ export function handleItemAction(slot: { item: ItemDef; equipped: boolean }): vo
   updateInventoryUI()
   updateHP(playerHP, playerMaxHP)
 }
-
 export function updateScrapUI(): void {
   const el = document.getElementById('scrap-label')
   if (el) el.textContent = `Scrap: ${player?.scrap ?? 0}`
@@ -279,7 +290,6 @@ export function updateSkillUI(): void {
     grid.appendChild(el)
   })
 }
-
 let _combatLogHideTimer: ReturnType<typeof setTimeout> | undefined = undefined
 export function addCombatLog(message: string): void {
   combatLogEntries.push(message)
@@ -289,19 +299,19 @@ export function addCombatLog(message: string): void {
   clearTimeout(_combatLogHideTimer)
   _combatLogHideTimer = setTimeout(() => { combatLog.style.display = 'none' }, 5000)
 }
-
 // ── Settings helpers ────────────────────────────────────
-
 export function loadSettingsIntoUI(): void {
   const save = loadSave()
   const vm = document.getElementById('vol-master') as HTMLInputElement
   const vs = document.getElementById('vol-sfx') as HTMLInputElement
   const rm = document.getElementById('reduce-motion') as HTMLInputElement
+  const cm = document.getElementById('camera-mode') as HTMLSelectElement
   const vmv = document.getElementById('vol-master-val')!
   const vsv = document.getElementById('vol-sfx-val')!
   if (vm) vm.value = String(save.settings.masterVolume)
   if (vs) vs.value = String(save.settings.sfxVolume)
   if (rm) rm.checked = save.settings.reduceMotion
+  if (cm) cm.value = save.settings.cameraMode ?? 'first-person'
   if (vmv) vmv.textContent = save.settings.masterVolume + '%'
   if (vsv) vsv.textContent = save.settings.sfxVolume + '%'
 }
@@ -311,9 +321,11 @@ export function applySettingsFromUI(): void {
   const vm = document.getElementById('vol-master') as HTMLInputElement
   const vs = document.getElementById('vol-sfx') as HTMLInputElement
   const rm = document.getElementById('reduce-motion') as HTMLInputElement
+  const cm = document.getElementById('camera-mode') as HTMLSelectElement
   if (vm) save.settings.masterVolume = parseInt(vm.value, 10)
   if (vs) save.settings.sfxVolume = parseInt(vs.value, 10)
   if (rm) save.settings.reduceMotion = rm.checked
+  if (cm) save.settings.cameraMode = cm.value as 'first-person' | 'third-person'
   saveSave(save)
   if (audio) audio.updateSettings({
     masterVolume: save.settings.masterVolume,
@@ -321,9 +333,7 @@ export function applySettingsFromUI(): void {
     reduceMotion: save.settings.reduceMotion,
   })
 }
-
 // ── Button handlers ─────────────────────────────────────
-
 export function initButtonHandlers(startGameFn: (seed: number) => void, startTutorialFn: (seed: number) => void): void {
   const $ = (id: string) => document.getElementById(id)
   const seed = () => { dungeonSeed = Date.now() % 100000; return dungeonSeed }
@@ -331,7 +341,15 @@ export function initButtonHandlers(startGameFn: (seed: number) => void, startTut
   $('btn-new')?.addEventListener('click', () => { seed(); startGameFn(dungeonSeed) })
   $('btn-continue')?.addEventListener('click', () => startGameFn(dungeonSeed || 12345))
   $('btn-settings')?.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
-  $('btn-settings-back')?.addEventListener('click', () => { applySettingsFromUI(); showScreen(gameState === 'menu' || gameState === 'dead' ? 'title' : 'game') })
+  $('btn-settings-back')?.addEventListener('click', () => {
+    applySettingsFromUI()
+    // Apply camera mode change mid-run if in game
+    if (gameState === 'playing') {
+      const save = loadSave()
+      _applyCameraMode(save.settings.cameraMode ?? 'first-person')
+    }
+    showScreen(gameState === 'menu' || gameState === 'dead' ? 'title' : 'game')
+  })
   $('btn-retry')?.addEventListener('click', () => {
     deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = playerMaxHP = 20; playerFloor = 1
     if (player) player.scrap = 0
@@ -364,11 +382,8 @@ export function initTitleScreen(): void {
   document.getElementById('btn-continue')!.style.display = save.meta.highFloorCleared > 0 ? 'block' : 'none'
   showScreen('title')
 }
-
 // ── Event listeners ─────────────────────────────────────
-
 let mouseDownPos = { x: 0, y: 0 }
-
 export function initEventListeners(_startGameFn: (seed: number) => void): void {
   document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (currentScreen === 'game' && gameState === 'playing' && input) {
@@ -449,11 +464,10 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
       }
     }
   })
-
   document.addEventListener('keyup', (e) => { if (input) input.onKeyUp(e) })
   canvas.addEventListener('mousedown', (e) => {
     if (input) input.onMouseDown()
-    if (camera) camera.onPointerDown(e.clientX)
+    if (camera) camera.onPointerDown(e.clientX, e.clientY)
     if (audio && !(audio as any)['enabled']) audio.init()
   })
   canvas.addEventListener('mouseup', () => {
@@ -461,12 +475,18 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
     if (camera) camera.onPointerUp()
   })
   canvas.addEventListener('mousemove', (e) => {
-    const dx = e.clientX - mouseDownPos.x
-    if (input) input.onMouseMove(dx, 0)
-    if (camera) camera.onPointerMove(e.clientX, e.clientY)
-    mouseDownPos = { x: e.clientX, y: e.clientY }
+    // Pointer-lock mouse-look (FP mode): deltas fed to InputManager,
+    // then GameLoop applies yaw to player and pitch to camera
+    if (document.pointerLockElement === canvas && camera instanceof FirstPersonCamera) {
+      const sens = loadSave().settings.cameraSensitivity ?? 50
+      if (input) input.onPointerLockMove(e.movementX, e.movementY, sens)
+    } else {
+      const dx = e.clientX - mouseDownPos.x
+      if (input) input.onMouseMove(dx, 0)
+      if (camera) camera.onPointerMove(e.clientX, e.clientY)
+      mouseDownPos = { x: e.clientX, y: e.clientY }
+    }
   })
-
   // P9-2: Hotbar slot click handlers (event delegation)
   quickUseBar.addEventListener('click', (e) => {
     const el = e.target as Element | null
@@ -474,9 +494,7 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
     if (slot) handleQuickUse(+slot.dataset.slot!)
   })
 }
-
 // ── Start game ──────────────────────────────────────────
-
 export function startGame(seed: number): void {
   gameState = 'playing'
   playerHP = 20
@@ -498,12 +516,12 @@ export function startGame(seed: number): void {
   skillTree = new STCls()
   chaseAI = new ChaseAICls({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5, stealthMultiplier: 0.35 })
   const w = window.innerWidth, h = window.innerHeight
-
   renderer = new GRCls({
     canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
     floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-  camera = new FollowCamera({ distance: 12, height: 5, FOV: 55, followLag: 0.10 })
+  // Mode-dependent camera: first-person by default (SaveService default)
+  camera = _createCamera(save.settings.cameraMode ?? 'first-person')
   lootManager = new LDMCls(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new IMCls()
   camera?.syncYaw(playerYaw)
@@ -521,13 +539,11 @@ export function startGame(seed: number): void {
   minimap = new Minimap(dungeon)
   initAmbientAudio(save)
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
-
   // P8-1: Init hit effects & screen shake
   const hitEffects = new HitEffects()
   const screenShake = new ScreenShake()
   GL.setHitEffects(hitEffects)
   GL.setScreenShake(screenShake)
-
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
   GL.setSkillTree(skillTree)
@@ -557,16 +573,12 @@ export function startGame(seed: number): void {
   GL.setQuickUseUpdate(() => updateQuickUseBar())
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
-
   // Start render loop
   gameLoop()
-
   // P9-1: Start run tracking
   RunTracker.startRun()
 }
-
 // ── Tutorial functions ──────────────────────────────────
-
 export function startTutorialGame(seed: number): void {
   gameState = 'playing'
   playerHP = 20
@@ -593,7 +605,8 @@ export function startTutorialGame(seed: number): void {
     canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
     floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-  camera = new FollowCamera({ distance: 12, height: 5, FOV: 55, followLag: 0.10 })
+  // Mode-dependent camera: first-person by default (SaveService default)
+  camera = _createCamera(save.settings.cameraMode ?? 'first-person')
   lootManager = new LDMCls(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new IMCls()
   camera?.syncYaw(playerYaw)
@@ -610,13 +623,11 @@ export function startTutorialGame(seed: number): void {
   minimap = new Minimap(currentDungeon)
   initAmbientAudio(save)
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
-
   // P8-1: Init hit effects & screen shake
   const hitEffects2 = new HitEffects()
   const screenShake2 = new ScreenShake()
   GL.setHitEffects(hitEffects2)
   GL.setScreenShake(screenShake2)
-
   GL.initGameLoop(deathScreen, combatLog)
   GL.setRuntimeState(currentScreen, gameState, renderer, player, camera, input, minimap, chaseAI, audio)
   GL.setSkillTree(skillTree)
@@ -647,7 +658,6 @@ export function startTutorialGame(seed: number): void {
   playerLastX = playerX; playerLastZ = playerZ; playerLastYaw = playerYaw
   gameLoop()
 }
-
 function buildTutorialDungeon(seed: number, theme: FloorTheme): DungeonData {
   const w = 14, h = 10
   const spawnX = 3, spawnY = Math.floor(h / 2)
@@ -676,31 +686,24 @@ function spawnTutorialDummy(renderer: GameRenderer): void {
 function isDummyMob(mob: MobKit): boolean {
   return mob.state.type === 'tutorial-dummy'
 }
-
 // ── Game loop ───────────────────────────────────────────
-
 export function gameLoop(timestamp = 0): void {
   // Single rAF driver — update input and run GL's game loop
   input?.update()
   GL.gameLoop(timestamp)
-
   ;[playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor] = [GL.getPlayerHP(), GL.getPlayerMaxHP(), GL.getPlayerX(), GL.getPlayerZ(), GL.getPlayerYaw(), GL.getPlayerFloor()]
   combatLogEntries = GL.getGameLog()
   mobs = GL.getMobs()
   updateScrapUI(); updateKeyCountUI(); updateTrophyUI()
-
   if (lootManager) {
     const time = renderer?.getElapsedTime() ?? 0
     const collected = lootManager.update(0.016, time, playerX, playerZ)
     if (collected.length > 0) showLootToast(collected[collected.length - 1])
   }
-
   if (currentDungeon) { updateStealth(isOnStealthTile(currentDungeon, playerX, playerZ)); document.getElementById('stealth-label')!.style.display = '' }
-
   const trapState = GL.getTrapHitState()
   const trapEl = document.getElementById('trap-hit-label')!
   if (trapState.active) { trapEl.style.display = 'block'; updateTrapHit(true, trapState.trapType) } else { trapEl.style.display = 'none' }
-
   if (player) updateStatusEffects(player.statusEffects)
   GL.checkPlayerDeath(updateHP, addCombatLog, player?.scrap ?? 0, (data) => {
     const statsEl = document.getElementById('death-stats')
@@ -716,7 +719,6 @@ export function gameLoop(timestamp = 0): void {
     if (durationEl) { durationEl.textContent = data.duration; durationEl.style.display = '' }
     if (bestEl) { bestEl.textContent = data.bestRun; bestEl.style.display = data.bestRun ? '' : 'none' }
   })
-
   // Tutorial tracking
   if (tutorialState?.active && input) {
     const state = input.getState()
@@ -763,7 +765,6 @@ export function gameLoop(timestamp = 0): void {
     GL.setAnimFrame(requestAnimationFrame(gameLoop))
   }
 }
-
 function transitionFromTutorial(): void {
   const overlay = document.querySelector('.tutorial-overlay')
   overlay?.parentElement?.remove()
@@ -776,7 +777,6 @@ function transitionFromTutorial(): void {
   dungeonSeed = Date.now() % 100000
   startGame(dungeonSeed)
 }
-
 // ── Boss summon event ───────────────────────────────────
 import { Boss } from '../entities/Boss'
 export function initBossSummon(): void {
