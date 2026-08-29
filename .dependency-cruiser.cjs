@@ -27,7 +27,7 @@ module.exports = {
       name: 'not-to-dev-dep',
       severity: 'error',
       comment: 'Runtime src must not import packages marked as devDependencies.',
-      from: { path: '^src', pathNot: '\\.spec\\.[jt]sx?$' },
+      from: { path: '^src', pathNot: ['\\.spec\\.[jt]sx?$', '\\.test\\.[jt]sx?$'] },
       to: { dependencyTypes: ['npm-dev'] },
     },
   ],
