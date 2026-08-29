@@ -5,6 +5,7 @@
 ## NOW
 
 - Phase: **Phase 8 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting: torch flicker + ambient falloff), PR#86 + #87 (closed) + #89 + #90
+- P9-1: Enhanced Death Recap + Run History — RunTracker module (40 lines), persistent best runs (top 5), death screen shows floor/scrap/mobs/duration/bestRun, retry button resets tick counter. PR#94. Bundle: 619.67 KB (<620 KB cap).
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
@@ -149,9 +150,19 @@
 | P8-2 | Audio feedback on hits — crit, player damage, death sounds | ✅ SHIPPED PR#87 | `AudioEngine.ts` (critHit, playerHit, death methods), `GameLoop.ts` (6 audio integration points), `AudioEngine.test.ts` (14 tests) |
 | P8-3 | Toast system polish — stacked notifications, slide-in/out animations, configurable duration/type | ✅ SHIPPED PR#89 | `ToastSystem.ts`, `ui.ts`, `Transition.ts`, `index.html`, `styles.css`, `toast-system.test.ts` |
 
+## P9 — Phase 9: Quality of Life
+
+| Slice | Feature | Status | Key files |
+|-------|---------|--------|-----------|
+| P9-1 | Enhanced Death Recap + Run History — persistent best runs, death stats (floor/scrap/mobs/duration/best), retry button | 🔄 PR#94 | `RunTracker.ts`, `GameLoop.ts`, `ui.ts`, `index.html`, `styles.css` |
+
 ## Planned
 
 - ✅ **P8-1 shipped** — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
+- ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
+- ✅ **P8-3 shipped** — Toast polish: ToastSystem.ts with stacking (max 4), slide-in/out CSS animations, configurable duration/type, rarity-colored loot toasts. Loot/door toasts migrated from inline DOM manipulation to ToastSystem. Floor toast in Transition.ts uses ToastSystem. 8 unit tests. Gate: 300 tests (2 skipped), 618.03 KB bundle.
+- ✅ **P8-4 shipped** — Dynamic lighting: `lighting.ts` pure math module (`torchIntensity` with irrational freq ratios + draft bursts, `ambientIntensity` floor-depth falloff 0.7→0.25), `GameRenderer.ts` wrappers, `GameLoop.ts` floor wiring, 13 tests. Gate: 313 tests green, 618.39 KB. Phase 8 is now fully complete (P8-1 ✅ P8-2 ✅ P8-3 ✅ P8-4 ✅, PR#86 + #90 merged).
+- ✅ **P9-1 shipped (PR#94)** — Enhanced Death Recap + Run History: `RunTracker.ts` (40 lines, persistent best runs top-5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets run tick counter. Bundle: 619.67 KB. Gate: 313 tests green (2 skipped), 0 TS errors. — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
 - ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
 - ✅ **P8-3 shipped** — Toast polish: ToastSystem.ts with stacking (max 4), slide-in/out CSS animations, configurable duration/type, rarity-colored loot toasts. Loot/door toasts migrated from inline DOM manipulation to ToastSystem. Floor toast in Transition.ts uses ToastSystem. 8 unit tests. Gate: 300 tests (2 skipped), 618.03 KB bundle.
 - ✅ **P8-4 shipped** — Dynamic lighting: `lighting.ts` pure math module (`torchIntensity` with irrational freq ratios + draft bursts, `ambientIntensity` floor-depth falloff 0.7→0.25), `GameRenderer.ts` wrappers, `GameLoop.ts` floor wiring, 13 tests. Gate: 313 tests green, 618.39 KB. Phase 8 is now fully complete (P8-1 ✅ P8-2 ✅ P8-3 ✅ P8-4 ✅, PR#86 + #90 merged).
