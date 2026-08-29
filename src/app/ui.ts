@@ -129,6 +129,10 @@ function _createCamera(mode: CameraMode): FollowCamera | FirstPersonCamera {
     ? new FirstPersonCamera({ FOV: 75, eyeHeight: 1.6 })
     : new FollowCamera({ distance: 12, height: 5, FOV: 55, followLag: 0.10 })
 }
+/** Re-request pointer-lock when returning to FP gameplay. */
+function _relockPointer(): void {
+  if (input && camera && camera instanceof FirstPersonCamera) input.setPointerLock(canvas)
+}
 /** Apply camera mode change to the running game (called from Settings). */
 function _applyCameraMode(mode: CameraMode): void {
   if (!renderer || !input) return
@@ -356,7 +360,9 @@ export function initButtonHandlers(startGameFn: (seed: number) => void, startTut
     updateHP(playerHP, playerMaxHP); economy?.reset(); skillTree?.reset(); GL.setBaseHP(20); GL.resetTickCount(); updateScrapUI()
   })
   $('btn-title')?.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
-  $('btn-resume')?.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
+  $('btn-resume')?.addEventListener('click', () => {
+    gameState = 'playing'; pauseOverlay.style.display = 'none'; _relockPointer()
+  })
   $('btn-pause-settings')?.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
   $('btn-pause-title')?.addEventListener('click', () => { pauseOverlay.style.display = 'none'; showScreen('title'); gameState = 'menu' })
   $('shop-toggle')?.addEventListener('click', () => {
@@ -418,7 +424,7 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
             updateInventoryUI()
             if (tutorialState) TutorialMode.markInventoryOpened(tutorialState)
           } else {
-            inventoryPanel.style.display = 'none'
+            inventoryPanel.style.display = 'none'; _relockPointer()
           }
         } else if (e.key === 'o' || e.key === 'O') {
           if (shopPanel.style.display === 'none') {
@@ -427,7 +433,7 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
             skillPanel.style.display = 'none'
             updateShopUI()
           } else {
-            shopPanel.style.display = 'none'
+            shopPanel.style.display = 'none'; _relockPointer()
           }
         } else if (e.key === 't' || e.key === 'T') {
           if (skillPanel.style.display === 'none') {
@@ -436,7 +442,7 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
             shopPanel.style.display = 'none'
             updateSkillUI()
           } else {
-            skillPanel.style.display = 'none'
+            skillPanel.style.display = 'none'; _relockPointer()
           }
         } else if (e.key === 'r' || e.key === 'R') {
           // Shrine activation
@@ -457,9 +463,7 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
         }
       } else if (gameState === 'paused') {
         if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-          e.preventDefault()
-          gameState = 'playing'
-          pauseOverlay.style.display = 'none'
+          e.preventDefault(); gameState = 'playing'; pauseOverlay.style.display = 'none'; _relockPointer()
         }
       }
     }
@@ -516,24 +520,20 @@ export function startGame(seed: number): void {
   skillTree = new STCls()
   chaseAI = new ChaseAICls({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5, stealthMultiplier: 0.35 })
   const w = window.innerWidth, h = window.innerHeight
-  renderer = new GRCls({
-    canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
-    floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
+  renderer = new GRCls({ canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
+    floorColor: '#2a2520', wallColor: '#2e2a25', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-  // Mode-dependent camera: first-person by default (SaveService default)
   camera = _createCamera(save.settings.cameraMode ?? 'first-person')
   lootManager = new LDMCls(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new IMCls()
-  camera?.syncYaw(playerYaw)
-  const theme = getThemeForFloor(1)
-  const dungeon = generateDungeon(seed, 1, theme)
+  camera?.syncYaw(playerYaw); if (save.settings.cameraMode !== 'third-person') _relockPointer()
+  const theme = getThemeForFloor(1), dungeon = generateDungeon(seed, 1, theme)
   currentDungeon = dungeon
   buildScene(renderer, dungeon)
   spawnMobs(renderer, dungeon, mobs)
   spawnBoss(renderer!, playerFloor, dungeon, mobs)
   player = new PlayerKit(renderer!)
-  playerX = dungeon.spawnX - dungeon.width / 2
-  playerZ = dungeon.spawnY - dungeon.height / 2
+  playerX = dungeon.spawnX - dungeon.width / 2; playerZ = dungeon.spawnY - dungeon.height / 2
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
   minimap = new Minimap(dungeon)
@@ -601,22 +601,18 @@ export function startTutorialGame(seed: number): void {
   skillTree = new STCls()
   chaseAI = new ChaseAICls({ aggroRange: 8, retreatRange: 15, attackRange: 1.2, attackCooldown: 1.0, moveSpeed: 2.5, stealthMultiplier: 0.35 })
   const w = window.innerWidth, h = window.innerHeight
-  renderer = new GRCls({
-    canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
-    floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
+  renderer = new GRCls({ canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
+    floorColor: '#2a2520', wallColor: '#2e2a25', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-  // Mode-dependent camera: first-person by default (SaveService default)
   camera = _createCamera(save.settings.cameraMode ?? 'first-person')
   lootManager = new LDMCls(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new IMCls()
-  camera?.syncYaw(playerYaw)
-  const theme = getThemeForFloor(1)
-  currentDungeon = buildTutorialDungeon(seed, theme)
+  camera?.syncYaw(playerYaw); if (save.settings.cameraMode !== 'third-person') _relockPointer()
+  currentDungeon = buildTutorialDungeon(seed, getThemeForFloor(1))
   buildScene(renderer, currentDungeon)
   spawnTutorialDummy(renderer!)
   player = new PlayerKit(renderer!)
-  playerX = currentDungeon.spawnX - currentDungeon.width / 2
-  playerZ = currentDungeon.spawnY - currentDungeon.height / 2
+  playerX = currentDungeon.spawnX - currentDungeon.width / 2; playerZ = currentDungeon.spawnY - currentDungeon.height / 2
   tutorialStairsZ = playerZ + currentDungeon.height / 2 - 3
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
