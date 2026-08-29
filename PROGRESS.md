@@ -11,7 +11,7 @@
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
+- Branch: **`agent/dungeon-crawl-20260829`** (canonical RUN_ID — one run = one branch; never spawn `-v2` / `-p*` / `-rebased`). Prior tips merged into `main` through #95.
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
 - Gate: **313 tests green (2 skipped), build green, 619.67 KB bundle**
 - BUGS: **game bugs drained** (B-1 closed, B-2 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
