@@ -204,6 +204,8 @@ export function updateKeyCountUI(): void {
   el.textContent = `🔑 ${inventory.getKeyCount()}`
 }
 
+/** P12: Update trophy counter in HUD */
+export function updateTrophyUI(): void { const el = document.getElementById('trophy-label'); if (el) el.textContent = `👑 ${RunTracker.getBossKills()}` }
 // ── P10-1: Jukebox (ambient track cycling) ──
 /** Update HUD jukebox label */
 export function updateJukeboxUI(): void {
@@ -682,12 +684,10 @@ export function gameLoop(timestamp = 0): void {
   input?.update()
   GL.gameLoop(timestamp)
 
-  ;[playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor] = [
-    GL.getPlayerHP(), GL.getPlayerMaxHP(), GL.getPlayerX(), GL.getPlayerZ(), GL.getPlayerYaw(), GL.getPlayerFloor(),
-  ]
+  ;[playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor] = [GL.getPlayerHP(), GL.getPlayerMaxHP(), GL.getPlayerX(), GL.getPlayerZ(), GL.getPlayerYaw(), GL.getPlayerFloor()]
   combatLogEntries = GL.getGameLog()
   mobs = GL.getMobs()
-  updateScrapUI(); updateKeyCountUI()
+  updateScrapUI(); updateKeyCountUI(); updateTrophyUI()
 
   if (lootManager) {
     const time = renderer?.getElapsedTime() ?? 0
@@ -706,12 +706,13 @@ export function gameLoop(timestamp = 0): void {
     const statsEl = document.getElementById('death-stats')
     const scrapEl = document.getElementById('death-scrap')
     const mobsEl = document.getElementById('mobs-killed')
+    const bossEl = document.getElementById('boss-kills')
     const durationEl = document.getElementById('run-duration')
     const bestEl = document.getElementById('best-run')
-
     if (statsEl) statsEl.textContent = `Deepest Floor: ${data.floor}`
     if (scrapEl) scrapEl.textContent = `Scrap Collected: ${data.scrap}`
     if (mobsEl) { mobsEl.textContent = data.mobsKilled; mobsEl.style.display = '' }
+    if (bossEl) { bossEl.textContent = data.bossKills; bossEl.style.display = '' }
     if (durationEl) { durationEl.textContent = data.duration; durationEl.style.display = '' }
     if (bestEl) { bestEl.textContent = data.bestRun; bestEl.style.display = data.bestRun ? '' : 'none' }
   })
@@ -777,7 +778,6 @@ function transitionFromTutorial(): void {
 }
 
 // ── Boss summon event ───────────────────────────────────
-
 import { Boss } from '../entities/Boss'
 export function initBossSummon(): void {
   window.addEventListener('boss-summon', () => {

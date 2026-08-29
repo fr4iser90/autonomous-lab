@@ -1,5 +1,11 @@
 # Features — Ashen Delve
 
+## P12: Phase 12: Boss Trophy Tracking
+- **Boss kill counter** — Persistent trophy icon (👑) in HUD showing total boss kills across runs. `RunTracker.getBossKills()`, `updateTrophyUI()`.
+- **Boss kill toast** — "👑 Boss Defeated!" toast with floor number on boss death (melee or DOT). Integrated into `GameLoop.ts` mob death path.
+- **Death screen boss stats** — Boss-kill count displayed on death screen alongside mobs slain. `checkPlayerDeath` returns `bossKills` in snapshot.
+- **Best run boss stat** — Best run display now includes boss kills: "🏆 Best Run: Floor N · M mobs · B bosses".
+
 ## P9: Phase 9: Quality of Life
 
 - **Quick-Use Hotbar** — Bottom-center bar with 4 quick-use slots. Number keys 1-4 for instant potion/key use. Potion cooldown: 1 second (overlay + red border during cooldown). Event delegation click handler on parent element. Inventory: `tryQuickUsePotion()`, `tryQuickUseKey()`, `isOnCooldown()`, `resetCooldowns()`. UI: `updateQuickUseBar()`, `handleQuickUse()`, `setQuickUseUpdate()`. Bundle: 619.01 KB. 319 tests (313+6 P9-2).
