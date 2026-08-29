@@ -18,10 +18,10 @@ import type { InputManager } from '../systems/input'
 import { Minimap } from '../render/Minimap'
 import { CombatEngine } from '../systems/CombatEngine'
 import * as RunTracker from '../systems/RunTracker'
-export { updateHP, updateFloor, updateDepth, updateStatusEffects } from './uiHelpers'
 import * as GL from '../systems/GameLoop'
 import { loadSave, saveSave } from '../services/SaveService'
 import { updateHP, updateFloor, updateDepth, updateStealth, updateTrapHit, updateStatusEffects } from './uiHelpers'
+export { updateHP, updateFloor, updateDepth, updateStatusEffects } from './uiHelpers'
 import { getThemeForFloor } from '../data/floors'
 import { ChaseAI as ChaseAICls } from '../systems/ChaseAI'
 import { Inventory as InvCls } from '../systems/Inventory'
@@ -57,8 +57,48 @@ const shrinePrompt = document.getElementById('shrine-prompt')!
 const shopPanel = document.getElementById('shop-panel')!
 const skillPanel = document.getElementById('skill-panel')!
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
+const quickUseBar = document.getElementById('quick-use-bar')!
 
-// Shared mutable state — set by main.ts
+// Quick-Use Hotbar (P9-2)
+const _QMAX = 4
+export function updateQuickUseBar(): void {
+  if (!inventory || !quickUseBar) return
+  const inv = inventory, slots = inv.getSlots()
+  const cs = slots.filter(s => s.item.type === 'potion' || s.item.type === 'key').slice(0, _QMAX)
+  quickUseBar.style.display = cs.length ? 'flex' : 'none'
+  cs.forEach((slot, i) => {
+    const el = quickUseBar.children[i] as HTMLElement
+    if (!el) return
+    const cd = inv.isOnCooldown(slot.item.id)
+    el.classList.toggle('cooldown', cd)
+    el.querySelector('.slot-icon')!.textContent = slot.item.icon
+    el.querySelector('.slot-count')!.textContent = slot.item.type === 'key' ? String(inv.getKeyCount()) : '×1'
+    el.title = slot.item.name + (cd ? ' (cd)' : '')
+  })
+  for (let i = cs.length; i < _QMAX; i++) {
+    const el = quickUseBar.children[i] as HTMLElement
+    if (el) el.classList.add('cooldown')
+  }
+}
+export function handleQuickUse(si: number): void {
+  if (!inventory) return
+  const cs = inventory.getSlots().filter(s => s.item.type === 'potion' || s.item.type === 'key')
+  const item = cs[si]
+  if (!item) return
+  if (item.item.type === 'potion') {
+    const heal = inventory.tryQuickUsePotion(item.item.id)
+    if (heal > 0 && playerHP !== undefined) {
+      playerHP = Math.min(playerMaxHP, playerHP + heal)
+      updateHP(playerHP, playerMaxHP)
+      showToast(`🧪 +${heal} HP`, { type: 'heal', className: 'toast-success' })
+    }
+  } else if (item.item.type === 'key' && inventory.tryQuickUseKey()) {
+    updateKeyCountUI()
+    showToast('🔑 Key used', { type: 'info', className: 'toast-info' })
+  }
+}
+
+// ── Shared mutable state — set by main.ts
 export let gameState: 'menu' | 'playing' | 'paused' | 'dead' = 'menu'
 export let currentScreen: 'title' | 'game' | 'settings' = 'title'
 export let playerHP = 20, playerMaxHP = 20, playerFloor = 1
@@ -390,6 +430,13 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
           if (gameState === 'playing') {
             GL.requestShrineActivate()
           }
+        } else {
+          // P9-2: Quick-use hotbar (1-4)
+          const num = parseInt(e.key, 10)
+          if (num >= 1 && num <= 4) {
+            e.preventDefault()
+            handleQuickUse(num - 1)
+          }
         }
       } else if (gameState === 'paused') {
         if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
@@ -402,7 +449,6 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
   })
 
   document.addEventListener('keyup', (e) => { if (input) input.onKeyUp(e) })
-
   canvas.addEventListener('mousedown', (e) => {
     if (input) input.onMouseDown()
     if (camera) camera.onPointerDown(e.clientX)
@@ -415,6 +461,13 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
     if (input) input.onMouseMove(dx, 0)
     if (camera) camera.onPointerMove(e.clientX, e.clientY)
     mouseDownPos = { x: e.clientX, y: e.clientY }
+  })
+
+  // P9-2: Hotbar slot click handlers (event delegation)
+  quickUseBar.addEventListener('click', (e) => {
+    const el = e.target as Element | null
+    const slot = el?.closest('.quick-use-slot') as HTMLElement | null
+    if (slot) handleQuickUse(+slot.dataset.slot!)
   })
 }
 
@@ -496,6 +549,8 @@ export function startGame(seed: number): void {
     shrinePrompt.style.display = 'none'
     if (audio) audio.hit()
   })
+  // P9-2: Quick-use hotbar
+  GL.setQuickUseUpdate(() => updateQuickUseBar())
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
 
@@ -579,6 +634,8 @@ export function startTutorialGame(seed: number): void {
     shrinePrompt.style.display = 'none'
     if (audio) audio.hit()
   })
+  // P9-2: Quick-use hotbar
+  GL.setQuickUseUpdate(() => updateQuickUseBar())
   GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
   GL.resetGameTime()
   TutorialMode.startTutorial(tutorialState)

@@ -57,9 +57,12 @@ let _screenShake: ScreenShake | null = null
 
 // P9-1: Run tick counter (independent of RunTracker for display)
 let _runTickCount = 0
-
 // Loot drop callback (set from main.ts)
 let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void) | null = null
+
+// P9-2: Quick-use hotbar update callback
+let _onQuickUseUpdate: (() => void) | null = null
+export function setQuickUseUpdate(cb: () => void): void { _onQuickUseUpdate = cb }
 
 // Door opened callback (set from main.ts)
 let _onDoorOpened: ((msg: string) => void) | null = null
@@ -257,6 +260,8 @@ export function gameLoop(timestamp = 0): number {
   _input?.update()
   const inp = _input?.getState() ?? { forward: 0, right: 0, rotate: 0, jump: false, attack: false }
 
+  // P9-2: Update quick-use hotbar
+  _onQuickUseUpdate?.()
   // Move player
   if (_player && _renderer) {
     const effects = _skillTree?.getActiveEffects() ?? { damageBonus: 0, hpBonus: 0, speedBonus: 0, critChanceBonus: 0 }
