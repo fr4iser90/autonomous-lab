@@ -49,7 +49,7 @@ export class GameRenderer {
     this.scene = new THREE.Scene()
 
     // Fog — cold ash atmosphere (expanded for better visibility)
-    this.scene.fog = new THREE.Fog(config.fogColor, 12, 40)
+    this.scene.fog = new THREE.Fog(config.fogColor, 20, 50)
 
     // Background
     this.scene.background = new THREE.Color(config.bgColor)
@@ -74,7 +74,7 @@ export class GameRenderer {
     this.renderer.toneMappingExposure = 1.2
 
     // Hemisphere light (ambient fill)
-    this.hemiLight = new THREE.HemisphereLight(0x668899, 0x333344, 0.7)
+    this.hemiLight = new THREE.HemisphereLight(0x668899, 0x333344, 1.1)
     this.scene.add(this.hemiLight)
 
     // Ground plane

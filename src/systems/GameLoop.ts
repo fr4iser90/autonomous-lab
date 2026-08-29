@@ -587,12 +587,12 @@ export function gameLoop(timestamp = 0): number {
     _minimap.setPlayerPos(_playerX, _playerZ)
   }
 
-  // Update camera (P8-1: apply screen shake offset)
+  // Update camera (P8-1: shake offset; B-CAM: sync yaw with player)
   if (_camera && _player && _renderer) {
     const shakeOffset = _screenShake?.update(dt, _player.position) ?? null
     _camera.update(_renderer, _player.position, _playerYaw, shakeOffset)
+    _camera.syncYaw(_playerYaw) // B-CAM: drag rotates camera and player together
   }
-
   // Animate torch flicker
   if (_renderer) {
     _renderer.updateTorchFlicker(time)

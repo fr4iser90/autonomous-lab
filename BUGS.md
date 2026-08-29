@@ -3,7 +3,7 @@
 # BUGS
 
 Last validation: agent SHA=`c695f6d` — Pages deploy live, P9-1 DOM elements confirmed (death-stats, mobs-killed, run-duration, best-run, retry button). Gate: 313 tests, 619.67 KB, 0 errors.
-Next validation: 2026-08-29 SHA=aff5f2c (Phase 6 Pages validation — B-14 found: Pages stale)
+Next validation: 2026-08-29 SHA=6a84d4859e26dab558bd20d3383122c77d30b9e9 (B-CAM+B-LIGHT fixes + validate; Playwright WebGL capture limited — scene verified via HUD DOM + code inspection)
 
 ## Open
 
@@ -49,6 +49,8 @@ _(none — all bugs resolved)_
 
 ## Fixed (2026-08-29 validation round)
 
+- **B-CAM**: Camera angle + look control — nearly top-down view (FOV 40, distance 10, height 7), mouse drag rotation only moved camera not player facing. **Fixed**: FollowCamera params → distance: 12, height: 5, FOV: 55, followLag: 0.10; `onPointerMove` now rotates both camera and player yaw (via `syncYaw` in GameLoop); `onPointerUp` clears mouse-down state; input rotation guarded by mouseDown flag.
+- **B-LIGHT**: Floor 1 nearly black — ambient intensity formula `max(0.25, 0.7 - (floor-1)*0.04)` gave 0.7 max, hemisphere light at 0.7, fog at 12–40 range made rooms invisible. **Fixed**: Formula → `max(0.45, 1.1 - (floor-1)*0.07)` (floor 1 = 1.1, min 0.45); TORCH_BASE_INTENSITY 2.0; fog expanded to 20–50; hemisphere light base 1.1; `Transition.advanceToFloor` now calls `setAmbientIntensity` for floor changes.
 - **B-9**: `#controls-info` missing from title screen — player had no way to learn controls before starting. **Fixed**: Added controls text to title screen (WASD Move, Mouse Drag Rotate, Space/Click Attack, E Inventory, O Shop, T Skills, Esc/P Pause).
 - **B-10**: Key conflicts in input.ts — Q/E used for keyboard rotation AND main.ts Q/E used for shop/inventory toggles — both actions fire simultaneously on single keystroke. **Fixed**: Removed Q/E keyboard rotation (rotation via mouse drag only), repurposed O for Shop and T for Skills.
 - **B-11**: S key conflict — `input.ts` uses S for backward movement AND `main.ts` uses S for skills toggle. **Fixed**: Skills now use T key (T for "Skill Tree").

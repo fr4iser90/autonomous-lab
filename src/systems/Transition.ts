@@ -91,4 +91,5 @@ export function advanceToFloor(floor: number, deps: TransitionDeps): void {
   GL.setDungeonData(newDungeon)
   GL.updateGameVars(playerHP, playerMaxHP, px, pz, 0, floor, mobsArr, combatLogEntries)
   updateFloor(floor)
+  renderer.setAmbientIntensity(floor)
 }

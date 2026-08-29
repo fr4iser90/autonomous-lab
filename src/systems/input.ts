@@ -39,6 +39,7 @@ export class InputManager {
   }
 
   onMouseMove(dx: number, _dy: number): void {
+    if (!this.mouseDown) return
     this._state.rotate -= dx * 0.01
   }
 

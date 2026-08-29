@@ -34,12 +34,13 @@ export function torchIntensity(time: number, torchIndex: number): number {
  * Base multiplier for torch lights.  Multiply with `torchIntensity()`
  * to get the actual intensity: `baseIntensity * torchIntensity(time, index)`.
  */
-export const TORCH_BASE_INTENSITY = 1.7
+export const TORCH_BASE_INTENSITY = 2.0
 
 /**
  * Compute ambient hemisphere-light intensity from the current floor number.
- * Deeper floors get darker ambient, clamped to a minimum of 0.25.
+ * Floor 1 starts bright (1.1) for spawn-room readability, deeper floors
+ * fade to a minimum of 0.45 so stealth/dark-fantasy mood is preserved.
  */
 export function ambientIntensity(floor: number): number {
-  return Math.max(0.25, 0.7 - (floor - 1) * 0.04)
+  return Math.max(0.45, 1.1 - (floor - 1) * 0.07)
 }
