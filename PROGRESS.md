@@ -1,11 +1,11 @@
-<!-- PROGRESS: Ashen Delve — P10 complete: P10-1 Jukebox + B-CAM/B-LIGHT merged. All phases P7-P10 done. Gate: 327 tests, 620.61 KB. -->
+<!-- PROGRESS: Ashen Delve — P11 complete: bundle 620.61 KB → 619.12 KB (under 620 KB cap). Gate: 327 tests, 619.12 KB. PR #101. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 10 complete** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95), P10-1 ✅ (PR#98), B-CAM+B-LIGHT ✅ (PR#100 merged). Gate: 327 tests green (2 skipped), 620.61 KB bundle.
-- **VALIDATE: fef03b9 PASS** — Playwright: 6/6 validation + 3/3 smoke tests pass. Vitest: 327/329 pass (2 skipped). Build: 620.61 KB. No new bugs found.
+- Phase: **Phase 11 complete** — Bundle optimization: 620.61 KB → 619.12 KB (under 620 KB cap). Gate: 327 tests green (2 skipped), 619.12 KB bundle. PR#101 open.
+- **VALIDATE: 14f56ba PASS** — Playwright: 3/3 smoke tests pass. Vitest: 327/329 pass (2 skipped). Build: 619.12 KB JS / 13.49 KB CSS. No new bugs found.
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
 - P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`). Bottom bar with 4 slots, number-key shortcuts (1-4) for potions/keys, 1-second cooldown on potions, cooldown overlay on slots. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown).
 - P10-1: Ambient Jukebox — **MERGED** ✅ — PR#98 merged to main (SHA `17921f2`). 3 `AmbientTrack` defs, `cycleAmbientTrack()` in AudioEngine, saved via `settings.ambientTrack` in SaveService, J key cycle + HUD click + toast. `ui.ts` refactored to 793 lines (under 800 cap).
