@@ -359,6 +359,13 @@ button:active {
   color: #6688cc;
 }
 
+.trophy-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  color: #ffd700;
+  margin-top: 0.1rem;
+}
+
 .door-toast {
   position: absolute;
   bottom: 120px;
@@ -729,6 +736,13 @@ button:active {
 .death-mobs, .death-duration {
   font-size: 0.95rem;
   color: var(--ash-ui-muted);
+  margin-bottom: 0.3rem;
+}
+
+.death-bosses {
+  font-size: 0.95rem;
+  color: #ffd700;
+  font-weight: 700;
   margin-bottom: 0.3rem;
 }
 

@@ -18,6 +18,7 @@ import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs, getSh
 import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
 import { poison, burn, freeze, shield } from '../data/statusEffects'
+import { showToast } from './ToastSystem'
 import { SHRINE_DEFS } from '../data/shrines'
 import { HitEffects } from './HitEffects'
 import { ScreenShake } from './ScreenShake'
@@ -380,7 +381,11 @@ export function gameLoop(timestamp = 0): void {
           const dmg = isCrit ? baseDmg * 2 : baseDmg
           mob.takeDamage(dmg)
           // P9-1: Record mob kill
-          if (!mob.state.alive) RunTracker.recordMobKill(mob.state.type)
+          if (!mob.state.alive) {
+            RunTracker.recordMobKill(mob.state.type)
+            // P12: Boss kill tracking
+            if (mob.state.isBoss) handleBossKill()
+          }
           // Credit scrap when mob dies
           if (!mob.state.alive && _player) {
             const scrap = Math.ceil(mob.state.stats.maxHp / 4) + _playerFloor
@@ -653,6 +658,8 @@ export function gameLoop(timestamp = 0): void {
               mob.state.alive = false
               // P9-1: Record mob kill from DOT
               RunTracker.recordMobKill(mob.state.type)
+              // P12: Boss kill tracking from DOT
+              if (mob.state.isBoss) handleBossKill()
               _combatLogEntries.push(`${eff.emoji} ${mob.state.type} burned to ash!`)
             } else {
               _combatLogEntries.push(`${eff.emoji} ${mob.state.type} takes ${dotDamage} ${eff.label} damage`)
@@ -684,7 +691,7 @@ export function checkPlayerDeath(
   updateHP: (hp: number, maxHp: number) => void,
   addCombatLog: (msg: string) => void,
   playerScrap = 0,
-  renderDeathStats?: (data: { floor: number; scrap: number; mobsKilled: string; duration: string; bestRun: string }) => void,
+  renderDeathStats?: (data: { floor: number; scrap: number; mobsKilled: string; bossKills: string; duration: string; bestRun: string }) => void,
 ): void {
   if (_gameState !== 'playing') return
   updateHP(_playerHP, _playerMaxHP)
@@ -699,6 +706,7 @@ export function checkPlayerDeath(
     const best = RunTracker.getBestRun()
 
     const mobsText = `Mobs Slain: ${snapshot?.mobsKilled ?? 0}`
+    const bossKillsText = `Bosses Slain: ${snapshot?.bossKills ?? 0}`
     const ticks = _runTickCount
     const seconds = Math.floor(ticks / 60)
     const minutes = Math.floor(seconds / 60)
@@ -707,10 +715,10 @@ export function checkPlayerDeath(
 
     let bestRun = ''
     if (best) {
-      bestRun = `🏆 Best Run: Floor ${best.floor} · ${best.mobsKilled} mobs`
+      bestRun = `🏆 Best Run: Floor ${best.floor} · ${best.mobsKilled} mobs · ${best.bossKills} bosses`
     }
 
-    renderDeathStats?.({ floor: _playerFloor, scrap: playerScrap, mobsKilled: mobsText, duration: durationText, bestRun })
+    renderDeathStats?.({ floor: _playerFloor, scrap: playerScrap, mobsKilled: mobsText, bossKills: bossKillsText, duration: durationText, bestRun })
   }
 }
 
@@ -731,6 +739,15 @@ export function getMobs(): MobKit[] { return _mobs }
 export function getPlayerFloor(): number { return _playerFloor }
 export function setBaseHP(baseHP: number): void { _playerMaxHP = baseHP }
 
+/** P12: Handle boss kill — toast, log, and hide boss HP bar */
+function handleBossKill(): void {
+  RunTracker.recordBossKill()
+  showToast(`👑 Boss Defeated! Floor ${_playerFloor}`, { type: 'door', duration: 4000 })
+  _combatLogEntries.push(`👑 Boss defeated on Floor ${_playerFloor}!`)
+  const bossBar = document.getElementById('boss-hp-bar')
+  if (bossBar) bossBar.classList.remove('active')
+}
+
 /** P4-4: Get the current trap hit state for UI feedback */
 export function getTrapHitState(): { active: boolean; trapType: string | null } {
   const active = _trapHitTimer > 0
@@ -745,34 +762,27 @@ export function updateBossUI(): void {
   const bossMob = _mobs.find(m => m.state.isBoss && m.state.alive)
   if (!bossMob) {
     // Hide boss UI when no boss alive
-    const bossBar = document.getElementById('boss-hp-bar')
-    if (bossBar) bossBar.classList.remove('active')
-    const bossWarning = document.getElementById('boss-warning')
-    if (bossWarning) bossWarning.classList.remove('flash')
+    const b1 = document.getElementById('boss-hp-bar'), b2 = document.getElementById('boss-warning')
+    if (b1) b1.classList.remove('active')
+    if (b2) b2.classList.remove('flash')
     _lastBossPhase = ''
     return
   }
-
   const boss = bossMob as any
   const hpFill = Math.round((bossMob.state.stats.hp / bossMob.state.stats.maxHp) * 100)
   const phase = boss.phase || 'normal'
-
-  // Show boss HP bar
   const bossBar = document.getElementById('boss-hp-bar')
   if (bossBar) {
     bossBar.classList.add('active')
     const fillEl = document.getElementById('boss-hp-fill')
     if (fillEl) fillEl.style.width = hpFill + '%'
   }
-
   // Flash boss warning during special attacks
   if (boss.isWarning && boss.warningType) {
     const bossWarning = document.getElementById('boss-warning')
     if (bossWarning) {
-      bossWarning.textContent = boss.warningType === 'fireball' ? '⚠ FIREBALL!' :
-        boss.warningType === 'slam' ? '⚠ GROUND SLAM!' : '⚠ MINION SUMMON!'
+      bossWarning.textContent = boss.warningType === 'fireball' ? '⚠ FIREBALL!' : boss.warningType === 'slam' ? '⚠ GROUND SLAM!' : '⚠ MINION SUMMON!'
       bossWarning.classList.add('flash')
-      // Remove class after animation
       setTimeout(() => bossWarning.classList.remove('flash'), 600)
     }
   }
@@ -780,16 +790,11 @@ export function updateBossUI(): void {
   // Log phase transitions
   if (phase !== _lastBossPhase) {
     _lastBossPhase = phase
-    const phaseMessages: Record<string, string> = {
-      normal: '',
-      enrage: '🔥 Boss enrages!',
-      desperate: '⚡ Boss summons minions!',
-    }
-    if (phaseMessages[phase]) {
-      _combatLogEntries.unshift(phaseMessages[phase])
+    const msg = phase === 'enrage' ? '🔥 Boss enrages!' : phase === 'desperate' ? '⚡ Boss summons minions!' : ''
+    if (msg) {
+      _combatLogEntries.unshift(msg)
       if (_combatLogEntries.length > 10) _combatLogEntries.pop()
     }
   }
 }
-
 export function resetTickCount(): void { _runTickCount = 0 }
