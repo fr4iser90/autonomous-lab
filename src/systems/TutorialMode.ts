@@ -68,7 +68,7 @@ export function createTutorialState(): TutorialState {
 /** Check if the player has started the tutorial by pressing a key */
 export function checkTutorialStart(state: TutorialState, key: string): boolean {
   if (!state.active) return false
-  return ['w', 'a', 's', 'd', 'q', 'e', ' ', ' ', 'Escape'].includes(key.toLowerCase())
+  return ['w', 'a', 's', 'd', 'q', 'e', ' ', 'escape'].includes(key.toLowerCase())
 }
 
 /** Mark movement — call when player moves */
