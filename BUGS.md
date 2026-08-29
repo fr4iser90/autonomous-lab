@@ -2,7 +2,7 @@
 
 # BUGS
 
-Last validation: HEAD (SHA `76a6973`) — Playwright: 9/9 pass (3 smoke + 6 validation), Vitest: 341/343 pass (2 skipped). Build: 619.89 KB. Screenshots: title/game/inventory/pause all PASS. No new bugs found.
+Last validation: HEAD (SHA `c534d67`) — Playwright: 9/9 pass (3 smoke + 6 validation), Vitest: 341/343 pass (2 skipped). Build: 619.89 KB. Screenshots: title/game/inventory/pause all PASS. No new bugs found.
 Next validation: 2026-08-29 SHA=6a84d4859e26dab558bd20d3383122c77d30b9e9 (B-CAM+B-LIGHT fixes + validate; Playwright WebGL capture limited — scene verified via HUD DOM + code inspection)
 
 ## Open
