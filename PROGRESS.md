@@ -4,11 +4,11 @@
 
 ## NOW
 
-- Phase: **Phase 7 — status effects + tutorial** — P7-1 (status effects) complete, P7-2 tutorial next
+- Phase: **Phase 7 — status effects + tutorial** — P7-1 (status effects) complete, P7-2 tutorial complete
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **142 tests green, build green, ~599 KB bundle**
+- Gate: **170 tests green, build green, ~604 KB bundle**
 - BUGS: **game bugs drained** (B-1 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
@@ -29,6 +29,13 @@
 | M10 | Audio + Settings | ✅ | `src/systems/AudioEngine.ts` (Web Audio procedural) |
 | M11 | Boss + Minimap | ✅ | `src/entities/Boss.ts`, `src/render/Minimap.ts` |
 | M12 | Polish + Integration | ✅ | `src/main.ts` (full game loop) |
+
+## P7 — Phase 7 Systems
+
+| Slice | Feature | Status | Key files |
+|-------|---------|--------|-----------|
+| P7-1 | Status effects (poison/burn/freeze/shield) | ✅ SHIPPED | `statusEffects.ts`, `GameLoop.ts` (mob attacks, HUD) |
+| P7-2 | Tutorial mode — 6-step guided onboarding | ✅ SHIPPED | `TutorialMode.ts` (state machine, 6 steps), `ui.ts` (overlay + dummy mob), `styles.css` (overlay styles), `tests/tutorial.test.ts` (14 tests) |
 
 ## P4 — Phase 4 Systems
 
@@ -108,6 +115,8 @@
 - ✅ P5-4: Sealed doors shipped — key consumption blocks/opens doors, key count HUD, door open toast. Inventory: getKeyCount/addKeys/consumeKey. DungeonPCG: getGridPosition/isSealedDoor/openDoorAt. GameLoop: door collision in movement. 13 new tests. PR#65.
 - ✅ P5-5: Stairs descent shipped — floor progression. DungeonPCG: isOnStairs. GameLoop: stairs detection + cooldown. Transition.ts: spawnMobs/spawnBoss/advanceToFloor/showFloorToast. main.ts: wired callback (481 lines). GameRenderer.ts: clearScene(). 9 new tests. PR#66.
 - 🔧 P5-5 validate: Fixed `updateGameVars` floor param + duplicate combat log. PR#67 (gate green, 126/126 tests).
+
+- ✅ P7-2: Tutorial mode shipped — 6-step guided onboarding (move → look → attack → inventory → combat dummy → stairs). TutorialState state machine, `TutorialMode.ts`, UI overlay in `ui.ts`, training dummy mob, CSS-styled step boxes with emoji/key hints/skip. 14 unit tests. `meta.tutorialDone` persistence via SaveService. Gate: 170 tests.
 - 🔧 B-7 fix (Phase 6): Settings-back button now returns to origin context — from title → title, from pause → game. `main.ts` settings-back handler checks `gameState`: 'menu'/'dead' → title, 'playing' → game. PR#69.
 - 🔧 B-8 fix (Phase 6): Removed inline `display:none` from `#stealth-label` in HTML — label visible from first frame. PR#70. All bugs now drained.
 - 🔧 B-9 fix (Phase 6 validation): Added controls text to title screen — player can now see WASD Move, Mouse Drag Rotate, Space/Click Attack, E Inventory, O Shop, T Skills, Esc/P Pause before starting. `index.html` + `styles.css`.
@@ -115,8 +124,10 @@
 - 🔧 B-11 fix (Phase 6 validation): Resolved S key conflict — skills toggle moved from S to T (T for "Skill Tree"), S remains for backward movement. `main.ts` + `index.html`.
 - 🔧 B-12 fix (Phase 6 validation): Added Space bar as keyboard attack key — attack was mouse-click only, not documented. `input.ts`.
 - 🔧 B-13 fix (Phase 6 validation): Added `controls-hint` element to HUD showing full key mapping. `index.html` + `styles.css`.
+
+- **P7-2: Tutorial mode shipped** — 6-step guided onboarding (move → look → attack → inventory → combat dummy → stairs). TutorialState machine in `TutorialMode.ts`, overlay rendered in `ui.ts` with `tutorial-overlay-container`, training dummy mob (`tutorial-dummy` type), CSS-styled step boxes with emoji icons + key hints + skip. 14 unit tests. Completing sets `meta.tutorialDone` in SaveService. Skippable via Escape/Space. Replayable from title.
 - ✅ Phase 6 validation (2026-08-29): Playwright smoke test against live Pages confirmed title screen shows "WASD|Arrow|click|attack|mouse|keyboard|controls|move" — controls text present. All 142 tests green, gate green. ESLint fix: `validate-*.mjs` added to eslint ignores (browser globals in validation scripts).
 
 ## Planned
 
-- **P7-2 Tutorial mode** — guided first run-through: movement tutorial, combat intro, shop demo, skill tree walkthrough, stairs descent demo. `TutorialSystem.ts`, `ui.ts` tutorial overlay, `GameLoop.ts` tutorial state machine.
+- **P7-3 Next phase** — TBD after Phase 7 review
