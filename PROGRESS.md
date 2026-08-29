@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 10 complete — PLAYABLE** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95), P10-1 ✅ (PR#98), B-MOVE/B-LAG fix ✅ (PR#99). Gate: 327 tests green (2 skipped), 620.35 KB bundle. M1–M12 all complete. All milestones shipped.
+- Phase: **Phase 10 complete — PLAYABLE** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95), P10-1 ✅ (PR#98), B-MOVE/B-LAG fix ✅ (PR#99). Gate: 327 tests green (2 skipped), 620.35 KB bundle. Smoke: 3/3 PASS. M1–M12 all complete. All milestones shipped. VALIDATE: `bf9ce20` PASS — game boots, title loads, settings work, HUD renders correctly.
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
 - P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`).
 - P10-1: Ambient Jukebox — **MERGED** ✅ — PR#98 merged to main (SHA `17921f2`). 3 `AmbientTrack` defs, `cycleAmbientTrack()` in AudioEngine, saved via `settings.ambientTrack` in SaveService, J key cycle + HUD click + toast. `ui.ts` refactored to 793 lines (under 800 cap).
