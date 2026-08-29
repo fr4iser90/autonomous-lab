@@ -18,7 +18,7 @@ function lbr(): RunSnapshot[] {
   try { const r = localStorage.getItem(BK); if (!r) return []; return JSON.parse(r) as RunSnapshot[] } catch { return [] }
 }
 
-function sbr(r: RunSnapshot[]): void { try { localStorage.setItem(BK, JSON.stringify(r)) } catch {} }
+function sbr(r: RunSnapshot[]): void { try { localStorage.setItem(BK, JSON.stringify(r)) } catch {/* storage full or disabled */} }
 
 export function startRun(): void { cr = { floor: 1, mobsKilled: 0 } }
 
