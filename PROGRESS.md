@@ -1,21 +1,21 @@
-<!-- PROGRESS: Ashen Delve — P9 complete: P9-1 Death Recap + P9-2 Quick-Use Hotbar. P10-1 Ambient Jukebox merged. B-CAM+B-LIGHT fix in PR#100. -->
+<!-- PROGRESS: Ashen Delve — P10 complete: P10-1 Jukebox + B-CAM/B-LIGHT merged. All phases P7-P10 done. Gate: 327 tests, 620.61 KB. -->
 
 # Progress
 
 ## NOW
 
-- Phase: **Phase 9 complete** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95), P10-1 ✅ (PR#98). B-CAM + B-LIGHT fixes in PR#100 (open, awaiting automerge to main). Gate: 327 tests green (2 skipped), 620.31 KB bundle.
+- Phase: **Phase 10 complete** — P8-1 ✅, P8-2 ✅, P8-3 ✅, P8-4 ✅, P9-1 ✅ (PR#94), P9-2 ✅ (PR#95), P10-1 ✅ (PR#98), B-CAM+B-LIGHT ✅ (PR#100 merged). Gate: 327 tests green (2 skipped), 620.61 KB bundle.
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
 - P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`). Bottom bar with 4 slots, number-key shortcuts (1-4) for potions/keys, 1-second cooldown on potions, cooldown overlay on slots. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown).
 - P10-1: Ambient Jukebox — **MERGED** ✅ — PR#98 merged to main (SHA `17921f2`). 3 `AmbientTrack` defs, `cycleAmbientTrack()` in AudioEngine, saved via `settings.ambientTrack` in SaveService, J key cycle + HUD click + toast. `ui.ts` refactored to 793 lines (under 800 cap).
-- B-CAM + B-LIGHT: Camera angle (FOV 55, distance 12, height 5, followLag 0.10; mouse drag rotates both camera and player yaw via `syncYaw`) and lighting (ambient `max(0.45, 1.1 - (floor-1)*0.07)`, fog 20–50, hemisphere 1.1, torches 2.0). PR#100 open, awaiting automerge.
+- B-CAM + B-LIGHT: **MERGED** ✅ (PR#100). Camera angle (FOV 55, distance 12, height 5, followLag 0.10; mouse drag rotates both camera and player yaw via `syncYaw`) and lighting (ambient `max(0.45, 1.1 - (floor-1)*0.07)`, fog 20–50, hemisphere 1.1, torches 2.0).
 - **VALIDATE: 727ac24 PASS** (B-CAM/B-LIGHT: code inspection + HUD DOM verification; Playwright WebGL capture limited in headless — scene renders black due to preserveDrawingBuffer:false, game logic confirmed via HP 20/20 / Floor 1 DOM)
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: **`agent/dungeon-crawl-20260829`** (canonical RUN_ID — one run = one branch; never spawn `-v2` / `-p*` / `-rebased`). Prior tips merged into `main` through #95.
+- Branch: **`agent/dungeon-crawl-20260829`** (canonical RUN_ID — one run = one branch; never spawn `-v2` / `-p*` / `-rebased`). All PRs merged into `main` through #100.
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **327 tests green (2 skipped), build green, 620.31 KB bundle**
+- Gate: **327 tests green (2 skipped), build green, 620.61 KB bundle**
 - BUGS: **game bugs drained** (B-1 through B-18 fixed/closed, B-14 human-only CI/Pages); Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 
@@ -170,6 +170,7 @@
 | Slice | Feature | Status | Key files |
 |-------|---------|--------|-----------|
 | P10-1 | Ambient Jukebox — 3 track selector, J key cycle, HUD label, toast notification | ✅ MERGED PR#98 (SHA `17921f2`) | `AudioEngine.ts` (AmbientTrack, cycleAmbientTrack), `SaveService.ts` (ambientTrack setting), `ui.ts` (cycleAmbientTrack, updateJukeboxUI, J key handler), `index.html` (#jukebox-label), `styles.css` (.jukebox-label) |
+| B-CAM+B-LIGHT | Camera angle (FOV 55, dist 12, height 5, lag 0.10) + mouse drag syncs yaw + lighting (ambient 1.1→0.45, fog 20–50, hemi 1.1, torch 2.0) | ✅ MERGED PR#100 (SHA `4589db4`) | `camera.ts` (FollowCamera params), `GameRenderer.ts` (syncYaw), `GameLoop.ts` (onPointerMove/up), `lighting.ts` (ambient intensity formula), `Transition.ts` (setAmbientIntensity on floor change) |
 
 ## Planned
 
@@ -180,6 +181,14 @@
 - ✅ **P9-1 shipped (PR#94)** — Enhanced Death Recap + Run History: `RunTracker.ts` (40 lines, persistent best runs top-5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets run tick counter. Bundle: 619.67 KB. Gate: 313 tests green (2 skipped), 0 TS errors.
 - ✅ **P9-2 shipped (PR#95)** — Quick-Use Hotbar + Consumable Cooldown: Bottom bar with 4 slots, number-key shortcuts (1-4), 1-second cooldown overlay. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown). 319 tests (313+6 P9-2).
 - ✅ **P10-1 shipped (PR#98)** — Ambient Jukebox: 3 `AmbientTrack` defs (`Dungeon Drone`, `Crypt Echo`, `Abyssal Hum`), `cycleAmbientTrack()` in `AudioEngine.ts`, saved via `settings.ambientTrack` in `SaveService.ts`, UI via J key + HUD click on `#jukebox-label`, toast notification. `ui.ts` refactored to 793 lines. 7 new unit tests. Gate: 327 tests green (2 skipped), 620.31 KB bundle.
+- ✅ **B-CAM + B-LIGHT shipped (PR#100)** — Camera: FollowCamera distance 12, height 5, FOV 55, followLag 0.10; mouse drag rotates both camera and player yaw via `syncYaw`. Lighting: ambient `max(0.45, 1.1 - (floor-1)*0.07)`, fog 20–50, hemisphere 1.1, torches 2.0. `Transition.ts` calls `setAmbientIntensity` on floor change. Gate: 327 tests green (2 skipped), 620.61 KB bundle.
 - ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
 - ✅ **P8-3 shipped** — Toast polish: ToastSystem.ts with stacking (max 4), slide-in/out CSS animations, configurable duration/type, rarity-colored loot toasts. Loot/door toasts migrated from inline DOM manipulation to ToastSystem. Floor toast in Transition.ts uses ToastSystem. 8 unit tests. Gate: 300 tests (2 skipped), 618.03 KB bundle.
 - ✅ **P8-4 shipped** — Dynamic lighting: `lighting.ts` pure math module (`torchIntensity` with irrational freq ratios + draft bursts, `ambientIntensity` floor-depth falloff 0.7→0.25), `GameRenderer.ts` wrappers, `GameLoop.ts` floor wiring, 13 tests. Gate: 313 tests green, 618.39 KB. Phase 8 is now fully complete (P8-1 ✅ P8-2 ✅ P8-3 ✅ P8-4 ✅, PR#86 + #90 merged).
+
+## Next
+
+- **Phase 10 complete** — P10-1 (Jukebox) + B-CAM/B-LIGHT (Camera + Lighting) merged to main. All 12 milestones complete. All CAPs reached (16/16 mobs, items, themes). Game is **PLAYABLE** on Pages.
+- **Validation**: 327 tests green (2 skipped), 620.61 KB bundle, 0 open blockers.
+- **Awaiting human direction** — No explicit Phase 11 scope defined. Options: new features, content expansion, performance, or wrap.
+- **Pages**: https://fr4iser90.github.io/autonomous-lab/ — live.
