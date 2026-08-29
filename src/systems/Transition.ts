@@ -24,6 +24,7 @@ import { Phantom } from '../entities/Phantom'
 import { Elemental } from '../entities/Elemental'
 import { Boss } from '../entities/Boss'
 import { updateFloor } from '../app/uiHelpers'
+import { showToast } from './ToastSystem'
 
 const makeMob = (r: GameRenderer, i: number): MobKit => {
   const fns: (() => MobKit)[] = [
@@ -49,12 +50,9 @@ export interface TransitionDeps {
 }
 
 export function showFloorToast(floor: number, addCombatLog: (msg: string) => void): void {
-  const el = document.getElementById('door-toast')
-  if (!el) return
-  el.textContent = `⬇ Descended to Floor ${floor}`
-  el.className = 'door-toast visible'
-  setTimeout(() => { el.className = 'door-toast' }, 1500)
-  addCombatLog(`⬇ Descended to Floor ${floor}`)
+  const msg = `⬇ Descended to Floor ${floor}`
+  showToast(msg, { type: 'door', duration: 2500 })
+  addCombatLog(msg)
 }
 
 export function spawnMobs(renderer: GameRenderer, dungeon: DungeonData, mobs: MobKit[]): void {

@@ -430,6 +430,75 @@ button:active {
 #loot-toast.rarity-uncommon { color: #44aaff; }
 #loot-toast.rarity-rare { color: #ffaa22; text-shadow: 0 0 8px rgba(255, 170, 34, 0.5); }
 
+/* P8-3: Toast system — stacked notifications with animations */
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 320px;
+  pointer-events: none;
+}
+
+.toast {
+  font-family: "Cinzel", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--ash-ui-bg);
+  border: 1px solid var(--ash-accent);
+  color: var(--ash-ui-text);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateX(120%);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toast.toast-enter,
+.toast.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast.toast-exit {
+  opacity: 0;
+  transform: translateX(120%);
+  transition: opacity 0.25s ease-in, transform 0.25s ease-in;
+}
+
+.toast-loot {
+  color: #88cc44;
+  border-color: #88cc44;
+}
+
+.toast-loot.rarity-common { color: #88cc44; }
+.toast-loot.rarity-uncommon { color: #44aaff; border-color: #44aaff; }
+.toast-loot.rarity-rare {
+  color: #ffaa22;
+  border-color: #ffaa22;
+  text-shadow: 0 0 6px rgba(255, 170, 34, 0.4);
+}
+
+.toast-door {
+  color: #ffcc44;
+  border-color: #ffcc44;
+}
+
+.toast-info {
+  color: var(--ash-ui-text);
+}
+
+.toast-warn {
+  color: #ff6644;
+  border-color: #ff6644;
+}
+
 .shop-item {
   aspect-ratio: 1;
   background: var(--ash-bg);

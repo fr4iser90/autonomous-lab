@@ -389,7 +389,10 @@ export function gameLoop(timestamp = 0): number {
             }
           }
           // P8-2: Audio feedback — critHit() for criticals, hit() for normal
-          if (_audio) isCrit ? _audio.critHit() : _audio.hit()
+          if (_audio) {
+            if (isCrit) _audio.critHit()
+            else _audio.hit()
+          }
 
           // P8-1: Visual feedback — hit flash, floating damage number, particles
           if (_hitEffects) {

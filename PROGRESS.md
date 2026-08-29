@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), PR #86 + #87
+- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 🚧 (Toast polish), PR #86 + #87 + PR TBD
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
@@ -137,9 +137,11 @@
 |-------|---------|--------|-----------|
 | P8-1 | HitEffects + ScreenShake — combat visual feedback | ✅ SHIPPED PR#86 | `HitEffects.ts` (damage numbers, burst particles, mesh flash), `ScreenShake.ts` (sin-based shake), `GameLoop.ts` (6 integration points), `camera.ts` (shakeOffset), 29 new tests |
 | P8-2 | Audio feedback on hits — crit, player damage, death sounds | ✅ SHIPPED PR#87 | `AudioEngine.ts` (critHit, playerHit, death methods), `GameLoop.ts` (6 audio integration points), `AudioEngine.test.ts` (14 tests) |
+| P8-3 | Toast system polish — stacked notifications, slide-in/out animations, configurable duration/type | 🚧 IN PROGRESS | `ToastSystem.ts`, `ui.ts`, `Transition.ts`, `styles.css`, `toast-system.test.ts` |
 
 ## Planned
 
 - ✅ **P8-1 shipped** — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
 - ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
-- **P8 remaining** — Code audit identified additional QoL: UI polish (toast system improvements, smoother HUD transitions), dynamic lighting tweaks. Next step: prioritize highest-impact items from audit and implement in slices.
+- **P8-3 (in progress)** — Toast polish: stacked notifications (max 4), slide-in from right, fade-out dismissal, configurable duration/type, rarity-colored loot toasts, CSS animations. 8 new unit tests.
+- **P8 remaining** — Dynamic lighting tweaks (torch flicker, ambient light falloff). Next step after P8-3 ships.
