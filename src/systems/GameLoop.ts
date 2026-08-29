@@ -3,7 +3,7 @@
  * Extracted from main.ts to keep entry point thin (≤500 lines).
  */
 import { GameRenderer } from '../render/GameRenderer'
-import { FollowCamera } from '../render/camera'
+import { FollowCamera, FirstPersonCamera } from '../render/camera'
 import { InputManager } from './input'
 import { PlayerKit } from '../kits/playerKit'
 import type { MobKit } from '../entities/MobKit'
@@ -43,7 +43,7 @@ let _stairsCooldown = 0
 // Systems (injected at init)
 let _renderer: GameRenderer | null = null
 let _player: PlayerKit | null = null
-let _camera: FollowCamera | null = null
+let _camera: FollowCamera | FirstPersonCamera | null = null
 let _input: InputManager | null = null
 let _minimap: Minimap | null = null
 let _chaseAI: ChaseAI | null = null
@@ -55,16 +55,13 @@ let _inventory: { getEquippedDamage: () => number; getEquippedArmor: () => numbe
 // P8-1: Hit effects (combat visual feedback)
 let _hitEffects: HitEffects | null = null
 let _screenShake: ScreenShake | null = null
-
 // P9-1: Run tick counter (independent of RunTracker for display)
 let _runTickCount = 0
 // Loot drop callback (set from main.ts)
 let _lootSpawn: ((mobType: string, x: number, z: number, item: ItemDef) => void) | null = null
-
 // P9-2: Quick-use hotbar update callback
 let _onQuickUseUpdate: (() => void) | null = null
 export function setQuickUseUpdate(cb: () => void): void { _onQuickUseUpdate = cb }
-
 // Door opened callback (set from main.ts)
 let _onDoorOpened: ((msg: string) => void) | null = null
 export function setDoorOpenedCallback(cb: (msg: string) => void): void {
@@ -76,7 +73,6 @@ let _onFloorAdvanced: ((floor: number) => void) | null = null
 export function setFloorAdvancedCallback(cb: (floor: number) => void): void {
   _onFloorAdvanced = cb
 }
-
 // Shrine callbacks (set from main.ts)
 let _onShrineActivated: ((msg: string) => void) | null = null
 let _onShrineProximity: ((shrineType: string) => void) | null = null
@@ -91,12 +87,10 @@ export function setShrineProximityCallback(cb: (shrineType: string) => void): vo
 let _currentScreen: 'title' | 'game' | 'settings' = 'title'
 let _gameState: 'menu' | 'playing' | 'paused' | 'dead' = 'menu'
 let _animFrame = 0
-
 // Timing
 let _lastTime = 0
 let _attackCooldown = 0
 let _stepCooldown = 0
-
 /** Inject runtime references into the game loop module */
 export function initGameLoop(
   deathScreen: HTMLElement,
@@ -111,7 +105,7 @@ export function setRuntimeState(
   gameState: 'menu' | 'playing' | 'paused' | 'dead',
   renderer: GameRenderer | null,
   player: PlayerKit | null,
-  camera: FollowCamera | null,
+  camera: FollowCamera | FirstPersonCamera | null,
   input: InputManager | null,
   minimap: Minimap | null,
   chaseAI: ChaseAI | null,
@@ -133,7 +127,6 @@ export function setRuntimeState(
 export function setDungeonData(dungeon: DungeonData | null): void {
   _dungeon = dungeon
 }
-
 export function resetGameTime(): void {
   _lastGrowlTime = 0
 }
@@ -589,11 +582,19 @@ export function gameLoop(timestamp = 0): void {
     _minimap.setPlayerPos(_playerX, _playerZ)
   }
 
-  // Update camera (P8-1: shake offset; B-CAM: sync yaw with player)
-  if (_camera && _player && _renderer) {
+  // Camera update — FP uses pointer-lock deltas; TP uses drag-rotate
+  if (_camera && _player && _renderer && _input) {
     const shakeOffset = _screenShake?.update(dt, _player.position) ?? null
+    const inpState = _input.getState()
+    if (inpState.fpYawDelta !== 0) {
+      _playerYaw += inpState.fpYawDelta
+      if (inpState.fpPitchDelta !== 0 && 'onPitchDelta' in _camera) {
+        ;(_camera as FirstPersonCamera).onPitchDelta(inpState.fpPitchDelta)
+      }
+    } else {
+      _camera.syncYaw(_playerYaw)
+    }
     _camera.update(_renderer, _player.position, _playerYaw, shakeOffset)
-    _camera.syncYaw(_playerYaw) // B-CAM: drag rotates camera and player together
   }
   // Animate torch flicker
   if (_renderer) {
@@ -786,7 +787,6 @@ export function updateBossUI(): void {
       setTimeout(() => bossWarning.classList.remove('flash'), 600)
     }
   }
-
   // Log phase transitions
   if (phase !== _lastBossPhase) {
     _lastBossPhase = phase
