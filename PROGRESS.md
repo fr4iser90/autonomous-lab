@@ -4,7 +4,7 @@
 
 ## NOW
 
-- Phase: **Phase 12 complete** — Boss Trophy Tracking: toast on boss defeat, boss kill counter in HUD (👑), boss kill stat on death screen, RunTracker integration with persistent `_totalBossKills`. Gate: 341 tests green (2 skipped), 619.89 KB bundle.
+- Phase: **Phase 12 complete** — Boss Trophy Tracking: toast on boss defeat, boss kill counter in HUD (👑), boss kill stat on death screen, RunTracker integration with persistent `_totalBossKills`. Gate: 341 tests green (2 skipped), 619.89 KB bundle. PR#102 open.
 - **VALIDATE: HEAD PASS** — Playwright: 3/3 smoke tests pass. Vitest: 341/343 pass (2 skipped). Build: 619.89 KB JS / 13.65 KB CSS. No new bugs found.
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — PR#94 merged to main (SHA `c695f6d`).
 - P9-2: Quick-Use Hotbar + Consumable Cooldown — **MERGED** ✅ — PR#95 merged to main (SHA `9710d52`). Bottom bar with 4 slots, number-key shortcuts (1-4) for potions/keys, 1-second cooldown on potions, cooldown overlay on slots. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown).
