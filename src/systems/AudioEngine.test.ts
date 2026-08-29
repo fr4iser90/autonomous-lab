@@ -1,9 +1,10 @@
 /**
  * Unit tests for AudioEngine — procedural audio via Web Audio API.
  * P8-2: Tests for new critHit(), playerHit(), and death() methods.
+ * P10-1: Tests for ambient jukebox track cycling.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { AudioEngine } from './AudioEngine'
+import { AudioEngine, AMBIENT_TRACKS } from './AudioEngine'
 
 describe('AudioEngine', () => {
   let engine: AudioEngine
@@ -90,6 +91,58 @@ describe('AudioEngine', () => {
 
     it('has stopAmbient method', () => {
       expect(typeof engine.stopAmbient).toBe('function')
+    })
+  })
+
+  describe('P10-1 ambient jukebox', () => {
+    it('AMBIENT_TRACKS has 3 tracks', () => {
+      expect(AMBIENT_TRACKS.length).toBe(3)
+    })
+
+    it('AMBIENT_TRACKS names are distinct', () => {
+      const names = AMBIENT_TRACKS.map(t => t.name)
+      expect(new Set(names).size).toBe(3)
+    })
+
+    it('currentAmbientTrack defaults to 0', () => {
+      expect(engine.currentAmbientTrack).toBe(0)
+    })
+
+    it('has cycleAmbientTrack method', () => {
+      expect(typeof engine.cycleAmbientTrack).toBe('function')
+    })
+
+    it('cycleAmbientTrack returns undefined when audio is disabled', () => {
+      const result = engine.cycleAmbientTrack()
+      expect(result).toBeUndefined()
+    })
+
+    it('cycleAmbientTrack increments track index when called', () => {
+      const initial = engine.currentAmbientTrack
+      engine.cycleAmbientTrack()
+      expect(engine.currentAmbientTrack).toBe(initial + 1)
+    })
+
+    it('cycleAmbientTrack wraps after cycling through all tracks', () => {
+      // With 3 tracks, cycle 3 times to wrap back
+      engine.currentAmbientTrack = 0
+      engine.cycleAmbientTrack() // -> 1
+      engine.cycleAmbientTrack() // -> 2
+      engine.cycleAmbientTrack() // -> 0 (wrapped)
+      expect(engine.currentAmbientTrack).toBe(0)
+    })
+
+    it('all tracks have required properties', () => {
+      for (const track of AMBIENT_TRACKS) {
+        expect(track.name).toBeDefined()
+        expect(typeof track.name).toBe('string')
+        expect(track.oscType).toBeDefined()
+        expect(['sine', 'triangle', 'square', 'sawtooth']).toContain(track.oscType)
+        expect(typeof track.freq).toBe('number')
+        expect(track.freq).toBeGreaterThan(0)
+        expect(track.harmonics).toBeDefined()
+        expect(Array.isArray(track.harmonics)).toBe(true)
+      }
     })
   })
 })

@@ -5,7 +5,7 @@ import type { Economy } from '../systems/Economy'
 import type { SkillTree } from '../systems/SkillTree'
 import type { MobKit } from '../entities/MobKit'
 import type { GameRenderer } from '../render/GameRenderer'
-import { AudioEngine } from '../systems/AudioEngine'
+import { AudioEngine, AMBIENT_TRACKS } from '../systems/AudioEngine'
 import type { ChaseAI } from '../systems/ChaseAI'
 import type { LootDropManager } from '../systems/LootDrop'
 import type { DungeonData } from '../systems/DungeonPCG'
@@ -204,6 +204,34 @@ export function updateKeyCountUI(): void {
   el.textContent = `🔑 ${inventory.getKeyCount()}`
 }
 
+// ── P10-1: Jukebox (ambient track cycling) ──────────────────
+
+/** Update HUD jukebox label */
+export function updateJukeboxUI(): void {
+  const el = document.getElementById('jukebox-label')
+  if (!el || !audio) return
+  const track = AMBIENT_TRACKS[audio.currentAmbientTrack]
+  el.textContent = `🎵 ${track.name}`
+}
+
+/** P10-1: Cycle ambient track + persist + update HUD */
+export function cycleAmbientTrack(): void {
+  if (!audio) return
+  const name = audio.cycleAmbientTrack()
+  if (name) showToast(`🎵 ${name}`, { type: 'toast-info', duration: 1500 })
+  const save = loadSave(); save.settings.ambientTrack = audio.currentAmbientTrack; saveSave(save)
+  updateJukeboxUI()
+}
+
+/** P10-1: Initialize ambient audio with saved track */
+function initAmbientAudio(save: ReturnType<typeof loadSave>): void {
+  if (!audio || (audio as any)['enabled']) return
+  audio.init()
+  audio.currentAmbientTrack = save.settings.ambientTrack ?? 0
+  audio.startAmbient(audio.currentAmbientTrack)
+  updateJukeboxUI()
+}
+
 export function updateShopUI(): void {
   if (!economy || !player) return
   const grid = document.getElementById('shop-grid')!
@@ -298,58 +326,35 @@ export function applySettingsFromUI(): void {
 // ── Button handlers ─────────────────────────────────────
 
 export function initButtonHandlers(startGameFn: (seed: number) => void, startTutorialFn: (seed: number) => void): void {
-  const btnNew = document.getElementById('btn-new')
-  const btnContinue = document.getElementById('btn-continue')
-  const btnTutorial = document.getElementById('btn-tutorial')
-  const btnSettings = document.getElementById('btn-settings')
-  const btnSettingsBack = document.getElementById('btn-settings-back')
-  const btnRetry = document.getElementById('btn-retry')
-  const btnTitle = document.getElementById('btn-title')
-  const btnResume = document.getElementById('btn-resume')
-  const btnPauseSettings = document.getElementById('btn-pause-settings')
-  const btnPauseTitle = document.getElementById('btn-pause-title')
-  const shopToggle = document.getElementById('shop-toggle')
-  const skillToggle = document.getElementById('skill-toggle')
-
-  if (btnTutorial) btnTutorial.addEventListener('click', () => {
-    dungeonSeed = Date.now() % 100000
-    startTutorialFn(dungeonSeed)
+  const $ = (id: string) => document.getElementById(id)
+  const seed = () => { dungeonSeed = Date.now() % 100000; return dungeonSeed }
+  $('btn-tutorial')?.addEventListener('click', () => { seed(); startTutorialFn(dungeonSeed) })
+  $('btn-new')?.addEventListener('click', () => { seed(); startGameFn(dungeonSeed) })
+  $('btn-continue')?.addEventListener('click', () => startGameFn(dungeonSeed || 12345))
+  $('btn-settings')?.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
+  $('btn-settings-back')?.addEventListener('click', () => { applySettingsFromUI(); showScreen(gameState === 'menu' || gameState === 'dead' ? 'title' : 'game') })
+  $('btn-retry')?.addEventListener('click', () => {
+    deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = playerMaxHP = 20; playerFloor = 1
+    if (player) player.scrap = 0
+    updateHP(playerHP, playerMaxHP); economy?.reset(); skillTree?.reset(); GL.setBaseHP(20); GL.resetTickCount(); updateScrapUI()
   })
-  if (btnNew) btnNew.addEventListener('click', () => { dungeonSeed = Date.now() % 100000; startGameFn(dungeonSeed) })
-  if (btnContinue) btnContinue.addEventListener('click', () => startGameFn(dungeonSeed || 12345))
-  if (btnSettings) btnSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
-  if (btnSettingsBack) btnSettingsBack.addEventListener('click', () => { applySettingsFromUI(); showScreen(gameState === 'menu' || gameState === 'dead' ? 'title' : 'game') })
-  if (btnRetry) btnRetry.addEventListener('click', () => { deathScreen.style.display = 'none'; gameState = 'playing'; playerHP = 20; playerMaxHP = 20; playerFloor = 1; if (player) player.scrap = 0; updateHP(playerHP, playerMaxHP); if (economy) economy.reset(); if (skillTree) skillTree.reset(); GL.setBaseHP(20); GL.resetTickCount(); updateScrapUI() })
-  if (btnTitle) btnTitle.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
-  if (btnResume) btnResume.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
-  if (btnPauseSettings) btnPauseSettings.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
-  if (btnPauseTitle) btnPauseTitle.addEventListener('click', () => { pauseOverlay.style.display = 'none'; showScreen('title'); gameState = 'menu' })
-  if (shopToggle) shopToggle.addEventListener('click', () => {
-    if (gameState === 'playing') {
-      shopPanel.style.display = shopPanel.style.display === 'block' ? 'none' : 'block'
-      inventoryPanel.style.display = 'none'
-      skillPanel.style.display = 'none'
-      if (shopPanel.style.display === 'block') updateShopUI()
-    }
+  $('btn-title')?.addEventListener('click', () => { deathScreen.style.display = 'none'; showScreen('title'); gameState = 'menu' })
+  $('btn-resume')?.addEventListener('click', () => { gameState = 'playing'; pauseOverlay.style.display = 'none' })
+  $('btn-pause-settings')?.addEventListener('click', () => { loadSettingsIntoUI(); showScreen('settings') })
+  $('btn-pause-title')?.addEventListener('click', () => { pauseOverlay.style.display = 'none'; showScreen('title'); gameState = 'menu' })
+  $('shop-toggle')?.addEventListener('click', () => {
+    if (gameState !== 'playing') return
+    const open = shopPanel.style.display !== 'block'
+    shopPanel.style.display = open ? 'block' : 'none'
+    inventoryPanel.style.display = 'none'; skillPanel.style.display = 'none'
+    if (open) updateShopUI()
   })
-  if (skillToggle) skillToggle.addEventListener('click', () => {
-    if (gameState === 'playing') {
-      skillPanel.style.display = skillPanel.style.display === 'block' ? 'none' : 'block'
-      inventoryPanel.style.display = 'none'
-      shopPanel.style.display = 'none'
-      if (skillPanel.style.display === 'block') updateSkillUI()
-    }
-  })
-}
-
-export function initVolumeSliders(): void {
-  const volMaster = document.getElementById('vol-master') as HTMLInputElement
-  const volSfx = document.getElementById('vol-sfx') as HTMLInputElement
-  if (volMaster) volMaster.addEventListener('input', () => {
-    document.getElementById('vol-master-val')!.textContent = volMaster.value + '%'
-  })
-  if (volSfx) volSfx.addEventListener('input', () => {
-    document.getElementById('vol-sfx-val')!.textContent = volSfx.value + '%'
+  $('skill-toggle')?.addEventListener('click', () => {
+    if (gameState !== 'playing') return
+    const open = skillPanel.style.display !== 'block'
+    skillPanel.style.display = open ? 'block' : 'none'
+    inventoryPanel.style.display = 'none'; shopPanel.style.display = 'none'
+    if (open) updateSkillUI()
   })
 }
 
@@ -357,12 +362,7 @@ export function initVolumeSliders(): void {
 
 export function initTitleScreen(): void {
   const save = loadSave()
-  const continueBtn = document.getElementById('btn-continue')!
-  if (save.meta.highFloorCleared > 0) {
-    continueBtn.style.display = 'block'
-  } else {
-    continueBtn.style.display = 'none'
-  }
+  document.getElementById('btn-continue')!.style.display = save.meta.highFloorCleared > 0 ? 'block' : 'none'
   showScreen('title')
 }
 
@@ -430,6 +430,9 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
           if (gameState === 'playing') {
             GL.requestShrineActivate()
           }
+        } else if (e.key === 'j' || e.key === 'J') {
+          e.preventDefault()
+          if (gameState === 'playing') cycleAmbientTrack()
         } else {
           // P9-2: Quick-use hotbar (1-4)
           const num = parseInt(e.key, 10)
@@ -515,7 +518,7 @@ export function startGame(seed: number): void {
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
   minimap = new Minimap(dungeon)
-  if (audio && !(audio as any)['enabled']) { audio.init(); audio.startAmbient() }
+  initAmbientAudio(save)
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
 
   // P8-1: Init hit effects & screen shake
@@ -603,7 +606,7 @@ export function startTutorialGame(seed: number): void {
   player.setPosition(playerX, 0, playerZ)
   playerYaw = 0
   minimap = new Minimap(currentDungeon)
-  if (audio && !(audio as any)['enabled']) { audio.init(); audio.startAmbient() }
+  initAmbientAudio(save)
   window.addEventListener('resize', () => { if (renderer) renderer.resize(window.innerWidth, window.innerHeight) })
 
   // P8-1: Init hit effects & screen shake

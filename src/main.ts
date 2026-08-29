@@ -2,7 +2,6 @@
 import {
   initTitleScreen,
   initButtonHandlers,
-  initVolumeSliders,
   initEventListeners,
   startGame,
   startTutorialGame,
@@ -19,6 +18,10 @@ export { Boss } from './entities/Boss'
 
 initTitleScreen()
 initButtonHandlers(startGame, startTutorialGame)
-initVolumeSliders()
+// Volume sliders (inlined)
+const volMaster = document.getElementById('vol-master') as HTMLInputElement
+const volSfx = document.getElementById('vol-sfx') as HTMLInputElement
+volMaster?.addEventListener('input', () => { document.getElementById('vol-master-val')!.textContent = volMaster.value + '%' })
+volSfx?.addEventListener('input', () => { document.getElementById('vol-sfx-val')!.textContent = volSfx.value + '%' })
 initEventListeners(startGame)
 initBossSummon()

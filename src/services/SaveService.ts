@@ -7,6 +7,8 @@ export interface GameSettings {
   sfxVolume: number
   reduceMotion: boolean
   cameraSensitivity: number
+  /** Current jukebox ambient track index (0-based) */
+  ambientTrack: number
 }
 
 export interface MetaData {
@@ -35,6 +37,7 @@ const DEFAULT_SETTINGS: GameSettings = {
   sfxVolume: 80,
   reduceMotion: false,
   cameraSensitivity: 50,
+  ambientTrack: 0,
 }
 
 const DEFAULT_META: MetaData = {

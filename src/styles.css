@@ -288,6 +288,20 @@ button:active {
   margin-top: 2px;
 }
 
+.jukebox-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.75rem;
+  color: #aa88cc;
+  margin-top: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 0.15s;
+}
+
+.jukebox-label:hover {
+  color: #ccaaee;
+}
+
 .trap-hit-label {
   font-family: "Cinzel", serif;
   font-size: 0.7rem;
