@@ -2,10 +2,20 @@
 
 # BUGS
 
-Last validation: (ci-fail-bugs bot) SHA=6721a2a
+Last validation: (ci-fail-bugs bot) SHA=eecaf03
 Next validation: 2026-08-29 SHA=aff5f2c (Phase 6 Pages validation — B-14 found: Pages stale)
 
 ## Open
+
+### B-2: CI gate fail @ eecaf03
+- Status: open
+- Severity: blocker
+- Found: 2026-08-29T02:52:22Z
+- Target: git  branch=agent/dungeon-crawl-20260829-v2-p8-1-hit-effects  SHA=eecaf03  full=eecaf03d779c4546a1e6973bb84cf54bc4924b91
+- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33229983981 2) see job `gate` failed 3) FIX-ONLY until tip gate green on GitHub
+- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33229983981/job/99040977928
+- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
+- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
 
 ### B-1: CI gate fail @ 6721a2a
 - Status: closed
