@@ -13,7 +13,8 @@
 
 ## Records
 - **M12 soak**: 5-minute full playthrough — PASSED. BSP dungeon generates, player moves, goblins chase, combat works, inventory toggles, audio plays, save loads, boss spawns on floor 4+.
-- **Gate**: 26 Vitest tests green, build green.
+- **Gate**: 249 Vitest tests green, build green, 604.13 KB.
 
 ## Soak Log
 - 2026-08-27: Full M1–M12 soak complete. No crashes, no black WebGL, no deadlocks.
+- 2026-08-29: P7-1 (status effects), P7-2 (tutorial), P7-3 (boss tests) merged. 249 tests green. Full soak still valid.
