@@ -44,9 +44,8 @@ export class InputManager {
 
   onMouseMove(dx: number, _dy: number): void {
     // Only accumulate rotation during mouse drag (primary button held)
-    if (this.mouseDown) {
-      this._pendingRotate -= dx * 0.01
-    }
+    if (!this.mouseDown) return
+    this._pendingRotate -= dx * 0.01
   }
 
   onMouseDown(): void {

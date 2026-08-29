@@ -204,8 +204,7 @@ export function updateKeyCountUI(): void {
   el.textContent = `🔑 ${inventory.getKeyCount()}`
 }
 
-// ── P10-1: Jukebox (ambient track cycling) ──────────────────
-
+// ── P10-1: Jukebox (ambient track cycling) ──
 /** Update HUD jukebox label */
 export function updateJukeboxUI(): void {
   const el = document.getElementById('jukebox-label')
@@ -222,7 +221,6 @@ export function cycleAmbientTrack(): void {
   const save = loadSave(); save.settings.ambientTrack = audio.currentAmbientTrack; saveSave(save)
   updateJukeboxUI()
 }
-
 /** P10-1: Initialize ambient audio with saved track */
 function initAmbientAudio(save: ReturnType<typeof loadSave>): void {
   if (!audio || (audio as any)['enabled']) return
@@ -231,7 +229,6 @@ function initAmbientAudio(save: ReturnType<typeof loadSave>): void {
   audio.startAmbient(audio.currentAmbientTrack)
   updateJukeboxUI()
 }
-
 export function updateShopUI(): void {
   if (!economy || !player) return
   const grid = document.getElementById('shop-grid')!
@@ -457,8 +454,10 @@ export function initEventListeners(_startGameFn: (seed: number) => void): void {
     if (camera) camera.onPointerDown(e.clientX)
     if (audio && !(audio as any)['enabled']) audio.init()
   })
-  canvas.addEventListener('mouseup', () => { if (input) input.onMouseUp() })
-
+  canvas.addEventListener('mouseup', () => {
+    if (input) input.onMouseUp()
+    if (camera) camera.onPointerUp()
+  })
   canvas.addEventListener('mousemove', (e) => {
     const dx = e.clientX - mouseDownPos.x
     if (input) input.onMouseMove(dx, 0)
@@ -502,10 +501,10 @@ export function startGame(seed: number): void {
     canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
     floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-  camera = new FollowCamera({ distance: 10, height: 7, FOV: 55, followLag: 0.08 })
+  camera = new FollowCamera({ distance: 12, height: 5, FOV: 55, followLag: 0.10 })
   lootManager = new LDMCls(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new IMCls()
-
+  camera?.syncYaw(playerYaw)
   const theme = getThemeForFloor(1)
   const dungeon = generateDungeon(seed, 1, theme)
   currentDungeon = dungeon
@@ -592,9 +591,10 @@ export function startTutorialGame(seed: number): void {
     canvas, width: w, height: h, bgColor: '#0a0a0e', fogColor: '#0a0a0e',
     floorColor: '#2a2520', wallColor: '#1a1815', wallHighlightColor: '#3a3530', torchEmissive: '#ff9944',
   })
-  camera = new FollowCamera({ distance: 10, height: 7, FOV: 55, followLag: 0.08 })
+  camera = new FollowCamera({ distance: 12, height: 5, FOV: 55, followLag: 0.10 })
   lootManager = new LDMCls(renderer!, (item) => inventory!.addItem(item), addCombatLog)
   input = new IMCls()
+  camera?.syncYaw(playerYaw)
   const theme = getThemeForFloor(1)
   currentDungeon = buildTutorialDungeon(seed, theme)
   buildScene(renderer, currentDungeon)

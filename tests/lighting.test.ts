@@ -80,8 +80,8 @@ describe('torchIntensity', () => {
 })
 
 describe('ambientIntensity', () => {
-  it('returns base intensity 0.7 at floor 1', () => {
-    expect(ambientIntensity(1)).toBeCloseTo(0.7, 4)
+  it('returns base intensity 1.1 at floor 1', () => {
+    expect(ambientIntensity(1)).toBeCloseTo(1.1, 4)
   })
 
   it('reduces intensity with floor depth', () => {
@@ -93,17 +93,17 @@ describe('ambientIntensity', () => {
     expect(f5).toBeGreaterThan(f10)
   })
 
-  it('follows the formula: max(0.25, 0.7 - (floor-1)*0.04)', () => {
-    expect(ambientIntensity(1)).toBeCloseTo(0.7, 4)
-    expect(ambientIntensity(5)).toBeCloseTo(0.54, 4)  // 0.7 - 4*0.04
-    expect(ambientIntensity(10)).toBeCloseTo(0.34, 4) // 0.7 - 9*0.04
+  it('follows the formula: max(0.45, 1.1 - (floor-1)*0.07)', () => {
+    expect(ambientIntensity(1)).toBeCloseTo(1.1, 4)
+    expect(ambientIntensity(5)).toBeCloseTo(0.82, 4)  // 1.1 - 4*0.07
+    expect(ambientIntensity(10)).toBeCloseTo(0.47, 4) // 1.1 - 9*0.07
   })
 
-  it('clamps to minimum 0.25 for deep floors', () => {
-    // Floor 16: 0.7 - 15*0.04 = 0.1, clamped to 0.25
-    expect(ambientIntensity(16)).toBeCloseTo(0.25, 4)
+  it('clamps to minimum 0.45 for deep floors', () => {
+    // Floor 16: 1.1 - 15*0.07 = 0.05, clamped to 0.45
+    expect(ambientIntensity(16)).toBeCloseTo(0.45, 4)
     // Floor 50: still clamped
-    expect(ambientIntensity(50)).toBeCloseTo(0.25, 4)
+    expect(ambientIntensity(50)).toBeCloseTo(0.45, 4)
   })
 
   it('returns positive values for all floor numbers', () => {
@@ -115,8 +115,8 @@ describe('ambientIntensity', () => {
   it('all 16 game floors have valid ambient intensity', () => {
     for (let floor = 1; floor <= 16; floor++) {
       const intensity = ambientIntensity(floor)
-      expect(intensity).toBeGreaterThanOrEqual(0.25)
-      expect(intensity).toBeLessThanOrEqual(0.7)
+      expect(intensity).toBeGreaterThanOrEqual(0.45)
+      expect(intensity).toBeLessThanOrEqual(1.1)
     }
   })
 })

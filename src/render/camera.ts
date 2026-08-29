@@ -15,7 +15,7 @@ export interface CameraSettings {
 }
 
 export class FollowCamera {
-  private currentPos = new THREE.Vector3(0, 8, 12)
+  private currentPos = new THREE.Vector3(0, 5, 12)
 
   readonly settings: CameraSettings
 
@@ -23,7 +23,7 @@ export class FollowCamera {
     this.settings = settings
   }
 
-  /** Update camera to follow the target (with optional shake offset) */
+  /** Update camera to follow the target (with optional shake offset). */
   update(renderer: GameRenderer, target: THREE.Vector3, yaw: number, shakeOffset: THREE.Vector3 | null = null): void {
     const { distance, height, followLag } = this.settings
 
@@ -45,32 +45,52 @@ export class FollowCamera {
       this.currentPos.z += shakeOffset.z
     }
 
-    // Look target
+    // Look target (slightly above player for angled view)
     const lookX = target.x
-    const lookY = target.y + 1.5
+    const lookY = target.y + 1.0
     const lookZ = target.z
 
     renderer.camera.position.copy(this.currentPos)
     renderer.camera.lookAt(lookX, lookY, lookZ)
   }
 
-  /** Handle mouse drag to adjust yaw */
+  /** Sync camera yaw with player yaw (called once at game start and on floor load). */
+  syncYaw(playerYaw: number): void {
+    this._yawAngle = playerYaw
+  }
+
+  /** Return the current camera yaw for debug / logging. */
+  getYaw(): number {
+    return this._yawAngle
+  }
+
+  /** Handle mouse down — start accumulating rotation. */
   onPointerDown(clientX: number): void {
+    this._mouseDown = true
     this._lastMouseX = clientX
   }
 
+  private _mouseDown = false
   private _lastMouseX = 0
 
+  /** Handle mouse move — accumulate rotation while mouse is down. */
   onPointerMove(clientX: number, _clientY: number, sensitivity: number = 50): void {
+    if (!this._mouseDown) return
     const dx = clientX - this._lastMouseX
-    this._yawAngle -= dx * 0.003 * (sensitivity / 50)
+    this._yawAngle -= dx * 0.005 * (sensitivity / 50)
     this._lastMouseX = clientX
+  }
+
+  /** Handle mouse up — stop accumulating rotation. */
+  onPointerUp(): void {
+    this._mouseDown = false
   }
 
   private _yawAngle = 0
 
   reset(): void {
-    this.currentPos.set(0, 8, 12)
+    this.currentPos.set(0, 5, 12)
     this._yawAngle = 0
+    this._mouseDown = false
   }
 }
