@@ -1,4 +1,4 @@
-<!-- PROGRESS: Ashen Delve — Phase 7 complete. P7-1 status effects, P7-2 tutorial, P7-3 boss unit tests. -->
+<!-- PROGRESS: Ashen Delve — P9-2 Quick-Use Hotbar + Consumable Cooldown implemented. -->
 
 # Progress
 
@@ -6,7 +6,8 @@
 
 - Phase: **Phase 8 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting: torch flicker + ambient falloff), PR#86 + #87 (closed) + #89 + #90
 - P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — `RunTracker.ts` (40 lines), persistent best runs (top 5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets tick counter. PR#94 merged to main (SHA `c695f6d`). Bundle: 619.67 KB (<620 KB cap). 313 tests green. Pages validated: all P9-1 DOM elements present.
-- Next: P9-2 — quality-of-life follow-ups; gate cadence: next validate in 3 feature cycles.
+- P9-2: Quick-Use Hotbar + Consumable Cooldown — **IN PROGRESS** — Bottom bar with 4 slots, number-key shortcuts (1-4) for potions/keys, 1-second cooldown on potions, cooldown overlay on slots. `Inventory.ts` (tryQuickUsePotion/Key, isOnCooldown, cooldown Map), `ui.ts` (updateQuickUseBar, handleQuickUse, event delegation), `index.html` (#quick-use-bar), `styles.css` (.quick-use-bar/.slot-cooldown). Bundle: 619.01 KB (<620 KB). 319 tests (313+6 P9-2).
+- Next: P9-2 tests gate; gate cadence: next validate in 3 feature cycles.
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
@@ -156,6 +157,7 @@
 | Slice | Feature | Status | Key files |
 |-------|---------|--------|-----------|
 | P9-1 | Enhanced Death Recap + Run History — persistent best runs, death stats (floor/scrap/mobs/duration/best), retry button | ✅ MERGED PR#94 (SHA `c695f6d`) | `RunTracker.ts`, `GameLoop.ts`, `ui.ts`, `index.html`, `styles.css` |
+| P9-2 | Quick-Use Hotbar + Consumable Cooldown — bottom bar, 4 slots, number keys 1-4, potion cooldown 1s | 🚧 IN PROGRESS | `Inventory.ts` (cooldown Map, tryQuickUsePotion/Key, isOnCooldown), `ui.ts` (hotbar DOM, event delegation), `index.html`, `styles.css` |
 
 ## Planned
 

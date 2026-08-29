@@ -19,6 +19,7 @@ export class Inventory {
   private readonly maxSlots = 6
   private readonly chests: Map<string, Chest> = new Map()
   private _keyCount = 0
+  private _cooldowns: Map<string, number> = new Map()
 
   /** Get current key count */
   getKeyCount(): number {
@@ -111,5 +112,36 @@ export class Inventory {
   reset(): void {
     this.slots = []
     this.chests.clear()
+    this._cooldowns.clear()
+  }
+
+  /** Quick-use a potion with cooldown check. Returns heal amount or 0. */
+  tryQuickUsePotion(itemId: string): number {
+    if (this.isOnCooldown(itemId)) return 0
+    const slot = this.slots.find(s => s.item.id === itemId && s.item.type === 'potion')
+    if (!slot) return 0
+    const heal = slot.item.value
+    this.slots = this.slots.filter(s => s.item.id !== itemId)
+    this._cooldowns.set(itemId, Date.now())
+    return heal
+  }
+
+  /** Quick-use a dungeon key. Returns true if consumed. */
+  tryQuickUseKey(): boolean {
+    if (this._keyCount <= 0) return false
+    this._keyCount--
+    this._cooldowns.set('dungeon-key', Date.now())
+    return true
+  }
+
+  /** Check if an item is currently on cooldown. */
+  isOnCooldown(itemId: string): boolean {
+    const lastUse = this._cooldowns.get(itemId)
+    return lastUse !== undefined && Date.now() - lastUse < 1000
+  }
+
+  /** Reset all cooldowns */
+  resetCooldowns(): void {
+    this._cooldowns.clear()
   }
 }

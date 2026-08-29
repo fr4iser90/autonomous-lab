@@ -207,3 +207,53 @@ describe('key count (P5-4)', () => {
     expect(inv.getKeyCount()).toBe(0)
   })
 })
+
+// --- P9-2: Quick-Use Hotbar + Consumable Cooldown ---
+
+describe('P9-2: cooldown system', () => {
+  it('isOnCooldown returns false initially for any itemId', () => {
+    const inv = new Inventory()
+    expect(inv.isOnCooldown('health-potion')).toBe(false)
+    expect(inv.isOnCooldown('dungeon-key')).toBe(false)
+  })
+
+  it('tryQuickUsePotion sets cooldown and returns heal amount', () => {
+    const inv = new Inventory()
+    const potion = item('health-potion', 'Health Potion', 'potion', 8)
+    inv.addItem(potion)
+    const heal = inv.tryQuickUsePotion(potion.id)
+    expect(heal).toBe(8)
+    expect(inv.isOnCooldown(potion.id)).toBe(true)
+  })
+
+  it('tryQuickUsePotion returns 0 when on cooldown', () => {
+    const inv = new Inventory()
+    const potion = item('health-potion', 'Health Potion', 'potion', 8)
+    inv.addItem(potion)
+    inv.tryQuickUsePotion(potion.id)
+    expect(inv.tryQuickUsePotion(potion.id)).toBe(0)
+    expect(inv.isOnCooldown(potion.id)).toBe(true)
+  })
+
+  it('tryQuickUseKey returns true and consumes key', () => {
+    const inv = new Inventory()
+    inv.addKeys(2)
+    expect(inv.tryQuickUseKey()).toBe(true)
+    expect(inv.getKeyCount()).toBe(1)
+  })
+
+  it('tryQuickUseKey returns false when no keys', () => {
+    const inv = new Inventory()
+    expect(inv.tryQuickUseKey()).toBe(false)
+  })
+
+  it('resetCooldowns clears all cooldowns', () => {
+    const inv = new Inventory()
+    const potion = item('health-potion', 'Health Potion', 'potion', 8)
+    inv.addItem(potion)
+    inv.tryQuickUsePotion(potion.id)
+    expect(inv.isOnCooldown(potion.id)).toBe(true)
+    inv.resetCooldowns()
+    expect(inv.isOnCooldown(potion.id)).toBe(false)
+  })
+})

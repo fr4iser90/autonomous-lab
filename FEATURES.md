@@ -1,5 +1,9 @@
 # Features — Ashen Delve
 
+## P9: Phase 9: Quality of Life
+
+- **Quick-Use Hotbar** — Bottom-center bar with 4 quick-use slots. Number keys 1-4 for instant potion/key use. Potion cooldown: 1 second (overlay + red border during cooldown). Event delegation click handler on parent element. Inventory: `tryQuickUsePotion()`, `tryQuickUseKey()`, `isOnCooldown()`, `resetCooldowns()`. UI: `updateQuickUseBar()`, `handleQuickUse()`, `setQuickUseUpdate()`. Bundle: 619.01 KB. 319 tests (313+6 P9-2).
+
 ## P8: Phase 8 Polish
 - **HitEffects + ScreenShake** — Floating damage numbers, hit burst particles, mesh flash, screen shake on all damage events. `HitEffects.ts`, `ScreenShake.ts`.
 - **Audio feedback** — `critHit()` (sharp square), `playerHit()` (dull triangle), `death()` (descending sawtooth) at all 6 damage points. `AudioEngine.ts`.

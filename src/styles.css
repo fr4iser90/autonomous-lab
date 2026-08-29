@@ -142,6 +142,57 @@ button:active {
   gap: 0.25rem;
 }
 
+/* Quick-Use Hotbar */
+.quick-use-bar {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 6;
+  pointer-events: auto;
+}
+
+.quick-use-slot {
+  width: 52px;
+  height: 52px;
+  background: var(--ash-ui-bg);
+  border: 1px solid var(--ash-ui-muted);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+  user-select: none;
+}
+
+.quick-use-slot:hover {
+  border-color: var(--ash-accent);
+  box-shadow: 0 0 8px rgba(255, 153, 68, 0.3);
+}
+
+.quick-use-slot .slot-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.quick-use-slot .slot-count {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ash-accent);
+  margin-top: 2px;
+}
+
+.quick-use-slot.cooldown {
+  border-color: var(--ash-blood);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .status-effects-panel {
   display: flex;
   flex-direction: column;
