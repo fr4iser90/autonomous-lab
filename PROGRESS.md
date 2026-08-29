@@ -5,13 +5,14 @@
 ## NOW
 
 - Phase: **Phase 8 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting: torch flicker + ambient falloff), PR#86 + #87 (closed) + #89 + #90
-- P9-1: Enhanced Death Recap + Run History — RunTracker module (40 lines), persistent best runs (top 5), death screen shows floor/scrap/mobs/duration/bestRun, retry button resets tick counter. PR#94. Bundle: 619.67 KB (<620 KB cap).
+- P9-1: Enhanced Death Recap + Run History — **MERGED** ✅ — `RunTracker.ts` (40 lines), persistent best runs (top 5), death screen shows floor/scrap/mobsKilled/runDuration/bestRun, retry button resets tick counter. PR#94 merged to main (SHA `c695f6d`). Bundle: 619.67 KB (<620 KB cap). 313 tests green. Pages validated: all P9-1 DOM elements present.
+- Next: P9-2 — quality-of-life follow-ups; gate cadence: next validate in 3 feature cycles.
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **313 tests green (2 skipped), build green, 618.39 KB bundle**
+- Gate: **313 tests green (2 skipped), build green, 619.67 KB bundle**
 - BUGS: **game bugs drained** (B-1 closed, B-2 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
@@ -154,7 +155,7 @@
 
 | Slice | Feature | Status | Key files |
 |-------|---------|--------|-----------|
-| P9-1 | Enhanced Death Recap + Run History — persistent best runs, death stats (floor/scrap/mobs/duration/best), retry button | 🔄 PR#94 | `RunTracker.ts`, `GameLoop.ts`, `ui.ts`, `index.html`, `styles.css` |
+| P9-1 | Enhanced Death Recap + Run History — persistent best runs, death stats (floor/scrap/mobs/duration/best), retry button | ✅ MERGED PR#94 (SHA `c695f6d`) | `RunTracker.ts`, `GameLoop.ts`, `ui.ts`, `index.html`, `styles.css` |
 
 ## Planned
 
