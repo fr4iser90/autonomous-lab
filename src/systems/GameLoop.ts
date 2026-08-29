@@ -248,16 +248,13 @@ export function updateGameVars(
   _combatLogEntries = combatLogEntries
 }
 
-export function gameLoop(timestamp = 0): number {
-  if (_currentScreen !== 'game' || _gameState !== 'playing') return 0
-  _animFrame = requestAnimationFrame(gameLoop) as unknown as number
+export function gameLoop(timestamp = 0): void {
+  if (_currentScreen !== 'game' || _gameState !== 'playing') return
 
   const dt = Math.min((timestamp - _lastTime) / 1000, 0.05)
   _lastTime = timestamp
   const time = _renderer?.getElapsedTime() || 0
 
-  // Update input
-  _input?.update()
   const inp = _input?.getState() ?? { forward: 0, right: 0, rotate: 0, jump: false, attack: false }
 
   // P9-2: Update quick-use hotbar
@@ -681,8 +678,6 @@ export function gameLoop(timestamp = 0): number {
   // Render
   _renderer?.render()
   _runTickCount++
-
-  return _animFrame
 }
 
 export function checkPlayerDeath(
@@ -720,6 +715,7 @@ export function checkPlayerDeath(
 }
 
 export function getAnimFrame(): number { return _animFrame }
+export function setAnimFrame(frame: number): void { _animFrame = frame }
 export function getPlayerX(): number { return _playerX }
 export function getPlayerZ(): number { return _playerZ }
 export function getPlayerYaw(): number { return _playerYaw }

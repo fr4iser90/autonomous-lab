@@ -678,8 +678,9 @@ function isDummyMob(mob: MobKit): boolean {
 // ── Game loop ───────────────────────────────────────────
 
 export function gameLoop(timestamp = 0): void {
-  GL.updateGameVars(playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor, mobs, combatLogEntries)
-  const frame = GL.gameLoop(timestamp)
+  // Single rAF driver — update input and run GL's game loop
+  input?.update()
+  GL.gameLoop(timestamp)
 
   ;[playerHP, playerMaxHP, playerX, playerZ, playerYaw, playerFloor] = [
     GL.getPlayerHP(), GL.getPlayerMaxHP(), GL.getPlayerX(), GL.getPlayerZ(), GL.getPlayerYaw(), GL.getPlayerFloor(),
@@ -688,7 +689,7 @@ export function gameLoop(timestamp = 0): void {
   mobs = GL.getMobs()
   updateScrapUI(); updateKeyCountUI()
 
-  if (lootManager && frame) {
+  if (lootManager) {
     const time = renderer?.getElapsedTime() ?? 0
     const collected = lootManager.update(0.016, time, playerX, playerZ)
     if (collected.length > 0) showLootToast(collected[collected.length - 1])
@@ -716,7 +717,7 @@ export function gameLoop(timestamp = 0): void {
   })
 
   // Tutorial tracking
-  if (tutorialState?.active && input && frame) {
+  if (tutorialState?.active && input) {
     const state = input.getState()
     if (state.forward !== 0 || state.right !== 0) {
       TutorialMode.markMoved(tutorialState, playerX, playerZ, playerLastX, playerLastZ)
@@ -757,8 +758,8 @@ export function gameLoop(timestamp = 0): void {
     if (existingOverlay) existingOverlay.parentElement?.remove()
   }
 
-  if (gameState === 'playing' && frame) {
-    requestAnimationFrame(gameLoop)
+  if (gameState === 'playing') {
+    GL.setAnimFrame(requestAnimationFrame(gameLoop))
   }
 }
 

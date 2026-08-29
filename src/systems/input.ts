@@ -13,6 +13,8 @@ export class InputManager {
   private keys = new Map<string, boolean>()
   private mouseDown = false
   private _state: InputState = { forward: 0, right: 0, rotate: 0, jump: false, attack: false }
+  // Accumulates mouse deltas between update() calls — cleared each frame
+  private _pendingRotate = 0
 
   getState(): InputState {
     return this._state
@@ -21,9 +23,11 @@ export class InputManager {
   update(): void {
     this._state.forward = (this.keys.get('w') || this.keys.get('W') ? 1 : 0) - (this.keys.get('s') || this.keys.get('S') ? 1 : 0)
     this._state.right = (this.keys.get('d') || this.keys.get('D') ? 1 : 0) - (this.keys.get('a') || this.keys.get('A') ? 1 : 0)
-    // Rotation via mouse drag only (no keyboard conflict with UI keys)
     this._state.jump = false
     this._state.attack = this.mouseDown || !!this.keys.get(' ')
+    // Apply pending rotation delta then clear for next frame
+    this._state.rotate = this._pendingRotate
+    this._pendingRotate = 0
   }
 
   onKeyDown(e: KeyboardEvent): void {
@@ -39,7 +43,10 @@ export class InputManager {
   }
 
   onMouseMove(dx: number, _dy: number): void {
-    this._state.rotate -= dx * 0.01
+    // Only accumulate rotation during mouse drag (primary button held)
+    if (this.mouseDown) {
+      this._pendingRotate -= dx * 0.01
+    }
   }
 
   onMouseDown(): void {
@@ -53,5 +60,6 @@ export class InputManager {
   reset(): void {
     this.keys.clear()
     this.mouseDown = false
+    this._pendingRotate = 0
   }
 }
