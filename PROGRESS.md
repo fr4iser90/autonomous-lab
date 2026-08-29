@@ -4,11 +4,12 @@
 
 ## NOW
 
-- Phase: **Phase 7 complete** — P7-1 ✅, P7-2 ✅, P7-3 ✅
+- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), PR #86
+- P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests. Gate: 278 tests, 615.87 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **249 tests green, build green, 604.13 KB bundle**
+- Gate: **278 tests green (2 skipped), build green, 615.87 KB bundle**
 - BUGS: **game bugs drained** (B-1 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
@@ -129,6 +130,13 @@
 - ✅ Phase 6 validation (2026-08-29): Playwright smoke test against live Pages confirmed title screen shows "WASD|Arrow|click|attack|mouse|keyboard|controls|move" — controls text present. All 142 tests green, gate green. ESLint fix: `validate-*.mjs` added to eslint ignores (browser globals in validation scripts).
 - ✅ P7-3: Boss unit tests shipped — 79 unit tests covering phases (normal→enrage→desperate), special attacks (fireball/slam damage scaling 5/6/8 and 6/8/10), minion summoning, warning system, crown glow, mesh integrity, edge cases. Gate: 249 tests green, 604.13 KB. `tests/boss.test.ts`.
 
+## P8 — Phase 8: Polish & Quality-of-Life
+
+| Slice | Feature | Status | Key files |
+|-------|---------|--------|-----------|
+| P8-1 | HitEffects + ScreenShake — combat visual feedback | ✅ SHIPPED PR#86 | `HitEffects.ts` (damage numbers, burst particles, mesh flash), `ScreenShake.ts` (sin-based shake), `GameLoop.ts` (6 integration points), `camera.ts` (shakeOffset), 29 new tests |
+
 ## Planned
 
-- **P8 — Phase 8: Polish & Quality-of-Life** — visual enhancements (particles, dynamic lighting), gameplay refinements (new mob types, skill upgrades), quality-of-life improvements. Starting with a code audit to identify the highest-impact improvements.
+- ✅ **P8-1 shipped** — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
+- **P8 remaining** — Code audit identified additional QoL: audio feedback on hits, UI polish (toast system improvements, smoother HUD transitions), dynamic lighting tweaks. Next step: prioritize highest-impact items from audit and implement in slices.
