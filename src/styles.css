@@ -555,10 +555,6 @@ button:active {
   border-color: #ffcc44;
 }
 
-.toast-info {
-  color: var(--ash-ui-text);
-}
-
 .toast-warn {
   color: #ff6644;
   border-color: #ff6644;
@@ -582,7 +578,8 @@ button:active {
   gap: 0.1rem;
 }
 
-.shop-item:hover {
+.shop-item:hover,
+.skill-item:hover {
   border-color: var(--ash-accent);
   background: var(--ash-ui-bg);
 }
@@ -624,11 +621,6 @@ button:active {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   gap: 0.1rem;
-}
-
-.skill-item:hover {
-  border-color: var(--ash-accent);
-  background: var(--ash-ui-bg);
 }
 
 .skill-item .item-icon {
