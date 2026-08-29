@@ -4,13 +4,13 @@
 
 ## NOW
 
-- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), PR#86 + #87 (closed) + #89
+- Phase: **Phase 8 complete** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), P8-3 ✅ (Toast polish), P8-4 ✅ (Dynamic lighting: torch flicker + ambient falloff), PR#86 + #87 (closed) + #89 + #90
 - P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
 - P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **300 tests green (2 skipped), build green, 618.03 KB bundle**
+- Gate: **313 tests green (2 skipped), build green, 618.39 KB bundle**
 - BUGS: **game bugs drained** (B-1 closed, B-2 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
@@ -38,6 +38,15 @@
 |-------|---------|--------|-----------|
 | P7-1 | Status effects (poison/burn/freeze/shield) | ✅ SHIPPED | `statusEffects.ts`, `GameLoop.ts` (mob attacks, HUD) |
 | P7-2 | Tutorial mode — 6-step guided onboarding | ✅ SHIPPED | `TutorialMode.ts` (state machine, 6 steps), `ui.ts` (overlay + dummy mob), `styles.css` (overlay styles), `tests/tutorial.test.ts` (14 tests) |
+
+## P8 — Phase 8 Polish
+
+| Slice | Feature | Status | Key files |
+|-------|---------|--------|-----------|
+| P8-1 | HitEffects + ScreenShake | ✅ SHIPPED | `HitEffects.ts`, `ScreenShake.ts`, `GameLoop.ts` (integration), `tests/boss.test.ts` (29 tests) |
+| P8-2 | Audio feedback | ✅ SHIPPED | `AudioEngine.ts` (critHit, playerHit, death), `GameLoop.ts` (6 integration points), `tests/AudioEngine.test.ts` (14 tests) |
+| P8-3 | Toast polish | ✅ SHIPPED | `ui.ts` (toast positioning/styling), `styles.css` (toast animations), `tests/toast-system.test.ts` (8 tests) |
+| P8-4 | Dynamic lighting (torch flicker + ambient falloff) | ✅ SHIPPED | `lighting.ts` (pure flicker/ambient functions), `GameRenderer.ts` (updateTorchFlicker, setAmbientIntensity), `GameLoop.ts` (floor-depth wiring), `tests/lighting.test.ts` (13 tests) |
 
 ## P4 — Phase 4 Systems
 

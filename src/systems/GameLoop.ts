@@ -112,6 +112,8 @@ export function setRuntimeState(
   _currentScreen = currentScreen
   _gameState = gameState
   _renderer = renderer
+  // P8-4: Set initial ambient intensity for floor 1
+  if (_renderer) _renderer.setAmbientIntensity(1)
   _player = player
   _camera = camera
   _input = input
@@ -299,6 +301,8 @@ export function gameLoop(timestamp = 0): number {
       if (_stairsCooldown <= 0 && isOnStairs(_dungeon, _playerX, _playerZ)) {
         _playerFloor += 1
         _onFloorAdvanced(_playerFloor)
+        // P8-4: Update ambient light for new floor depth
+        if (_renderer) _renderer.setAmbientIntensity(_playerFloor)
         _stairsCooldown = 2.0 // prevent repeated triggers
       }
     }

@@ -1,5 +1,11 @@
 # Features — Ashen Delve
 
+## P8: Phase 8 Polish
+- **HitEffects + ScreenShake** — Floating damage numbers, hit burst particles, mesh flash, screen shake on all damage events. `HitEffects.ts`, `ScreenShake.ts`.
+- **Audio feedback** — `critHit()` (sharp square), `playerHit()` (dull triangle), `death()` (descending sawtooth) at all 6 damage points. `AudioEngine.ts`.
+- **Toast polish** — Improved positioning/styling for loot, floor-advance, door, and shrine toasts. `styles.css`, `ui.ts`.
+- **Dynamic lighting** — Organic torch flicker (irrational frequency ratios + draft bursts), ambient light intensity fades with floor depth (0.7 → 0.25 over 16 floors). `lighting.ts` (pure math), `GameRenderer.ts`, `GameLoop.ts`.
+
 ## M12: Full Integration
 **DungeonPCG** — BSP room splitting with L-shaped corridors, BFS reachability verification. Seed-based generation via Mulberry32 RNG. Stairs placed in last room.
 

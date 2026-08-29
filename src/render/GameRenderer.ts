@@ -3,6 +3,7 @@
  * M2: Three.js bootstrap with fog, hemisphere + torch lights, ground plane.
  */
 import * as THREE from 'three'
+import { torchIntensity, TORCH_BASE_INTENSITY, ambientIntensity } from '../utils/lighting.js'
 
 export interface RendererConfig {
   canvas: HTMLCanvasElement
@@ -170,13 +171,16 @@ export class GameRenderer {
     return highlight
   }
 
-  /** Animate torch flicker */
+  /** Animate torch flicker — organic multi-frequency with draft bursts */
   updateTorchFlicker(time: number): void {
     for (let i = 0; i < this.torchLights.length; i++) {
-      const light = this.torchLights[i]
-      const flicker = 0.85 + 0.15 * Math.sin(time * 3 + i * 1.7) * Math.cos(time * 7 + i * 2.3)
-      light.intensity = 1.7 * flicker
+      this.torchLights[i].intensity = TORCH_BASE_INTENSITY * torchIntensity(time, i)
     }
+  }
+
+  /** Set ambient hemisphere light intensity based on floor depth */
+  setAmbientIntensity(floor: number): void {
+    this.hemiLight.intensity = ambientIntensity(floor)
   }
 
   resize(width: number, height: number): void {
