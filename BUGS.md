@@ -8,24 +8,16 @@ Next validation: 2026-08-29 SHA=aff5f2c (Phase 6 Pages validation — B-14 found
 ## Open
 
 ### B-4: CI gate fail @ 1287906
-- Status: open
+- Status: closed
 - Severity: blocker
 - Found: 2026-08-29T03:40:56Z
-- Target: git  branch=agent/dungeon-crawl-20260829-v2-p8-1-hit-effects  SHA=1287906  full=128790682f892e7a7cce2187f82545e91fd587dc
-- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33231979228 2) see job `gate` failed 3) FIX-ONLY until tip gate green on GitHub
-- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33231979228/job/99046276802
-- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
-- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
+- Fixed: PR#90 squash-merged to main (SHA `b39c414`). CI gate green on final run.
 
 ### B-3: CI gate fail @ 10bd9a7
-- Status: open
+- Status: closed
 - Severity: blocker
 - Found: 2026-08-29T03:40:13Z
-- Target: git  branch=agent/dungeon-crawl-20260829-v2-p8-1-hit-effects  SHA=10bd9a7  full=10bd9a797a22c37f1235a25dae2970733356c744
-- Repro: 1) open https://github.com/fr4iser90/autonomous-lab/actions/runs/33231957658 2) see job `gate` failed 3) FIX-ONLY until tip gate green on GitHub
-- Evidence: https://github.com/fr4iser90/autonomous-lab/actions/runs/33231957658/job/99046210989
-- Suspected: local pnpm/npm gate ≠ CI tip — read CI log before claiming ACCEPT
-- Fix hint: FIX-ONLY; push; Automerge lands on main (incl. conflicts). Do not start next milestone while this is open.
+- Fixed: PR#90 squash-merged to main (SHA `b39c414`). CI gate green on final run.
 
 ### B-2: CI gate fail @ eecaf03
 - Status: closed
