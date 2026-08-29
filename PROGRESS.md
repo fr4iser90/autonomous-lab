@@ -127,7 +127,6 @@
 
 - **P7-2: Tutorial mode shipped** — 6-step guided onboarding (move → look → attack → inventory → combat dummy → stairs). TutorialState machine in `TutorialMode.ts`, overlay rendered in `ui.ts` with `tutorial-overlay-container`, training dummy mob (`tutorial-dummy` type), CSS-styled step boxes with emoji icons + key hints + skip. 14 unit tests. Completing sets `meta.tutorialDone` in SaveService. Skippable via Escape/Space. Replayable from title.
 - ✅ Phase 6 validation (2026-08-29): Playwright smoke test against live Pages confirmed title screen shows "WASD|Arrow|click|attack|mouse|keyboard|controls|move" — controls text present. All 142 tests green, gate green. ESLint fix: `validate-*.mjs` added to eslint ignores (browser globals in validation scripts).
+- ✅ P7-3: Boss unit tests shipped — 79 unit tests covering phases (normal→enrage→desperate), special attacks (fireball/slam damage scaling 5/6/8 and 6/8/10), minion summoning, warning system, crown glow, mesh integrity, edge cases. Gate: 249 tests green, 604.13 KB. `tests/boss.test.ts`.
 
 ## Planned
-
-- **P7-3 Next phase** — TBD after Phase 7 review
