@@ -14,7 +14,7 @@ import { ChaseAI } from './ChaseAI'
 import { AudioEngine } from './AudioEngine'
 import { Minimap } from '../render/Minimap'
 import { SkillTree } from './SkillTree'
-import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs, getShrineAt, deactivateShrine } from './DungeonPCG'
+import { isOnStealthTile, getTrapAt, isSealedDoor, openDoorAt, isOnStairs, getShrineAt, deactivateShrine, TileType } from './DungeonPCG'
 import type { DungeonData } from './DungeonPCG'
 import { TRAP_DEFS } from '../data/traps'
 import { poison, burn, freeze, shield } from '../data/statusEffects'
@@ -242,18 +242,27 @@ export function gameLoop(timestamp = 0): number {
     const moveX = (Math.sin(_playerYaw) * inp.forward + Math.cos(_playerYaw) * inp.right) * speed * dt
     const moveZ = (Math.cos(_playerYaw) * inp.forward - Math.sin(_playerYaw) * inp.right) * speed * dt
 
-    // P5-4: Sealed door collision — block movement on sealed doors unless key is consumed
+    // P5-4: Collision — block movement on walls and sealed doors
     let allowMove = true
     if (_dungeon && (moveX !== 0 || moveZ !== 0)) {
       const tentX = _playerX + moveX
       const tentZ = _playerZ + moveZ
-      if (isSealedDoor(_dungeon, tentX, tentZ)) {
-        if (_inventory?.consumeKey()) {
-          openDoorAt(_dungeon, tentX, tentZ)
-          _onDoorOpened?.('🔑 Door opened!')
-          // allowMove stays true — key consumed, door opened
-        } else {
-          allowMove = false // no key — blocked
+      // Wall collision — walkable tiles are FLOOR, DOOR, STAIRS, SPAWN, STEALTH, TRAP
+      const gridX = Math.floor(tentX + _dungeon.width / 2)
+      const gridZ = Math.floor(tentZ + _dungeon.height / 2)
+      const wallIdx = gridZ * _dungeon.width + gridX
+      if (gridX >= 0 && gridX < _dungeon.width && gridZ >= 0 && gridZ < _dungeon.height) {
+        const wallCell = _dungeon.cells[wallIdx]
+        if (wallCell.type === TileType.WALL) {
+          allowMove = false // solid wall — blocked
+        } else if (wallCell.type === TileType.DOOR && isSealedDoor(_dungeon, tentX, tentZ)) {
+          if (_inventory?.consumeKey()) {
+            openDoorAt(_dungeon, tentX, tentZ)
+            _onDoorOpened?.('🔑 Door opened!')
+            // allowMove stays true — key consumed, door opened
+          } else {
+            allowMove = false // no key — blocked
+          }
         }
       }
     }
