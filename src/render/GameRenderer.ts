@@ -31,6 +31,15 @@ export class GameRenderer {
   readonly ground: THREE.Mesh
   readonly wallGroup = new THREE.Group()
 
+  // Instanced meshes (performance optimization — replaces individual tile meshes)
+  floorMesh: THREE.InstancedMesh | null = null
+  wallMesh: THREE.InstancedMesh | null = null
+  wallHighlightMesh: THREE.InstancedMesh | null = null
+
+  // Public color accessors (for InstancedMesh creation)
+  get wallColor(): string { return this.config.wallColor }
+  get wallHighlightColor(): string { return this.config.wallHighlightColor }
+
   // Config
   private readonly config: RendererConfig
 
@@ -38,8 +47,8 @@ export class GameRenderer {
     this.config = config
     this.scene = new THREE.Scene()
 
-    // Fog — cold ash atmosphere
-    this.scene.fog = new THREE.Fog(config.fogColor, 8, 25)
+    // Fog — cold ash atmosphere (expanded for better visibility)
+    this.scene.fog = new THREE.Fog(config.fogColor, 12, 40)
 
     // Background
     this.scene.background = new THREE.Color(config.bgColor)
@@ -61,10 +70,10 @@ export class GameRenderer {
     if (hasDepth) this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
-    this.renderer.toneMappingExposure = 0.8
+    this.renderer.toneMappingExposure = 1.2
 
     // Hemisphere light (ambient fill)
-    this.hemiLight = new THREE.HemisphereLight(0x446688, 0x222233, 0.4)
+    this.hemiLight = new THREE.HemisphereLight(0x668899, 0x333344, 0.7)
     this.scene.add(this.hemiLight)
 
     // Ground plane
@@ -89,7 +98,7 @@ export class GameRenderer {
   }
 
   private addTorchLight(x: number, y: number, z: number): THREE.PointLight {
-    const light = new THREE.PointLight(new THREE.Color(this.config.torchEmissive), 1.5, 15, 2)
+    const light = new THREE.PointLight(new THREE.Color(this.config.torchEmissive), 2.0, 20, 2)
     light.position.set(x, y, z)
     light.castShadow = false // Performance: shadows on point lights are expensive
     this.scene.add(light)
@@ -117,7 +126,7 @@ export class GameRenderer {
     flame.position.set(x, 0.65, z)
 
     // Torch light
-    const light = new THREE.PointLight(new THREE.Color(this.config.torchEmissive), 1.2, 12, 2)
+    const light = new THREE.PointLight(new THREE.Color(this.config.torchEmissive), 1.8, 18, 2)
     light.position.set(x, 0.7, z)
 
     const group = new THREE.Group()
@@ -166,7 +175,7 @@ export class GameRenderer {
     for (let i = 0; i < this.torchLights.length; i++) {
       const light = this.torchLights[i]
       const flicker = 0.85 + 0.15 * Math.sin(time * 3 + i * 1.7) * Math.cos(time * 7 + i * 2.3)
-      light.intensity = 1.2 * flicker
+      light.intensity = 1.7 * flicker
     }
   }
 
@@ -206,6 +215,17 @@ export class GameRenderer {
         }
       })
     })
+    // Dispose InstancedMesh objects
+    for (const prop of [this.floorMesh, this.wallMesh, this.wallHighlightMesh]) {
+      if (prop) {
+        prop.geometry.dispose()
+        ;(prop.material as THREE.Material).dispose()
+        this.scene.remove(prop)
+      }
+    }
+    this.floorMesh = null
+    this.wallMesh = null
+    this.wallHighlightMesh = null
   }
 
   /** Cleanup */

@@ -303,7 +303,13 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
   const floorColor = theme.floorColors.floor
   // wallColor and wallHighlightColor are available via renderer config
 
-  // Floor tiles
+  // Collect floor/wall instances for InstancedMesh rendering (performance: reduces draw calls from hundreds to 3)
+  const floorMatrices: THREE.Matrix4[] = []
+  const floorColors: THREE.Color[] = []
+  const floorHeights: number[] = []
+  const wallMatrices: THREE.Matrix4[] = []
+  const highlightMatrices: THREE.Matrix4[] = []
+
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const cell = cells[y * width + x]
@@ -311,39 +317,74 @@ export function buildScene(renderer: GameRenderer, dungeon: DungeonData): void {
       const worldZ = y - height / 2
 
       if (cell.type === CELL_FLOOR || cell.type === CELL_DOOR || cell.type === CELL_SPAWN || cell.type === CELL_STAIRS || cell.type === CELL_STEALTH || cell.type === CELL_TRAP) {
-        // Floor tile (stealth tiles rendered darker for shadowy effect, traps sit on floor)
-        const tileGeo = new THREE.BoxGeometry(0.95, 0.1, 0.95)
         const isStealth = cell.type === CELL_STEALTH
         const isTrap = cell.type === CELL_TRAP
         const baseColor = isStealth ? new THREE.Color(floorColor).multiplyScalar(0.55) : new THREE.Color(floorColor)
-        const tileMat = new THREE.MeshStandardMaterial({
-          color: baseColor,
-          roughness: isTrap ? 0.7 : 0.95, // slightly smoother for trap surfaces
-        })
-        const tile = new THREE.Mesh(tileGeo, tileMat)
-        tile.position.set(worldX, isTrap ? 0.06 : 0.05, worldZ)
-        tile.receiveShadow = true
-        renderer.scene.add(tile)
+        floorMatrices.push(new THREE.Matrix4().makeTranslation(worldX, isTrap ? 0.06 : 0.05, worldZ))
+        floorColors.push(baseColor)
+        floorHeights.push(isTrap ? 0.06 : 0.05)
       }
 
       if (cell.type === CELL_WALL) {
-        renderer.addWallBlock(worldX, worldZ)
-        renderer.addWallHighlight(worldX, worldZ)
-      }
-
-      if (cell.type === CELL_DOOR) {
-        // Door tile (no wall above)
-        const tileGeo = new THREE.BoxGeometry(0.95, 0.1, 0.95)
-        const tileMat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(floorColor),
-          roughness: 0.85,
-        })
-        const tile = new THREE.Mesh(tileGeo, tileMat)
-        tile.position.set(worldX, 0.05, worldZ)
-        tile.receiveShadow = true
-        renderer.scene.add(tile)
+        wallMatrices.push(new THREE.Matrix4().makeTranslation(worldX, 1, worldZ))
+        highlightMatrices.push(new THREE.Matrix4().makeTranslation(worldX, 2.025, worldZ))
       }
     }
+  }
+
+  // Create InstancedMesh for floor tiles — single draw call for all walkable tiles
+  if (floorMatrices.length > 0) {
+    const floorGeo = new THREE.BoxGeometry(0.95, 0.1, 0.95)
+    const floorMat = new THREE.MeshStandardMaterial({
+      roughness: 0.95,
+      metalness: 0.0,
+    })
+    const instancedFloor = new THREE.InstancedMesh(floorGeo, floorMat, floorMatrices.length)
+    for (let i = 0; i < floorMatrices.length; i++) {
+      instancedFloor.setMatrixAt(i, floorMatrices[i])
+      instancedFloor.setColorAt(i, floorColors[i])
+    }
+    instancedFloor.receiveShadow = true
+    instancedFloor.instanceMatrix.needsUpdate = true
+    if (instancedFloor.instanceColor) instancedFloor.instanceColor.needsUpdate = true
+    renderer.scene.add(instancedFloor)
+    renderer.floorMesh = instancedFloor
+  }
+
+  // Create InstancedMesh for walls — single draw call for all walls (eliminates z-fighting)
+  if (wallMatrices.length > 0) {
+    const wallGeo = new THREE.BoxGeometry(1, 2, 1)
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(renderer.wallColor),
+      roughness: 0.95,
+      metalness: 0.0,
+    })
+    const instancedWalls = new THREE.InstancedMesh(wallGeo, wallMat, wallMatrices.length)
+    for (let i = 0; i < wallMatrices.length; i++) {
+      instancedWalls.setMatrixAt(i, wallMatrices[i])
+    }
+    instancedWalls.castShadow = true
+    instancedWalls.receiveShadow = true
+    instancedWalls.instanceMatrix.needsUpdate = true
+    renderer.wallGroup.add(instancedWalls)
+    renderer.wallMesh = instancedWalls
+  }
+
+  // Create InstancedMesh for wall highlights (torchlit top edges)
+  if (highlightMatrices.length > 0) {
+    const highlightGeo = new THREE.BoxGeometry(1.02, 0.05, 1.02)
+    const highlightMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(renderer.wallHighlightColor),
+      roughness: 0.7,
+      metalness: 0.1,
+    })
+    const instancedHighlights = new THREE.InstancedMesh(highlightGeo, highlightMat, highlightMatrices.length)
+    for (let i = 0; i < highlightMatrices.length; i++) {
+      instancedHighlights.setMatrixAt(i, highlightMatrices[i])
+    }
+    instancedHighlights.instanceMatrix.needsUpdate = true
+    renderer.wallGroup.add(instancedHighlights)
+    renderer.wallHighlightMesh = instancedHighlights
   }
 
   // Stairs
