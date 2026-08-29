@@ -4,12 +4,12 @@
 
 ## NOW
 
-- Phase: **Phase 7 — status effects + tutorial** — P7-1 (status effects) complete, M7.5 tutorial next
+- Phase: **Phase 7 — status effects + tutorial** — P7-1 (status effects) complete, P7-2 tutorial next
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
-- Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70)
+- Branch: `agent/dungeon-crawl-20260829-v2` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79)
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **126 tests green, build green, ~589 KB bundle**
-- BUGS: **game bugs drained** (B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
+- Gate: **142 tests green, build green, ~599 KB bundle**
+- BUGS: **game bugs drained** (B-1 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 
@@ -38,6 +38,7 @@
 | P4-2 | Skill tree | ✅ SHIPPED PR#53 | `SkillTree.ts`, `tests/skill-tree.test.ts` |
 | P4-3 | Stealth zones | ✅ SHIPPED PR#55 | `DungeonPCG.ts`, `ChaseAI.ts`, `GameLoop.ts`, `uiHelpers.ts`, `tests/stealth.test.ts` |
 | P4-4 | Floor traps | ✅ SHIPPED PR#60 | `traps.ts`, `DungeonPCG.ts` (trap gen/render), `GameLoop.ts` (trap damage), `uiHelpers.ts`, `index.html`, `tests/traps.test.ts` |
+| P4-5 | Sacred shrines | ✅ SHIPPED PR#79 | `shrines.ts`, `DungeonPCG.ts` (shrine gen/render), `GameLoop.ts` (activation/buff), `ui.ts` (prompt/R key), `index.html`, `styles.css`, `tests/shrine.test.ts` |
 | P5-1 | Item rarity on all 16 | ✅ SHIPPED PR#61 | `items.ts` (Rarity type on all 16 defs) |
 | P5-2 | LootDrop system | ✅ SHIPPED PR#62 | `LootDrop.ts` (weighted drops, 3D collectibles, auto-pickup) |
 | P5-3 | Rarity UI + loot toast | ✅ SHIPPED PR#64 | `main.ts` (rarity class/label helpers, showLootToast, updateInventoryUI, updateShopUI), `styles.css` (rarity colors), `index.html` (loot-toast HUD) |
@@ -75,6 +76,7 @@
 - 2026-08-29: P5-3: Rarity UI polish — color-coded inventory slots (green/blue/gold for common/uncommon/rare), loot collection toast with fade-out, shop rarity labels, auto-pickup toast in game loop. PR#64.
 - 2026-08-29: P5-5: Stairs descent — floor progression on stairs tiles. New Transition.ts module (spawnMobs/spawnBoss/advanceToFloor/showFloorToast), GameRenderer.clearScene(), DungeonPCG.isOnStairs(), stairs cooldown in GameLoop. 9 new tests. PR#66.
 - 2026-08-29: P5-5 validate: Found 2 bugs in Transition.ts — `updateGameVars` passed old `playerFloor` instead of new `floor`, and `addCombatLog` called twice per descent. Fixed: pass `floor`, remove duplicate log, clean unused params. Gate green (126/126, 577 KB). PR#67.
+- 2026-08-29: P4-5: Sacred shrines shipped — 3 types (heal +30% HP, buff +2 dmg/30s, shield +2 armor/20s), proximity prompt, [R] activation, 3D glowing pedestals with pulsing orbs, 16 tests. PR#79 (merged to main).
 
 ## CAP Checklist
 
@@ -92,12 +94,14 @@
 ## Next
 
 - ✅ Phase 6 complete — B-7 (settings-back) and B-8 (stealth-label) both fixed and merged. PR#69, #70.
-- ✅ All 12 milestones complete (M1–M12), 126/126 tests, 0 open bugs. Game is **PLAYABLE** on Pages.
+- ✅ All 12 milestones complete (M1–M12), 142/142 tests, 0 open bugs. Game is **PLAYABLE** on Pages.
+- ✅ Gate: **142 tests green, build green, 599.47 KB bundle** (verified 2026-08-29)
 
 - ✅ P4-1: Economy shipped (scrap + shop)
 - ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
 - ✅ P4-3: Stealth zones shipped (stealth tiles reduce aggro by 65%, darker floors, HUD indicator)
 - ✅ P4-4: Floor traps shipped (spike/poison/fire — 3 types, 12 tests, PR#60)
+- ✅ P4-5: Sacred shrines shipped — 3 shrine types (heal/buff/shield). Proximity prompt → [R] activate → instant heal (+30% max HP) or buff (+2 damage, 30s) or shield (+2 armor, 20s). 3D glowing pedestals with pulsing orbs. 16 tests. PR#79.
 - ✅ P5-1: Item rarity on all 16 items shipped (PR#61)
 - ✅ P5-2: LootDrop system shipped (weighted drops, 3D collectibles, auto-pickup, PR#62)
 - ✅ P5-3: Rarity UI + loot toast feedback shipped (PR#64) — color-coded slots, toast with rarity variants, auto-pickup feedback
@@ -111,4 +115,8 @@
 - 🔧 B-11 fix (Phase 6 validation): Resolved S key conflict — skills toggle moved from S to T (T for "Skill Tree"), S remains for backward movement. `main.ts` + `index.html`.
 - 🔧 B-12 fix (Phase 6 validation): Added Space bar as keyboard attack key — attack was mouse-click only, not documented. `input.ts`.
 - 🔧 B-13 fix (Phase 6 validation): Added `controls-hint` element to HUD showing full key mapping. `index.html` + `styles.css`.
-- ✅ Phase 6 validation (2026-08-29): Playwright smoke test against live Pages confirmed title screen shows "WASD|Arrow|click|attack|mouse|keyboard|controls|move" — controls text present. All 126 tests green, gate green. ESLint fix: `validate-*.mjs` added to eslint ignores (browser globals in validation scripts).
+- ✅ Phase 6 validation (2026-08-29): Playwright smoke test against live Pages confirmed title screen shows "WASD|Arrow|click|attack|mouse|keyboard|controls|move" — controls text present. All 142 tests green, gate green. ESLint fix: `validate-*.mjs` added to eslint ignores (browser globals in validation scripts).
+
+## Planned
+
+- **P7-2 Tutorial mode** — guided first run-through: movement tutorial, combat intro, shop demo, skill tree walkthrough, stairs descent demo. `TutorialSystem.ts`, `ui.ts` tutorial overlay, `GameLoop.ts` tutorial state machine.

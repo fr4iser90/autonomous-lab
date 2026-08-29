@@ -64,6 +64,17 @@ All extend `MobKit` in `src/entities/`:
 ## Dungeon PCG
 BSP room splitting → L-shaped corridors → BFS reachability → stairs in last room. Seed-based via Mulberry32 RNG.
 
+## Shrines
+Defined in `src/data/shrines.ts` — 3 shrine types placed randomly on each floor (non-spawn, non-stairs floor tile):
+
+| Type | ID | Effect | Duration |
+|------|----|--------|----------|
+| Healing | `heal` | Instant HP restore (+30% max HP) | Instant |
+| Battle | `buff` | +2 damage to player attacks | 30s (ticks) |
+| Warding | `shield` | +2 armor (damage reduction) | 20s (ticks) |
+
+Activation: Player walks near shrine → [R] key prompt appears → confirms activation. Visual: 3D glowing pedestal with pulsing orb. One shrine per floor.
+
 ## Audio
 Web Audio API procedural: footsteps (0.4s), mob growls (3s), attack swoosh (0.5s), ambient 55Hz drone.
 

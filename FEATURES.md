@@ -68,3 +68,16 @@
 - **4 new items**: steel-club (+9 DMG), mega-potion (+32 HP), iron-shield (+2 DEF), rune-ring (+2 HP)
 - **2 new floor themes**: Elven Ruins (floors 7–9), Magma Caverns (10+)
 - mobKits: 8/16, items: 10/16, floorThemes: 4/16
+
+## P4: Phase 4 Systems
+
+- **Economy** — Scrap currency, shop UI with 5 purchasable items, buy/sell/inventory sync. `Economy.ts`, `shopItems.ts`.
+- **Skill tree** — 8 nodes across 3 tiers, skill points from level-ups, UI overlay. `SkillTree.ts`, `tests/skill-tree.test.ts`.
+- **Stealth zones** — Player moves at 0.5× speed in dark tiles, Stalker chase AI ignores stealth. `ChaseAI.ts`, `uiHelpers.ts`.
+- **Floor traps** — 3 trap types (spike/poison/fire), triggered on walk, `traps.ts` data, DungeonPCG placement, `GameLoop.ts` damage.
+- **Item rarity** — Rarity enum (common/uncommon/rare), all 16 items tagged. `items.ts`.
+- **LootDrop system** — Weighted drops from mobs, 3D floating collectibles, auto-pickup. `LootDrop.ts`.
+- **Rarity UI + loot toast** — Color-coded inventory slots, toast notifications. `main.ts`, `styles.css`, `index.html`.
+- **Sealed doors + key consumption** — 4 sealed doors per floor, dungeon key required. `Inventory.ts` (keys), `DungeonPCG.ts` (isSealedDoor/openDoorAt), `GameLoop.ts` (collision block).
+- **Stairs descent + floor progression** — BSP-generated stairs in last room, floor counter, `Transition.ts` module.
+- **Sacred shrines** — 3 types: Healing (+30% max HP instant), Battle (+2 damage, 30s buff), Warding (+2 armor/damage reduction, 20s). 3D glowing pedestals with pulsing orbs. `shrines.ts`, DungeonPCG shrine gen/render, `GameLoop.ts` activation + buff timer, `ui.ts` proximity prompt + [R] key, `index.html`, `styles.css`, `tests/shrine.test.ts` (16 tests).
