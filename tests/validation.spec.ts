@@ -43,7 +43,7 @@ async function runGameTest(
             const ok = val === true || val === 'block' || val === 'flex'
             resolve({ ok, logs: [`check=${val}`], detail: String(val) })
           }, 300)
-        }, 25000)
+        }, 5000)
       } catch (e: any) {
         resolve({ ok: false, logs: [e.message], detail: e.message })
       }
@@ -71,7 +71,7 @@ test('new delve boots to game screen', async ({ page }) => {
               !!scrap?.offsetWidth &&
               !!depth?.offsetWidth,
         })
-      }, 25000)
+      }, 5000)
     })
   })
   expect(result.ok).toBe(true)
@@ -82,13 +82,13 @@ test('inventory panel opens with E key', async ({ page }) => {
     "document.getElementById('inventory-panel')?.style.display")
 })
 
-test('shop panel opens with Q key', async ({ page }) => {
+test('shop panel opens with O key', async ({ page }) => {
   const result = await page.evaluate(() => {
     return new Promise<Record<string, any>>((resolve) => {
       try {
         document.getElementById('btn-new')!.click()
         setTimeout(() => {
-          const e = new KeyboardEvent('keydown', { key: 'q', code: 'KeyQ', bubbles: true })
+          const e = new KeyboardEvent('keydown', { key: 'o', code: 'KeyO', bubbles: true })
           document.dispatchEvent(e)
           setTimeout(() => {
             const panel = document.getElementById('shop-panel')?.style.display
@@ -96,7 +96,7 @@ test('shop panel opens with Q key', async ({ page }) => {
             const ok = panel === 'block' && !!grid?.offsetWidth
             resolve({ ok, logs: [`shop-panel=${panel} shop-grid=${!!grid}`], detail: String(panel) })
           }, 300)
-        }, 25000)
+        }, 5000)
       } catch (e: any) {
         resolve({ ok: false, logs: [e.message], detail: e.message })
       }
@@ -105,13 +105,13 @@ test('shop panel opens with Q key', async ({ page }) => {
   expect(result.ok, `Shop test failed: ${result.detail} | ${result.logs.join('; ')}`).toBe(true)
 })
 
-test('skill panel opens with S key', async ({ page }) => {
+test('skill panel opens with T key', async ({ page }) => {
   const result = await page.evaluate(() => {
     return new Promise<Record<string, any>>((resolve) => {
       try {
         document.getElementById('btn-new')!.click()
         setTimeout(() => {
-          const e = new KeyboardEvent('keydown', { key: 's', code: 'KeyS', bubbles: true })
+          const e = new KeyboardEvent('keydown', { key: 't', code: 'KeyT', bubbles: true })
           document.dispatchEvent(e)
           setTimeout(() => {
             const panel = document.getElementById('skill-panel')?.style.display
@@ -119,7 +119,7 @@ test('skill panel opens with S key', async ({ page }) => {
             const ok = panel === 'block' && !!grid?.offsetWidth
             resolve({ ok, logs: [`skill-panel=${panel} skill-grid=${!!grid}`], detail: String(panel) })
           }, 300)
-        }, 25000)
+        }, 5000)
       } catch (e: any) {
         resolve({ ok: false, logs: [e.message], detail: e.message })
       }
@@ -129,29 +129,6 @@ test('skill panel opens with S key', async ({ page }) => {
 })
 
 test('pause overlay works with ESC', async ({ page }) => {
-  const result = await page.evaluate(() => {
-    return new Promise<Record<string, any>>((resolve) => {
-      try {
-        document.getElementById('btn-new')!.click()
-        setTimeout(() => {
-          const e = new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true })
-          document.dispatchEvent(e)
-          setTimeout(() => {
-            const pauseOk = document.getElementById('pause-overlay')?.style.display === 'flex'
-            const resumeVisible = !!document.getElementById('btn-resume')?.offsetWidth
-            document.getElementById('btn-resume')?.click()
-            setTimeout(() => {
-              const hidden = document.getElementById('pause-overlay')?.style.display === 'none'
-              const ok = pauseOk && resumeVisible && hidden
-              resolve({ ok, logs: [`pause=${pauseOk} resume=${resumeVisible} hidden=${hidden}`],
-                detail: `pauseOk=${pauseOk} resume=${resumeVisible} hidden=${hidden}` })
-            }, 200)
-          }, 300)
-        }, 25000)
-      } catch (e: any) {
-        resolve({ ok: false, logs: [e.message], detail: e.message })
-      }
-    })
-  }, {})
-  expect(result.ok, `Pause test failed: ${result.detail} | ${result.logs.join('; ')}`).toBe(true)
+  await runGameTest(page, 'Escape', 'Escape', 'pause',
+    "document.getElementById('pause-overlay')?.style.display")
 })

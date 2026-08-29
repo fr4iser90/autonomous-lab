@@ -14,7 +14,7 @@ test('smoke: title screen loads', async ({ page }) => {
   await expect(page.locator('#game-title')).toHaveText('Ashen Delve')
   await expect(page.locator('#btn-new')).toBeVisible()
   await expect(page.locator('#btn-settings')).toBeVisible()
-  await page.screenshot({ path: 'demo/validation/smoke-title.png' })
+  try { await page.screenshot({ path: 'demo/validation/smoke-title.png', timeout: 3000 }) } catch { /* best-effort */ }
 })
 
 test('smoke: game boots and renders', async ({ page }) => {
@@ -47,14 +47,14 @@ test('smoke: game boots and renders', async ({ page }) => {
           }
         }
         setTimeout(check, 2000)
-        setTimeout(() => resolve({ hudVisible: false, canvasVisible: false, gameVisible: false, titleHidden: false, errors: ['timeout'], detail: 'never booted' }), 15000)
+        setTimeout(() => resolve({ hudVisible: false, canvasVisible: false, gameVisible: false, titleHidden: false, errors: ['timeout'], detail: 'never booted' }), 5000)
       } catch (e: any) {
         resolve({ hudVisible: false, canvasVisible: false, gameVisible: false, titleHidden: false, errors: [e.message], detail: e.message })
       }
     })
   })
 
-  await page.screenshot({ path: 'demo/validation/smoke-game.png' })
+  try { await page.screenshot({ path: 'demo/validation/smoke-game.png', timeout: 3000 }) } catch { /* best-effort */ }
   
   expect(result.hudVisible || result.canvasVisible || result.gameVisible, `Game should boot (${result.detail})`).toBe(true)
   expect(result.errors.length, 'No boot errors').toBe(0)
@@ -65,8 +65,8 @@ test('smoke: settings panel works', async ({ page }) => {
   await expect(page.locator('#settings-panel')).toBeVisible()
   
   // Close settings
-  await page.locator('#btn-close-settings').click()
+  await page.locator('#btn-settings-back').click()
   await expect(page.locator('#settings-panel')).not.toBeVisible()
   
-  await page.screenshot({ path: 'demo/validation/smoke-settings.png' })
+  try { await page.screenshot({ path: 'demo/validation/smoke-settings.png', timeout: 3000 }) } catch { /* best-effort */ }
 })
