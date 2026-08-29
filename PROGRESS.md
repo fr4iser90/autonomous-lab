@@ -4,13 +4,14 @@
 
 ## NOW
 
-- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), PR #86
-- P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests. Gate: 278 tests, 615.87 KB bundle.
+- Phase: **Phase 8 in progress** — P8-1 ✅ (HitEffects + ScreenShake), P8-2 ✅ (Audio feedback), PR #86 + PR TBD
+- P8-1: Combat visual feedback shipped — floating damage numbers, hit burst particles, mesh flash effects, screen shake on all damage events. 29 new unit tests.
+- P8-2: Audio feedback shipped — `critHit()` (sharp square wave for crits), `playerHit()` (dull triangle wave for player damage), `death()` (descending sawtooth for mob/player death). Integrated at all 6 damage points in GameLoop. 14 new unit tests. Gate: 292 tests, 617.42 KB bundle.
 - Milestone: 16 mob kits (16/16), 16 items (16/16), 16 floor themes (16/16), Phase 3 visual (6/6 PASS)
 - Branch: `agent/dungeon-crawl-20260829-v2-p73-docs` → P4-1 through P5-5 merged (PR#52,53,55,60,61,62,64,65,66,67) + B-7 (PR#69) + B-8 (PR#70) + P4-5 shrines (PR#79) + P7-1, P7-2, P7-3 + PR#84
 - Engine: **Three.js** 0.170.0 (procedural meshes only — no imports)
-- Gate: **278 tests green (2 skipped), build green, 615.87 KB bundle**
-- BUGS: **game bugs drained** (B-1 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
+- Gate: **292 tests green (2 skipped), build green, 617.42 KB bundle**
+- BUGS: **game bugs drained** (B-1 closed, B-2 closed, B-7 through B-13 fixed); B-14 tagged human-only (CI/Pages workflow — per AGENTS.md hard stop)
 - Pages: **https://fr4iser90.github.io/autonomous-lab/** live
 - P7-1: Status effects (poison/burn/freeze/shield) + HUD indicators shipped — mob-specific attacks apply effects
 
@@ -103,7 +104,7 @@
 
 - ✅ Phase 6 complete — B-7 (settings-back) and B-8 (stealth-label) both fixed and merged. PR#69, #70.
 - ✅ All 12 milestones complete (M1–M12), 142/142 tests, 0 open bugs. Game is **PLAYABLE** on Pages.
-- ✅ Gate: **142 tests green, build green, 599.47 KB bundle** (verified 2026-08-29)
+- ✅ Gate: **292 tests green (2 skipped), build green, 617.42 KB bundle** (verified 2026-08-29)
 
 - ✅ P4-1: Economy shipped (scrap + shop)
 - ✅ P4-2: Skill tree shipped (8 skills, floor-gated)
@@ -135,8 +136,10 @@
 | Slice | Feature | Status | Key files |
 |-------|---------|--------|-----------|
 | P8-1 | HitEffects + ScreenShake — combat visual feedback | ✅ SHIPPED PR#86 | `HitEffects.ts` (damage numbers, burst particles, mesh flash), `ScreenShake.ts` (sin-based shake), `GameLoop.ts` (6 integration points), `camera.ts` (shakeOffset), 29 new tests |
+| P8-2 | Audio feedback on hits — crit, player damage, death sounds | ✅ SHIPPED PR TBD | `AudioEngine.ts` (critHit, playerHit, death methods), `GameLoop.ts` (6 audio integration points), `AudioEngine.test.ts` (14 tests) |
 
 ## Planned
 
 - ✅ **P8-1 shipped** — Combat visual feedback: HitEffects (floating damage numbers, hit burst particles, mesh flash) + ScreenShake (deterministic sin-based camera shake). Integrated into GameLoop at all 6 damage-deal points. PR#86.
-- **P8 remaining** — Code audit identified additional QoL: audio feedback on hits, UI polish (toast system improvements, smoother HUD transitions), dynamic lighting tweaks. Next step: prioritize highest-impact items from audit and implement in slices.
+- ✅ **P8-2 shipped** — Audio feedback: `critHit()` (sharp square wave, 600→100 Hz, 0.18s), `playerHit()` (dull triangle wave, 120→30 Hz, 0.2s), `death()` (descending sawtooth, 180→20 Hz, 0.5s). Integrated into GameLoop at all 6 damage points (trap, fireball, slam, mob attack, crit, player death). Gate: 292 tests green, 617.42 KB bundle.
+- **P8 remaining** — Code audit identified additional QoL: UI polish (toast system improvements, smoother HUD transitions), dynamic lighting tweaks. Next step: prioritize highest-impact items from audit and implement in slices.

@@ -1,6 +1,7 @@
 /**
  * AudioEngine — procedural audio via Web Audio API.
  * M10: Footsteps, mob growls, ambient dungeon, attack swoosh.
+ * P8-2: critHit(), playerHit(), death() for combat audio feedback.
  */
 export interface AudioSettings {
   masterVolume: number
@@ -113,6 +114,54 @@ export class AudioEngine {
     gain.connect(this.masterGain)
     osc.start()
     osc.stop(this.ctx.currentTime + 0.12)
+  }
+
+  /** Play a sharp critical hit — square wave descending ramp */
+  critHit(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(600, this.ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.18)
+    gain.gain.setValueAtTime(0.12 * this.settings.sfxVolume / 100, this.ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18)
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+    osc.start()
+    osc.stop(this.ctx.currentTime + 0.18)
+  }
+
+  /** Play a dull player damage thud — triangle wave descending ramp */
+  playerHit(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(120, this.ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.2)
+    gain.gain.setValueAtTime(0.1 * this.settings.sfxVolume / 100, this.ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2)
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+    osc.start()
+    osc.stop(this.ctx.currentTime + 0.2)
+  }
+
+  /** Play a descending death rumble — sawtooth descending ramp */
+  death(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(180, this.ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.5)
+    gain.gain.setValueAtTime(0.12 * this.settings.sfxVolume / 100, this.ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5)
+    osc.connect(gain)
+    gain.connect(this.masterGain)
+    osc.start()
+    osc.stop(this.ctx.currentTime + 0.5)
   }
 
   /** Play ambient dungeon drone */
